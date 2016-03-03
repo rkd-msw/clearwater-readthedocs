@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>All-in-one OVF Installation &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Installing a Chef server" href="Installing_a_Chef_server.html" />
+    <link rel="prev" title="All-in-one EC2 AMI Installation" href="All_in_one_EC2_AMI_Installation.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="all-in-one-ovf-installation">
+<h1>All-in-one OVF Installation<a class="headerlink" href="#all-in-one-ovf-installation" title="Permalink to this headline">¶</a></h1>
+<p>This pages describes how to install an <a class="reference external" href="All_in_one_Images.md">all-in-one
+image</a> on your own virtualization platform
+using <a class="reference external" href="http://dmtf.org/standards/ovf">OVF (Open Virtualization
+Format)</a>.</p>
+<div class="section" id="supported-platforms">
+<h2>Supported Platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this headline">¶</a></h2>
+<p>This process should work on any virtualization platform that supports
+OVFs using x86-64 CPUs, but has only been tested on</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.vmware.com/products/player/">VMware Player</a></li>
+<li><a class="reference external" href="https://www.virtualbox.org/">VirtualBox</a></li>
+<li><a class="reference external" href="http://www.vmware.com/products/vsphere-hypervisor/overview.html">VMware
+ESXi</a>.</li>
+</ul>
+<p>The image uses DHCP to gets its IP configuration, so the virtualization
+platform must either serve DHCP natively or be connected to a network
+with a DHCP server.</p>
+<p>If you install/run the OVF on another platform, please let us know how
+you get on on the <a class="reference external" href="http://lists.projectclearwater.org/listinfo/clearwater">mailing
+list</a> so we
+can update this page.</p>
+</div>
+<div class="section" id="installation-process">
+<h2>Installation Process<a class="headerlink" href="#installation-process" title="Permalink to this headline">¶</a></h2>
+<p>To install the OVF, you must first download it from
+<a class="reference external" href="http://vm-images.cw-ngv.com/cw-aio.ova">http://vm-images.cw-ngv.com/cw-aio.ova</a> and save it to disk.</p>
+<p>Then, you must import it into your virtualization platform. The process
+for this varies.</p>
+<ul class="simple">
+<li>On VMware Player, choose <strong>File-&gt;Open a Virtual Machine</strong> from the
+menu and select the cw-aio.ova file you downloaded. On the Import
+Virtual Machine dialog that appears, the defaults are normally fine,
+so you can just click <strong>Import</strong>.</li>
+<li>On VirtualBox, choose <strong>File-&gt;Import Appliance...</strong> from the menu. In
+the Appliance Import Wizard, click <strong>Choose...</strong>, select the
+cw-aio.ova file you downloaded and click <strong>Next</strong>. On the next tab,
+you can view the settings and then click <strong>Import</strong>.</li>
+<li>On VMware ESXi, using the VMware vSphere Client, choose
+<strong>File-&gt;Deploy OVF Template...</strong> from the menu. Select the cw-aio.ova
+file you downloaded and click through assigning it a suitable name,
+location and attached network (which must support DHCP) before
+finally clicking <strong>Finish</strong> to create the virtual machine.</li>
+</ul>
+</div>
+<div class="section" id="running-and-using-the-image">
+<h2>Running and Using the Image<a class="headerlink" href="#running-and-using-the-image" title="Permalink to this headline">¶</a></h2>
+<p>Once you&#8217;ve installed the virtual machine, you should start it in the
+usual way for your virtualization platform.</p>
+<p>If you attach to the console, you should see an Ubuntu loading screen
+and then be dropped at a <code class="docutils literal"><span class="pre">cw-aio</span></code> login prompt. The username is
+<code class="docutils literal"><span class="pre">ubuntu</span></code> and the password is <code class="docutils literal"><span class="pre">cw-aio</span></code>. Note that the console is
+hard-coded to use a US keyboard, so if you have a different keyboard you
+might find that keys are remapped - in particular the <code class="docutils literal"><span class="pre">-</span></code> key.</p>
+<p>The OVF provides 3 network services.</p>
+<ul class="simple">
+<li>SSH - username is <code class="docutils literal"><span class="pre">ubuntu</span></code> and password is <code class="docutils literal"><span class="pre">cw-aio</span></code></li>
+<li>HTTP to ellis for subscriber management - sign-up code is <code class="docutils literal"><span class="pre">secret</span></code>.
+You will probably want to change this to a more secure value - see
+<a class="reference external" href="Modifying_Clearwater_settings.md">&#8220;Modifying Clearwater
+settings&#8221;</a> for how to do this.</li>
+<li>SIP to bono for call signaling - credentials are provisioned through
+ellis.</li>
+</ul>
+<p>How these network services are exposed can vary depending on the
+capabilities of the platform.</p>
+<ul class="simple">
+<li>VMware Player sets up a private network between your PC and the
+virtual machine and normally assigns the virtual machine IP address
+<code class="docutils literal"><span class="pre">192.168.28.128</span></code>. To access ellis, you&#8217;ll need to point your
+browser at <a class="reference external" href="http://192.168.28.128">http://192.168.28.128</a>. To register over SIP, you&#8217;ll need
+to configure an outbound proxy of 192.168.28.128 port 5060.</li>
+<li>VirtualBox uses NAT on the local IP address, exposing SSH on port
+8022, HTTP on port 8080 and SIP on port 8060. To access ellis, you&#8217;ll
+need to point your browser at <a class="reference external" href="http://localhost:8080">http://localhost:8080</a>. To register over
+SIP, you&#8217;ll need to configure an outbound proxy of localhost port
+8060.</li>
+<li>VMware ESXi runs the host as normal on the network, so you can
+connect to it directly. To find out its IP address, log in over the
+console and type <code class="docutils literal"><span class="pre">hostname</span> <span class="pre">-I</span></code>. To access ellis, just point your
+browser at this IP address. To register over SIP, you&#8217;ll need to
+configure an outbound proxy for this IP address.</li>
+</ul>
+<p>Once you&#8217;ve successfully connected to ellis, try <a class="reference external" href="Making_your_first_call.md">making your first
+call</a> - just remember to configure the SIP
+outbound proxy as discussed above.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">All-in-one OVF Installation</a><ul>
+<li><a class="reference internal" href="#supported-platforms">Supported Platforms</a></li>
+<li><a class="reference internal" href="#installation-process">Installation Process</a></li>
+<li><a class="reference internal" href="#running-and-using-the-image">Running and Using the Image</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="All_in_one_EC2_AMI_Installation.html" title="previous chapter">All-in-one EC2 AMI Installation</a></li>
+      <li>Next: <a href="Installing_a_Chef_server.html" title="next chapter">Installing a Chef server</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/All_in_one_OVF_Installation.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/All_in_one_OVF_Installation.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

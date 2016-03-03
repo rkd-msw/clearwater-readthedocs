@@ -1,0 +1,512 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Manual Install Instructions &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="All-in-one EC2 AMI Installation" href="All_in_one_EC2_AMI_Installation.html" />
+    <link rel="prev" title="Automated Install Instructions" href="Automated_Install.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="manual-install-instructions">
+<h1>Manual Install Instructions<a class="headerlink" href="#manual-install-instructions" title="Permalink to this headline">¶</a></h1>
+<p>These instructions will take you through installing a minimal Clearwater
+system using the latest binary packages provided by the Clearwater
+project. For a high level look at the install process, and a discussion
+of alternative install methods, see <a class="reference external" href="Installation_Instructions.md">Installation
+Instructions</a>.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<p>Before starting this process you will need the following:</p>
+<ul class="simple">
+<li>Six machines running clean installs of <a class="reference external" href="http://releases.ubuntu.com/trusty/">Ubuntu 14.04 - 64bit server
+edition</a>.<ul>
+<li>The software has been tested on Amazon EC2 <code class="docutils literal"><span class="pre">t2.small</span></code> instances
+(i.e. 1 vCPU, 2 GB RAM), so any machines at least as powerful as
+one of them will be sufficient.</li>
+<li>Each machine will take on a separate role in the final deployment.
+The system requirements for each role are the same thus the
+allocation of roles to machines can be arbitrary.</li>
+<li>The firewalls of these devices must be independently configurable.
+This may require some attention when commissioning the machines.
+For example, in Amazon&#8217;s EC2, they should all be created in
+separate security groups.</li>
+<li>On Amazon EC2, we&#8217;ve tested both within a
+<a class="reference external" href="http://aws.amazon.com/vpc/">VPC</a> and without. If using a VPC,
+we recommend using the &#8220;VPC with a Single Public Subnet&#8221; model (in
+the &#8220;VPC Wizard&#8221;) as this is simplest.</li>
+</ul>
+</li>
+<li>A publicly accessible IP address of each of the above machines and a
+private IP address for each of them (these may be the same address
+depending on the machine environment). These will be referred to as
+<code class="docutils literal"><span class="pre">&lt;publicIP&gt;</span></code> and <code class="docutils literal"><span class="pre">&lt;privateIP&gt;</span></code> below. (If running on Amazon EC2
+in a VPC, you must explicitly add this IP address by ticking the
+&#8220;Automatically assign a public IP address&#8221; checkbox on creation.)</li>
+<li>The FQDN of the machine, which resolves to the machine&#8217;s public IP
+address (if the machine has no FQDN, you should instead use the
+public IP). Referred to as <code class="docutils literal"><span class="pre">&lt;hostname&gt;</span></code> below.</li>
+<li>SSH access to the above machines to a user authorised to use sudo. If
+your system does not come with such a user pre-configured, add a user
+with <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">adduser</span> <span class="pre">&lt;username&gt;</span></code> and then authorize them to use sudo
+with <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">adduser</span> <span class="pre">&lt;username&gt;</span> <span class="pre">sudo</span></code>.</li>
+<li>A DNS zone in which to install your deployment and the ability to
+configure records within that zone. This zone will be referred to as
+<code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> below.</li>
+<li>If you are not using the Project Clearwater provided Debian
+repository, you will need to know the URL (and, if applicable, the
+public GPG key) of your repository.</li>
+</ul>
+</div>
+<div class="section" id="configure-the-apt-software-sources">
+<h2>Configure the APT software sources<a class="headerlink" href="#configure-the-apt-software-sources" title="Permalink to this headline">¶</a></h2>
+<p>Configure each machine so that APT can use the Clearwater repository
+server.</p>
+<p>Under sudo, create <code class="docutils literal"><span class="pre">/etc/apt/sources.list.d/clearwater.list</span></code> with the
+following contents:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>deb http://repo.cw-ngv.com/stable binary/
+</pre></div>
+</div>
+<p><em>Note: If you are not installing from the provided Clearwater Debian
+repository, replace the URL in this file to point to your Debian package
+repository.</em></p>
+<p>Once this is created install the signing key used by the Clearwater
+server with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>curl -L http://repo.cw-ngv.com/repo_key | sudo apt-key add -
+</pre></div>
+</div>
+<p>You should check the key fingerprint with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo apt-key finger
+</pre></div>
+</div>
+<p>The output should contain the following - check the fingerprint
+carefully.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>pub   4096R/22B97904 2013-04-30
+      Key fingerprint = 9213 4604 DE32 7DF7 FEB7  2026 111D BE47 22B9 7904
+uid                  Project Clearwater Maintainers &lt;maintainers@projectclearwater.org&gt;
+sub   4096R/46EC5B7F 2013-04-30
+</pre></div>
+</div>
+<p>Once the above steps have been performed, run the following to re-index
+your package manager:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo apt-get update
+</pre></div>
+</div>
+</div>
+<div class="section" id="determine-machine-roles">
+<h2>Determine Machine Roles<a class="headerlink" href="#determine-machine-roles" title="Permalink to this headline">¶</a></h2>
+<p>At this point, you should decide (if you haven&#8217;t already) which of the
+six machines will take on which of the Clearwater roles.</p>
+<p>The six roles are:</p>
+<ul class="simple">
+<li>ellis</li>
+<li>bono - This role also hosts a restund STUN server</li>
+<li>sprout</li>
+<li>homer</li>
+<li>homestead</li>
+<li>ralf</li>
+</ul>
+</div>
+<div class="section" id="firewall-configuration">
+<h2>Firewall configuration<a class="headerlink" href="#firewall-configuration" title="Permalink to this headline">¶</a></h2>
+<p>We need to make sure the Clearwater nodes can all talk to each other. To
+do this, you will need to open up some ports in the firewalls in your
+network. The ports used by Clearwater are listed in <a class="reference external" href="Clearwater_IP_Port_Usage.md">Clearwater IP Port
+Usage</a>. Configure all of these ports to
+be open to the appropriate hosts before continuing to the next step. If
+you are running on a platform that has multiple physical or virtual
+interfaces and the option to apply different firewall rules on each,
+make sure that you open these ports on the correct interfaces.</p>
+</div>
+<div class="section" id="create-the-per-node-configuration">
+<h2>Create the per-node configuration.<a class="headerlink" href="#create-the-per-node-configuration" title="Permalink to this headline">¶</a></h2>
+<p>On each machine create the file <code class="docutils literal"><span class="pre">/etc/clearwater/local_config</span></code> with
+the following contents.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>local_ip=&lt;privateIP&gt;
+public_ip=&lt;publicIP&gt;
+public_hostname=&lt;hostname&gt;
+etcd_cluster=&quot;&lt;comma separated list of private IPs&gt;&quot;
+</pre></div>
+</div>
+<p>Note that the <code class="docutils literal"><span class="pre">etcd_cluster</span></code> variable should be set to a comma
+separated list that contains the private IP address of the nodes you
+created above. For example if the nodes had addresses 10.0.0.1 to
+10.0.0.6, <code class="docutils literal"><span class="pre">etcd_cluster</span></code> should be set to
+<code class="docutils literal"><span class="pre">&quot;10.0.0.1,10.0.0.2,10.0.0.3,10.0.0.4,10.0.0.5,10.0.0.6&quot;</span></code></p>
+<p>If you are creating a <a class="reference external" href="Geographic_redundancy.md">geographically redundant
+deployment</a>, then:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">etcd_cluster</span></code> should contain the IP addresses of nodes in both
+sites</li>
+<li>you should set <code class="docutils literal"><span class="pre">local_site_name</span></code> and <code class="docutils literal"><span class="pre">remote_site_name</span></code> in
+<code class="docutils literal"><span class="pre">/etc/clearwater/local_config</span></code>.</li>
+</ul>
+<p>These names are arbitrary, but should reflect the node&#8217;s location (e.g.
+a node in site A should have <code class="docutils literal"><span class="pre">local_site_name=siteA</span></code> and
+<code class="docutils literal"><span class="pre">remote_site_name=siteB</span></code>, whereas a node in site B should have
+<code class="docutils literal"><span class="pre">local_site_name=siteB</span></code> and <code class="docutils literal"><span class="pre">remote_site_name=siteA</span></code>):</p>
+<p>If this machine will be a Sprout or Ralf node create the file
+<code class="docutils literal"><span class="pre">/etc/chronos/chronos.conf</span></code> with the following contents:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>[http]
+bind-address = &lt;privateIP&gt;
+bind-port = 7253
+threads = 50
+
+[logging]
+folder = /var/log/chronos
+level = 2
+
+[alarms]
+enabled = true
+
+[exceptions]
+max_ttl = 600
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-node-specific-software">
+<h2>Install Node-Specific Software<a class="headerlink" href="#install-node-specific-software" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">ssh</span></code> onto each box in turn and follow the appropriate instructions
+below according to the role the node will take in the deployment:</p>
+<div class="section" id="ellis">
+<h3>Ellis<a class="headerlink" href="#ellis" title="Permalink to this headline">¶</a></h3>
+<p>Install the Ellis package with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo DEBIAN_FRONTEND=noninteractive apt-get install ellis --yes
+sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes
+</pre></div>
+</div>
+</div>
+<div class="section" id="bono">
+<h3>Bono<a class="headerlink" href="#bono" title="Permalink to this headline">¶</a></h3>
+<p>Install the Bono and Restund packages with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo DEBIAN_FRONTEND=noninteractive apt-get install bono restund --yes
+sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes
+</pre></div>
+</div>
+</div>
+<div class="section" id="sprout">
+<h3>Sprout<a class="headerlink" href="#sprout" title="Permalink to this headline">¶</a></h3>
+<p>Install the Sprout package with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo DEBIAN_FRONTEND=noninteractive apt-get install sprout --yes
+sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes
+</pre></div>
+</div>
+<p>If you want the Sprout nodes to include a Memento Application server,
+then install the Memento packages with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo DEBIAN_FRONTEND=noninteractive apt-get install memento-as memento-nginx --yes
+</pre></div>
+</div>
+</div>
+<div class="section" id="homer">
+<h3>Homer<a class="headerlink" href="#homer" title="Permalink to this headline">¶</a></h3>
+<p>Install the Homer packages with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo DEBIAN_FRONTEND=noninteractive apt-get install homer --yes
+sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes
+</pre></div>
+</div>
+</div>
+<div class="section" id="homestead">
+<h3>Homestead<a class="headerlink" href="#homestead" title="Permalink to this headline">¶</a></h3>
+<p>Install the Homestead packages with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo DEBIAN_FRONTEND=noninteractive apt-get install homestead homestead-prov clearwater-prov-tools --yes
+sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes
+</pre></div>
+</div>
+</div>
+<div class="section" id="ralf">
+<h3>Ralf<a class="headerlink" href="#ralf" title="Permalink to this headline">¶</a></h3>
+<p>Install the Ralf package with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo DEBIAN_FRONTEND=noninteractive apt-get install ralf --yes
+sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="snmp-statistics">
+<h2>SNMP statistics<a class="headerlink" href="#snmp-statistics" title="Permalink to this headline">¶</a></h2>
+<p>Sprout, Bono and Homestead nodes expose statistics over SNMP. This
+function is not installed by default. If you want to enable it follow
+the instruction in <a class="reference external" href="Clearwater_SNMP_Statistics.md">our SNMP
+documentation</a>.</p>
+</div>
+<div class="section" id="provide-shared-configuration">
+<h2>Provide Shared Configuration<a class="headerlink" href="#provide-shared-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Log onto any node in the deployment and create the file
+<code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> with the following contents:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span># Deployment definitions
+home_domain=&lt;zone&gt;
+sprout_hostname=sprout.&lt;zone&gt;
+hs_hostname=hs.&lt;zone&gt;:8888
+hs_provisioning_hostname=hs.&lt;zone&gt;:8889
+ralf_hostname=ralf.&lt;zone&gt;:10888
+xdms_hostname=homer.&lt;zone&gt;:7888
+
+# Email server configuration
+smtp_smarthost=&lt;smtp server&gt;
+smtp_username=&lt;username&gt;
+smtp_password=&lt;password&gt;
+email_recovery_sender=clearwater@example.org
+
+# Keys
+signup_key=&lt;secret&gt;
+turn_workaround=&lt;secret&gt;
+ellis_api_key=&lt;secret&gt;
+ellis_cookie_key=&lt;secret&gt;
+</pre></div>
+</div>
+<p>If you wish to enable the optional I-CSCF function, also add the
+following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span># I-CSCF/S-CSCF configuration
+icscf=5052
+upstream_hostname=&lt;sprout_hostname&gt;
+upstream_port=5052
+</pre></div>
+</div>
+<p>If you wish to enable the optional external HSS lookups, add the
+following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span># HSS configuration
+hss_hostname=&lt;address of your HSS&gt;
+hss_port=3868
+</pre></div>
+</div>
+<p>If you want to host multiple domains from the same Clearwater
+deployment, add the following (and configure DNS to route all domains to
+the same servers):</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span># Additional domains
+additional_home_domains=&lt;domain 1&gt;,&lt;domain 2&gt;,&lt;domain 3&gt;...
+</pre></div>
+</div>
+<p>If you want your Sprout nodes to include Gemini/Memento Application
+Servers add the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Application Servers</span>
+<span class="n">gemini_enabled</span><span class="o">=</span><span class="s1">&#39;Y&#39;</span>
+<span class="n">memento_enabled</span><span class="o">=</span><span class="s1">&#39;Y&#39;</span>
+</pre></div>
+</div>
+<p>See the <a class="reference external" href="Installing_a_Chef_workstation.md#add-deployment-specific-configuration">Chef
+instructions</a>
+for more information on how to fill these in. The values marked
+<code class="docutils literal"><span class="pre">&lt;secret&gt;</span></code> <strong>must</strong> be set to secure values to protect your deployment
+from unauthorized access. To modify these settings after the deployment
+is created, follow <a class="reference external" href="Modifying_Clearwater_settings.md">these
+instructions</a>.</p>
+<p>Now run the following to upload the configuration to a shared database
+and propagate it around the cluster.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>/usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
+</pre></div>
+</div>
+<div class="section" id="setting-up-s-cscf-configuration">
+<h3>Setting up S-CSCF configuration<a class="headerlink" href="#setting-up-s-cscf-configuration" title="Permalink to this headline">¶</a></h3>
+<p>If I-CSCF functionality is enabled, then you will need to set up the
+S-CSCF configuration. S-CSCF configuration is stored in the
+<code class="docutils literal"><span class="pre">/etc/clearwater/s-cscf.json</span></code> file on each sprout node. The file
+stores the configuration of each S-CSCF, their capabilities, and their
+relative weighting and priorities.</p>
+<p>If you require I-CSCF functionality, log onto your sprout node and
+create <code class="docutils literal"><span class="pre">/etc/clearwater/s-cscf.json</span></code> with the following contents:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>{
+   &quot;s-cscfs&quot; : [
+       {   &quot;server&quot; : &quot;sip:&lt;sprout_domain&gt;:5054;transport=TCP&quot;,
+           &quot;priority&quot; : 0,
+           &quot;weight&quot; : 100,
+           &quot;capabilities&quot; : [&lt;comma separated capabilities&gt;]
+       }
+   ]
+}
+</pre></div>
+</div>
+<p>Then upload it to the shared configuration database by running
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/upload_scscf_json</span></code>.
+This means that any sprout nodes that you add to the cluster will
+automatically learn the configuration.</p>
+</div>
+</div>
+<div class="section" id="provision-telephone-numbers-in-ellis">
+<h2>Provision Telephone Numbers in Ellis<a class="headerlink" href="#provision-telephone-numbers-in-ellis" title="Permalink to this headline">¶</a></h2>
+<p>Log onto you Ellis node and provision a pool of numbers in Ellis. The
+command given here will generate 1000 numbers starting at
+<code class="docutils literal"><span class="pre">sip:6505550000&#64;&lt;zone&gt;</span></code>, meaning none of the generated numbers will be
+routable outside of the Clearwater deployment. For more details on
+creating numbers, see the <a class="reference external" href="https://github.com/Metaswitch/ellis/blob/dev/docs/create-numbers.md">create_numbers.py
+documentation</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo bash -c &quot;export PATH=/usr/share/clearwater/ellis/env/bin:$PATH ;
+              cd /usr/share/clearwater/ellis/src/metaswitch/ellis/tools/ ;
+              python create_numbers.py --start 6505550000 --count 1000&quot;
+</pre></div>
+</div>
+<p>On success, you should see some output from python about importing eggs
+and then the following.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>Created 1000 numbers, 0 already present in database
+</pre></div>
+</div>
+<p>This command is idempotent, so it&#8217;s safe to run it multiple times. If
+you&#8217;ve run it once before, you&#8217;ll see the following instead.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>Created 0 numbers, 1000 already present in database
+</pre></div>
+</div>
+</div>
+<div class="section" id="dns-records">
+<h2>DNS Records<a class="headerlink" href="#dns-records" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater uses DNS records to allow each node to find the others it
+needs to talk to to carry calls. At this point, you should create the
+DNS entries for your deployment before continuing to the next step.
+<a class="reference external" href="Clearwater_DNS_Usage.md">Clearwater DNS Usage</a> describes the entries
+that are required before Clearwater will be able to carry service.</p>
+<p>Although not required, we also suggest that you configure individual DNS
+records for each of the machines in your deployment to allow easy access
+to them if needed.</p>
+<p><em>Be aware that DNS record creation can take time to propagate, you can
+check whether your newly configured records have propagated successfully
+by running ``dig &lt;record&gt;`` on each Clearwater machine and checking that
+the correct IP address is returned.</em></p>
+</div>
+<div class="section" id="where-next">
+<h2>Where next?<a class="headerlink" href="#where-next" title="Permalink to this headline">¶</a></h2>
+<p>Once you&#8217;ve reached this point, your Clearwater deployment is ready to
+handle calls. See the following pages for instructions on making your
+first call and running the supplied regression test suite.</p>
+<ul class="simple">
+<li><a class="reference external" href="Making_your_first_call.md">Making your first call</a></li>
+<li><a class="reference external" href="Running_the_live_tests.md">Running the live test suite</a></li>
+</ul>
+</div>
+<div class="section" id="larger-scale-deployments">
+<h2>Larger-Scale Deployments<a class="headerlink" href="#larger-scale-deployments" title="Permalink to this headline">¶</a></h2>
+<p>If you&#8217;re intending to spin up a larger-scale deployment containing more
+than one node of each types, it&#8217;s recommended that you use the
+<a class="reference external" href="Automated_Install.md">automated install process</a>, as this makes
+scaling up and down very straight-forward. If for some reason you can&#8217;t,
+you can add nodes to the deployment using the <a class="reference external" href="Clearwater_Elastic_Scaling.md">Elastic Scaling
+Instructions</a></p>
+<div class="section" id="standalone-application-servers">
+<h3>Standalone Application Servers<a class="headerlink" href="#standalone-application-servers" title="Permalink to this headline">¶</a></h3>
+<p>Gemini and Memento can run integrated into the Sprout nodes, or they can
+be run as standalone application servers.</p>
+<p>To install Gemini or Memento as a standalone server, follow the same
+process as installing a Sprout node, but don&#8217;t add them to the existing
+Sprout DNS cluster.</p>
+<p>The <code class="docutils literal"><span class="pre">sprout_hostname</span></code> setting in <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> on
+standalone application servers should be set to the cluster of the
+standalone application servers, for example, <code class="docutils literal"><span class="pre">memento.cw-ngv.com</span></code>.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Manual Install Instructions</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#configure-the-apt-software-sources">Configure the APT software sources</a></li>
+<li><a class="reference internal" href="#determine-machine-roles">Determine Machine Roles</a></li>
+<li><a class="reference internal" href="#firewall-configuration">Firewall configuration</a></li>
+<li><a class="reference internal" href="#create-the-per-node-configuration">Create the per-node configuration.</a></li>
+<li><a class="reference internal" href="#install-node-specific-software">Install Node-Specific Software</a><ul>
+<li><a class="reference internal" href="#ellis">Ellis</a></li>
+<li><a class="reference internal" href="#bono">Bono</a></li>
+<li><a class="reference internal" href="#sprout">Sprout</a></li>
+<li><a class="reference internal" href="#homer">Homer</a></li>
+<li><a class="reference internal" href="#homestead">Homestead</a></li>
+<li><a class="reference internal" href="#ralf">Ralf</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#snmp-statistics">SNMP statistics</a></li>
+<li><a class="reference internal" href="#provide-shared-configuration">Provide Shared Configuration</a><ul>
+<li><a class="reference internal" href="#setting-up-s-cscf-configuration">Setting up S-CSCF configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#provision-telephone-numbers-in-ellis">Provision Telephone Numbers in Ellis</a></li>
+<li><a class="reference internal" href="#dns-records">DNS Records</a></li>
+<li><a class="reference internal" href="#where-next">Where next?</a></li>
+<li><a class="reference internal" href="#larger-scale-deployments">Larger-Scale Deployments</a><ul>
+<li><a class="reference internal" href="#standalone-application-servers">Standalone Application Servers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Automated_Install.html" title="previous chapter">Automated Install Instructions</a></li>
+      <li>Next: <a href="All_in_one_EC2_AMI_Installation.html" title="next chapter">All-in-one EC2 AMI Installation</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Manual_Install.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Manual_Install.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

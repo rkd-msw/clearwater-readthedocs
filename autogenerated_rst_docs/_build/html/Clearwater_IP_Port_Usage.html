@@ -1,0 +1,391 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Clearwater IP Port Usage &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Clearwater DNS Usage" href="Clearwater_DNS_Usage.html" />
+    <link rel="prev" title="CDF Integration" href="CDF_Integration.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="clearwater-ip-port-usage">
+<h1>Clearwater IP Port Usage<a class="headerlink" href="#clearwater-ip-port-usage" title="Permalink to this headline">¶</a></h1>
+<p>The nodes in Clearwater attempt talk to each other over IP. This
+document lists the ports that are used by a deployment of Clearwater.</p>
+<div class="section" id="all-nodes">
+<h2>All nodes<a class="headerlink" href="#all-nodes" title="Permalink to this headline">¶</a></h2>
+<p>All nodes need to allow the following ICMP messages:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>Echo Request
+Echo Reply
+Destination Unreachable
+</pre></div>
+</div>
+<p>They also need the following ports open to the world (<code class="docutils literal"><span class="pre">0.0.0.0/0</span></code>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>TCP/22 for SSH access
+</pre></div>
+</div>
+<p>If your deployment uses SNMP monitoring software
+(<a class="reference external" href="http://www.cacti.net/">cacti</a> for example), each node will also
+have to open appropriate ports for this service.</p>
+<ul>
+<li><p class="first">SNMP</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">UDP</span><span class="o">/</span><span class="mi">161</span><span class="o">-</span><span class="mi">162</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>If your deployment uses our <a class="reference external" href="Automatic_Clustering_Config_Sharing">automatic clustering and configuration
+sharing</a> feature, open the
+following ports between every node</p>
+<ul>
+<li><p class="first">etcd</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">2380</span>
+<span class="n">TCP</span><span class="o">/</span><span class="mi">4000</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="all-in-one">
+<h2>All-in-one<a class="headerlink" href="#all-in-one" title="Permalink to this headline">¶</a></h2>
+<p>All-in-one nodes need the following ports opened to the world</p>
+<ul>
+<li><p class="first">Web UI</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">80</span>
+<span class="n">TCP</span><span class="o">/</span><span class="mi">443</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">STUN signaling:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">3478</span>
+<span class="n">UDP</span><span class="o">/</span><span class="mi">3478</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">SIP signaling:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">5060</span>
+<span class="n">UDP</span><span class="o">/</span><span class="mi">5060</span>
+<span class="n">TCP</span><span class="o">/</span><span class="mi">5062</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">RTP forwarding:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">UDP</span><span class="o">/</span><span class="mi">32768</span><span class="o">-</span><span class="mi">65535</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="ellis">
+<h2>Ellis<a class="headerlink" href="#ellis" title="Permalink to this headline">¶</a></h2>
+<p>The Ellis node needs the following ports opened to the world:</p>
+<ul>
+<li><p class="first">Web UI</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">80</span>
+<span class="n">TCP</span><span class="o">/</span><span class="mi">443</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="bono">
+<h2>Bono<a class="headerlink" href="#bono" title="Permalink to this headline">¶</a></h2>
+<p>The Bono nodes need the following ports opened to the world:</p>
+<ul>
+<li><p class="first">STUN signaling:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">3478</span>
+<span class="n">UDP</span><span class="o">/</span><span class="mi">3478</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">SIP signaling:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">5060</span>
+<span class="n">UDP</span><span class="o">/</span><span class="mi">5060</span>
+<span class="n">TCP</span><span class="o">/</span><span class="mi">5062</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">RTP forwarding:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">UDP</span><span class="o">/</span><span class="mi">32768</span><span class="o">-</span><span class="mi">65535</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports open to all other Bono nodes and to
+all the Sprout nodes:</p>
+<ul>
+<li><p class="first">Internal SIP signaling:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">5058</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="sprout">
+<h2>Sprout<a class="headerlink" href="#sprout" title="Permalink to this headline">¶</a></h2>
+<p>The Sprout nodes need the following ports open to all Bono nodes:</p>
+<ul>
+<li><p class="first">Internal SIP signaling:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>TCP/5054
+TCP/5052 (if I-CSCF function is enabled)
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports opened to all other Sprout nodes:</p>
+<ul>
+<li><p class="first">Shared registration store:</p>
+<p>For releases using a memcached store - that is all releases up to
+release 28 (Lock, Stock and Two Smoking Barrels) and from release 32
+(Pulp Fiction) onwards</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">11211</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Chronos:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">7253</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Cassandra (if including a Memento AS):</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">7000</span>
+<span class="n">TCP</span><span class="o">/</span><span class="mi">9160</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports opened to all homestead nodes:</p>
+<ul>
+<li><p class="first">Registration Termination Requests (if using an HSS):</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">9888</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports opened to the world:</p>
+<ul>
+<li><p class="first">HTTP interface (if including a Memento AS):</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">443</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="homestead">
+<h2>Homestead<a class="headerlink" href="#homestead" title="Permalink to this headline">¶</a></h2>
+<p>The Homestead nodes need the following ports open to all the Sprout
+nodes and the Ellis node:</p>
+<ul>
+<li><p class="first">RESTful interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">8888</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports open to just the Ellis node:</p>
+<ul>
+<li><p class="first">RESTful interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">8889</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports opened to all other Homestead nodes:</p>
+<ul>
+<li><p class="first">Cassandra:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">7000</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports opened to the world:</p>
+</div>
+<div class="section" id="homer">
+<h2>Homer<a class="headerlink" href="#homer" title="Permalink to this headline">¶</a></h2>
+<p>The Homer nodes need the following ports open to all the Sprout nodes
+and the Ellis node:</p>
+<ul>
+<li><p class="first">RESTful interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">7888</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports opened to all other Homer nodes:</p>
+<ul>
+<li><p class="first">Cassandra:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">7000</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports opened to the world:</p>
+</div>
+<div class="section" id="ralf">
+<h2>Ralf<a class="headerlink" href="#ralf" title="Permalink to this headline">¶</a></h2>
+<p>The Ralf nodes need the following ports open to all the Sprout and Bono
+nodes:</p>
+<ul>
+<li><p class="first">RESTful interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">10888</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need to following ports open to all other Ralf nodes:</p>
+<ul>
+<li><p class="first">Chronos:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">7253</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Memcached:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">11211</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="standalone-application-servers">
+<h2>Standalone Application Servers<a class="headerlink" href="#standalone-application-servers" title="Permalink to this headline">¶</a></h2>
+<p>Standalone Project Clearwater application servers (e.g. Memento and
+Gemini) need the following ports open to all Sprout nodes:</p>
+<ul>
+<li><p class="first">SIP signaling:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">5054</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports open to all other standalone
+application servers (if they include a Memento AS):</p>
+<ul>
+<li><p class="first">Cassandra:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">7000</span>
+<span class="n">TCP</span><span class="o">/</span><span class="mi">9160</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports open to all Homestead nodes (if they
+include a Memento AS):</p>
+<ul>
+<li><p class="first">RESTful interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">11888</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>They also need the following ports opened to the world (if they include
+a Memento AS):</p>
+<ul>
+<li><p class="first">HTTP interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">TCP</span><span class="o">/</span><span class="mi">443</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Clearwater IP Port Usage</a><ul>
+<li><a class="reference internal" href="#all-nodes">All nodes</a></li>
+<li><a class="reference internal" href="#all-in-one">All-in-one</a></li>
+<li><a class="reference internal" href="#ellis">Ellis</a></li>
+<li><a class="reference internal" href="#bono">Bono</a></li>
+<li><a class="reference internal" href="#sprout">Sprout</a></li>
+<li><a class="reference internal" href="#homestead">Homestead</a></li>
+<li><a class="reference internal" href="#homer">Homer</a></li>
+<li><a class="reference internal" href="#ralf">Ralf</a></li>
+<li><a class="reference internal" href="#standalone-application-servers">Standalone Application Servers</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="CDF_Integration.html" title="previous chapter">CDF Integration</a></li>
+      <li>Next: <a href="Clearwater_DNS_Usage.html" title="next chapter">Clearwater DNS Usage</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_IP_Port_Usage.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_IP_Port_Usage.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

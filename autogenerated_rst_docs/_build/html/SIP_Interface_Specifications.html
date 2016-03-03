@@ -1,0 +1,1361 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SIP Interface Specifications &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Clearwater Automatic Clustering and Configuration Sharing" href="Automatic_Clustering_Config_Sharing.html" />
+    <link rel="prev" title="IPv6" href="IPv6.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="sip-interface-specifications">
+<h1>SIP Interface Specifications<a class="headerlink" href="#sip-interface-specifications" title="Permalink to this headline">¶</a></h1>
+<p>This document is a review of all the SIP related RFCs referenced by IMS
+(in particular <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> <a class="reference external" href="http://www.etsi.org/deliver/etsi_ts/124200_124299/124229/10.10.00_60/ts_124229v101000p.pdf">Rel
+10</a>),
+particularly how they relate to Clearwater&#8217;s SIP support. The bulk of
+the document goes through the RFCs grouped in the following 4
+categories.</p>
+<ul class="simple">
+<li>RFCs already supported by Clearwater (at least sufficient for IMS
+compliance for Clearwater as a combined P/I/S-CSCF/BGCF/IBCF).</li>
+<li>RFCs partially supported by Clearwater.</li>
+<li>RFCs that are relevant to Clearwater but not currently supported.</li>
+<li>RFCs relevant to media processing, which Clearwater doesn&#8217;t currently
+need to handle as it is not involved in the media path.</li>
+<li>RFCs that are not relevant to Clearwater.</li>
+</ul>
+<div class="section" id="supported">
+<h2>Supported<a class="headerlink" href="#supported" title="Permalink to this headline">¶</a></h2>
+<p>The following RFCs are already supported by Clearwater. Note that a
+number of these are supported simply because they require no active
+function from SIP proxies other than forwarding headers unchanged.</p>
+<div class="section" id="basic-sip-rfc-3261">
+<h3>Basic SIP (<a class="reference external" href="http://www.ietf.org/rfc/rfc3261.txt">RFC 3261</a>)<a class="headerlink" href="#basic-sip-rfc-3261" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>This covers the basic SIP protocol including<ul>
+<li>the 6 basic methods (ACK, BYE, CANCEL, INVITE, OPTIONS and
+REGISTER)</li>
+<li>the 44 basic headers</li>
+<li>the transaction and dialog state machines</li>
+<li>the function of UACs, UASs, stateful and stateless proxies, and
+registrars</li>
+<li>basic and digest security</li>
+<li>transport over UDP and TCP.</li>
+</ul>
+</li>
+<li>Clearwater supports this RFC.</li>
+</ul>
+</div>
+<div class="section" id="subscribe-notify-publish-messages-rfc-3265-and-rfc-3903">
+<h3>SUBSCRIBE/NOTIFY/PUBLISH messages (<a class="reference external" href="http://www.ietf.org/rfc/rfc3265.txt">RFC 3265</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc3903.txt">RFC 3903</a>)<a class="headerlink" href="#subscribe-notify-publish-messages-rfc-3265-and-rfc-3903" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>These two RFCs define a framework for generating and distributing
+event notifications in a SIP network. They cover the SUBSCRIBE and
+NOTIFY methods and Allow-Events and Event headers (<a class="reference external" href="http://www.ietf.org/rfc/rfc3265.txt">RFC
+3265</a>) and the PUBLISH method
+and SIP-Etag and SIP-If-Match headers (<a class="reference external" href="http://www.ietf.org/rfc/rfc3903.txt">RFC
+3903</a>).</li>
+<li>Routing of these messages is largely transparent to proxies, so is
+largely already supported by proxy function in Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="update-method-rfc-3311">
+<h3>UPDATE method (<a class="reference external" href="http://www.ietf.org/rfc/rfc3311.txt">RFC 3311</a>)<a class="headerlink" href="#update-method-rfc-3311" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines UPDATE method used to update session parameters (so can be
+used as an alternative to reINVITE as a keepalive, for media
+renegotiation or to signal successful resource reservation). Often
+used by ICE enabled endpoints to change media path once ICE probing
+phase has completed.</li>
+<li>Supported transparently by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="privacy-header-rfc-3323">
+<h3>Privacy header (<a class="reference external" href="http://www.ietf.org/rfc/rfc3323.txt">RFC 3323</a>)<a class="headerlink" href="#privacy-header-rfc-3323" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Required for privacy service.</li>
+<li>Clearwater supports this header.</li>
+</ul>
+</div>
+<div class="section" id="p-asserted-identity-and-p-preferred-identity-headers-rfc-3325">
+<h3>P-Asserted-Identity and P-Preferred-Identity headers (<a class="reference external" href="http://www.ietf.org/rfc/rfc3325.txt">RFC 3325</a>)<a class="headerlink" href="#p-asserted-identity-and-p-preferred-identity-headers-rfc-3325" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines headers that allow a UE to select which identity it wants to
+use on a call-by-call basis. Ties in with authentication and the
+P-Associated-URIs header defined in <a class="reference external" href="http://www.ietf.org/rfc/rfc3455.txt">RFC
+3455</a> (see below).</li>
+<li>Clearwater supports these headers.</li>
+</ul>
+</div>
+<div class="section" id="path-header-rfc-3327">
+<h3>Path header (<a class="reference external" href="http://www.ietf.org/rfc/rfc3327.txt">RFC 3327</a>)<a class="headerlink" href="#path-header-rfc-3327" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines handling of registrations from devices which are not adjacent
+(in SIP routing terms) to the registrar.</li>
+<li>Supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="message-sipfrag-mime-type-rfc-3420">
+<h3>message/sipfrag MIME type (<a class="reference external" href="http://www.ietf.org/rfc/rfc3420.txt">RFC 3420</a>)<a class="headerlink" href="#message-sipfrag-mime-type-rfc-3420" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="http://www.ietf.org/rfc/rfc3420.txt">RFC 3420</a> defines an
+encoding for transporting MIME or S/MIME encoded SIP message
+fragments in the body of a SIP message. Use cases for this include
+status NOTIFYs sent during REFER processing which signal the status
+of the referral to the referee.</li>
+<li>Support for this is mandatory according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>, but it
+does not describe any particular use cases.</li>
+<li>Transparent to proxy components, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="p-access-network-info-p-associated-uri-p-called-party-id-p-charging-function-address-p-charging-vector-and-p-visited-network-id-headers-rfc-3455">
+<h3>P-Access-Network-Info, P-Associated-URI, P-Called-Party-ID, P-Charging-Function-Address, P-Charging-Vector and P-Visited-Network-ID headers (<a class="reference external" href="http://www.ietf.org/rfc/rfc3455.txt">RFC 3455</a>)<a class="headerlink" href="#p-access-network-info-p-associated-uri-p-called-party-id-p-charging-function-address-p-charging-vector-and-p-visited-network-id-headers-rfc-3455" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines various private headers specifically for IMS.</li>
+<li>P-Access-Network-Info is added to incoming messages by the UE or the
+P-CSCF to provide information about the access network and possibly
+the UEs location within the network (for example cell). IMS
+specifications talk about various uses for this information,
+including routing emergency calls, an alternative to
+<code class="docutils literal"><span class="pre">phone-context</span></code> for interpreting dialled digits, determining the
+security scheme. This header is supported by Clearwater.</li>
+<li>P-Associated-URI is returned by registrar to include the list of
+alternative user identities defined for the IMS subscription. This
+header is supported by Clearwater.</li>
+<li>P-Called-Party-ID is added to a SIP request by an IMS network to
+ensure the called UE knows which of the user identities within the
+IMS subscription was actually called. This header is supported by
+Clearwater.</li>
+<li>P-Charging-Function-Address and P-Charging-Vector headers are related
+to billing, and are supported by Clearwater.</li>
+<li>P-Visited-Network-ID is used when roaming to identify the network the
+user has roamed to. The specs say it is a free-form string, and
+should be used to check that there is a roaming agreement in place.
+This header is supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="symmetric-sip-response-routing-rfc-3581">
+<h3>Symmetric SIP response routing (<a class="reference external" href="http://www.ietf.org/rfc/rfc3581.txt">RFC 3581</a>)<a class="headerlink" href="#symmetric-sip-response-routing-rfc-3581" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines how SIP responses should be routed to ensure they traverse
+NAT pinholes.</li>
+<li>Mandatory for IMS proxy components.</li>
+<li>Supported by Clearwater nodes.</li>
+</ul>
+</div>
+<div class="section" id="call-transfer-multiparty-call-control-refer-method-and-related-headers-rfc-3515-rfc-3891-rfc-3892-rfc-3911">
+<h3>Call transfer, multiparty call control (REFER method and related headers) (<a class="reference external" href="http://www.ietf.org/rfc/rfc3515.txt">RFC 3515</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc3891.txt">RFC 3891</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc3892.txt">RFC 3892</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc3911.txt">RFC 3911</a>)<a class="headerlink" href="#call-transfer-multiparty-call-control-refer-method-and-related-headers-rfc-3515-rfc-3891-rfc-3892-rfc-3911" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Covers REFER method, Refer-To header and event packages for
+transferring referral state (<a class="reference external" href="http://www.ietf.org/rfc/rfc3515.txt">RFC
+3515</a>), Replaces header (<a class="reference external" href="http://www.ietf.org/rfc/rfc3891.txt">RFC
+3891</a>), Referred-By header
+(<a class="reference external" href="http://www.ietf.org/rfc/rfc3892.txt">RFC 3892</a>), Join header
+(<a class="reference external" href="http://www.ietf.org/rfc/rfc3911.txt">RFC 3911</a>), Refer-Sub
+header (<a class="reference external" href="http://www.ietf.org/rfc/rfc4488.txt">RFC 4488</a>), and the
+Target-Dialog header (<a class="reference external" href="http://www.ietf.org/rfc/rfc4538.txt">RFC
+4538</a>).</li>
+<li>Transparent to proxies, so supported by Clearwater - although needs
+support for GRUUs (introduced in the Ninja Gaiden release) to work in
+all use cases.</li>
+</ul>
+</div>
+<div class="section" id="service-route-header-rfc-3608">
+<h3>Service-Route header (<a class="reference external" href="http://www.ietf.org/rfc/rfc3608.txt">RFC 3608</a>)<a class="headerlink" href="#service-route-header-rfc-3608" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>In IMS an S-CSCF includes Service-Route header on REGISTER responses,
+so UE can use to construct Route headers to ensure subsequent
+requests get to the appropriate S-CSCF.</li>
+<li>Optional according to TS
+24.229(<a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">http://www.3gpp.org/ftp/Specs/html-info/24229.htm</a>).</li>
+<li>This header is supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="enum-rfc-3761-and-rfc-4769">
+<h3>ENUM (<a class="reference external" href="http://www.ietf.org/rfc/rfc3761.txt">RFC 3761</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc4769.txt">RFC 4769</a>)<a class="headerlink" href="#enum-rfc-3761-and-rfc-4769" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a mechanism for using DNS look-ups to translate telephone
+numbers into SIP URIs. (<a class="reference external" href="http://www.ietf.org/rfc/rfc3761.txt">RFC
+3761</a> defines ENUM, <a class="reference external" href="http://www.ietf.org/rfc/rfc4769.txt">RFC
+4769</a> contains IANA
+registrations for ENUM data.)</li>
+<li>IMS specifies that ENUM is one mechanisms an S-CSCF can use to
+translate non-routable URIs (either Tel URIs or SIP URIs encoding a
+phone number) into a globally routable URI (one where the domain
+name/IP address portion of the URI can safely be used to route the
+message towards its destination).</li>
+<li>Clearwater supports this through function in Sprout.</li>
+</ul>
+</div>
+<div class="section" id="event-package-for-mwi-rfc-3842">
+<h3>Event package for MWI (<a class="reference external" href="http://www.ietf.org/rfc/rfc3842.txt">RFC 3842</a>)<a class="headerlink" href="#event-package-for-mwi-rfc-3842" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines an event package for notifying UAs of message waiting.</li>
+<li>Required for UEs and ASs implementing MWI services, transparent to
+proxy components.</li>
+<li>Transparent to proxies, so already supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="presence-event-package-rfc-3856">
+<h3>Presence event package (<a class="reference external" href="http://www.ietf.org/rfc/rfc3856.txt">RFC 3856</a>)<a class="headerlink" href="#presence-event-package-rfc-3856" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines an event package for monitoring user presence.</li>
+<li>Required for UEs supporting presence and presence servers.</li>
+<li>Transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="watcher-event-template-package-rfc-3857">
+<h3>Watcher event template package (<a class="reference external" href="http://www.ietf.org/rfc/rfc3857.txt">RFC 3857</a>)<a class="headerlink" href="#watcher-event-template-package-rfc-3857" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines an event package that can be used to subscribe to the list of
+watchers for another event type.</li>
+<li>IMS mandates support for this package for subscribing to the list of
+watchers of a particular presentity, so support is only applicable
+for SIP UEs supporting presence and presence application servers.</li>
+<li>Transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="session-expiry-rfc-4028">
+<h3>Session-expiry (<a class="reference external" href="http://www.ietf.org/rfc/rfc4028.txt">RFC 4028</a>)<a class="headerlink" href="#session-expiry-rfc-4028" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Covers periodic reINVITE or UPDATE messages used to allow UEs or call
+stateful proxies to detect when sessions have ended. Includes Min-SE
+and Session-Expires headers, which are used to negotiate the
+frequency of keepalives.</li>
+<li>Clearwater supports session-expiry as a proxy per section 8 of the
+RFC. It does not have a minimum acceptable session interval, so does
+not make use of the Min-SE header, though does honor it.</li>
+<li>Clearwater requests a session interval of 10 minutes (or as close to
+10 minutes as possible given pre-existing headers) in order to
+properly perform session-based billing.</li>
+</ul>
+</div>
+<div class="section" id="early-session-disposition-type-rfc-3959">
+<h3>Early session disposition type (<a class="reference external" href="http://www.ietf.org/rfc/rfc3959.txt">RFC 3959</a>)<a class="headerlink" href="#early-session-disposition-type-rfc-3959" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a new value for the Content-Disposition header to indicate
+when SDP negotiation applies to early media.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Transparent to proxies so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="dialog-events-rfc-4235">
+<h3>Dialog events (<a class="reference external" href="http://www.ietf.org/rfc/rfc4235.txt">RFC 4235</a>)<a class="headerlink" href="#dialog-events-rfc-4235" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Event package for dialog state.</li>
+<li>In <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS 24.229</a>
+only seems to be relevant to E-CSCF and LRF functions.</li>
+<li>Transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="mrfc-control-rfc-4240-rfc-5552-rfc-6230-rfc-6231-rfc-6505">
+<h3>MRFC control (<a class="reference external" href="http://www.ietf.org/rfc/rfc4240.txt">RFC 4240</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc5552.txt">RFC 5552</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc6230.txt">RFC 6230</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc6231.txt">RFC 6231</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc6505.txt">RFC 6505</a>)<a class="headerlink" href="#mrfc-control-rfc-4240-rfc-5552-rfc-6230-rfc-6231-rfc-6505" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>These RFCs define three different ways of controlling the function of
+an MRFC from an AS. <a class="reference external" href="http://www.ietf.org/rfc/rfc4240.txt">RFC
+4240</a> is a simple &#8220;play an
+announcement&#8221; service, <a class="reference external" href="http://www.ietf.org/rfc/rfc5552.txt">RFC
+5552</a> uses VoiceXML and <a class="reference external" href="http://www.ietf.org/rfc/rfc6230.txt">RFC
+6230</a>/<a class="reference external" href="http://www.ietf.org/rfc/rfc6231.txt">RFC
+6231</a>/<a class="reference external" href="http://www.ietf.org/rfc/rfc6505.txt">RFC
+6505</a> use SIP/SDP to
+establish a two-way control channel between the AS and MRFC.</li>
+<li>IMS allows any of the three mechanisms to be used, or combinations
+depending on circumstances.</li>
+<li>All three mechanisms are transparent to proxy components, so
+supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="history-info-draft-ietf-sipcore-rfc4244bis-not-rfc-4244-which-is-inaccurate-wrt-real-implementations">
+<h3>History-Info (<a class="reference external" href="http://datatracker.ietf.org/doc/draft-ietf-sipcore-rfc4244bis/">draft-ietf-sipcore-rfc4244bis</a> - not <a class="reference external" href="http://www.ietf.org/rfc/rfc4244.txt">RFC 4244</a>, which is inaccurate wrt real implementations)<a class="headerlink" href="#history-info-draft-ietf-sipcore-rfc4244bis-not-rfc-4244-which-is-inaccurate-wrt-real-implementations" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Primarily aimed at ASs - need to manipulate History-Info headers when
+diverting calls. The MMTEL AS built into Sprout already supports this
+for CDIV.</li>
+<li>Also, need to proxy History-Info headers transparently. Clearwater
+supports this.</li>
+<li>However, s9.1 says if the incoming H-I is missing or wrong, the
+intermediary must add an entry on behalf of the previous entity.
+Clearwater does not currently do this so if other parts of the
+network are not compliant, Clearwater will not fill in for them (and
+should).</li>
+</ul>
+</div>
+<div class="section" id="oms-push-to-talk-over-cellular-service-rfc-4354-rfc-4964-and-rfc-5318">
+<h3>OMS Push-to-Talk over Cellular service (<a class="reference external" href="http://www.ietf.org/rfc/rfc4354.txt">RFC 4354</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc4964.txt">RFC 4964</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc5318.txt">RFC 5318</a>)<a class="headerlink" href="#oms-push-to-talk-over-cellular-service-rfc-4354-rfc-4964-and-rfc-5318" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Covers poc-settings event package (<a class="reference external" href="http://www.ietf.org/rfc/rfc4354.txt">RFC
+4354</a>), P-Answer-State header
+(<a class="reference external" href="http://www.ietf.org/rfc/rfc4964.txt">RFC 4964</a>) and
+P-Refused-URI-List header (<a class="reference external" href="http://www.ietf.org/rfc/rfc5318.txt">RFC
+5318</a>)</li>
+<li>Only required for OMA push-to-talk over cellular service.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="conference-event-package-rfc-4575">
+<h3>Conference event package (<a class="reference external" href="http://www.ietf.org/rfc/rfc4575.txt">RFC 4575</a>)<a class="headerlink" href="#conference-event-package-rfc-4575" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines an event package for various events associated with SIP
+conferences.</li>
+<li>Mandatory for UEs and IMS application servers providing conference
+services.</li>
+<li>Transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="event-notification-resource-lists-rfc-4662">
+<h3>Event notification resource lists (<a class="reference external" href="http://www.ietf.org/rfc/rfc4662.txt">RFC 4662</a>)<a class="headerlink" href="#event-notification-resource-lists-rfc-4662" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines an extension to the SUBSCRIBE/NOTIFY event mechanisms that
+allow an application to subscribe for events from multiple resources
+with a single request, by referencing a resource list.</li>
+<li>In IMS, this is only required for presence events, and is only
+mandatory for UEs supporting presence or presence servers, otherwise
+it is optional.</li>
+<li>Should be transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="consent-based-communications-rfc-5360">
+<h3>Consent based Communications (<a class="reference external" href="http://www.ietf.org/rfc/rfc5360.txt">RFC 5360</a>)<a class="headerlink" href="#consent-based-communications-rfc-5360" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a framework for obtaining consent for routing traffic towards
+a SIP entity, including Permission-Missing and Trigger-Consent
+headers, SIP MESSAGE methods sent via store-and-forward relay to
+request consents and an event package (ie. a lot of extra SIP!).</li>
+<li>In theory could be applicable to registrations in IMS (guarding
+against a user maliciously redirecting their incoming calls or
+messages to another user&#8217;s device) or to CDIV type services.</li>
+<li>Mandatory according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> - but
+not clear exactly what is required, could be as simple as just
+forwarding headers transparently, or it could be required to support
+consent for registrations.</li>
+<li>Reading Rel 9, this strongly suggests that the only nodes that need
+to actually invoke these mechanisms certain types of application
+servers, such as conference servers or message servers that support
+message distribution lists (so the function is to guard against
+people being added to these lists without their consent). Therefore
+the only function required in the core is to pass the messages and
+headers through transparently. Clearwater already supports this
+minimal set of function.</li>
+</ul>
+</div>
+<div class="section" id="multiple-recipient-message-requests-rfc-5365">
+<h3>Multiple-Recipient MESSAGE requests (<a class="reference external" href="http://www.ietf.org/rfc/rfc5365.txt">RFC 5365</a>)<a class="headerlink" href="#multiple-recipient-message-requests-rfc-5365" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a mechanism for MESSAGE requests to be sent to multiple
+recipients by specifying the list of recipients in the body of the
+message. A message list server then fans the MESSAGE out to the
+multiple recipients.</li>
+<li>The function is mandatory in an IMS message list server, but not
+required anywhere else in the network.</li>
+<li>Transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="creating-multi-party-conferences-rfc-5366">
+<h3>Creating multi-party conferences (<a class="reference external" href="http://www.ietf.org/rfc/rfc5366.txt">RFC 5366</a>)<a class="headerlink" href="#creating-multi-party-conferences-rfc-5366" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Allows a SIP UA to establish a multi-party conference by specifying a
+resource list in the body of the message used to set up the
+conference.</li>
+<li>Mandatory for IMS conference app servers.</li>
+<li>Transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="referring-to-multiple-resources-rfc-5368">
+<h3>Referring to multiple resources (<a class="reference external" href="http://www.ietf.org/rfc/rfc5368.txt">RFC 5368</a>)<a class="headerlink" href="#referring-to-multiple-resources-rfc-5368" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Allows a SIP UA to send a REFER message containing a resource list
+URI. One use case for this could be to send a single REFER to a
+conference server to get it to invite a group of people to a
+conference.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>, and
+only applicable to UEs and any application servers that can receive
+REFER requests.</li>
+<li>Transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="p-served-user-header-rfc-5502">
+<h3>P-Served-User header (<a class="reference external" href="http://www.ietf.org/rfc/rfc5502.txt">RFC 5502</a>)<a class="headerlink" href="#p-served-user-header-rfc-5502" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Only applicable on the ISC interface - used to clear up some
+ambiguities about exactly which user the AS should be providing
+service for.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>This header is supported by Clearwater and included on requests sent
+to application servers.</li>
+</ul>
+</div>
+<div class="section" id="message-body-handling-rfc-5621">
+<h3>Message body handling (<a class="reference external" href="http://www.ietf.org/rfc/rfc5621.txt">RFC 5621</a>)<a class="headerlink" href="#message-body-handling-rfc-5621" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines how multiple message bodies can be encoded in a SIP message.</li>
+<li>Relevant in handling of third-party REGISTERs on ISC where XML
+encoded data from iFC may be passed to AS.</li>
+</ul>
+</div>
+<div class="section" id="sip-outbound-support-rfc-5626">
+<h3>SIP outbound support (<a class="reference external" href="http://www.ietf.org/rfc/rfc5626.txt">RFC 5626</a>)<a class="headerlink" href="#sip-outbound-support-rfc-5626" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines mechanisms for clients behind NATs to connect to a SIP
+network so SIP requests can be routed to the client through the NAT.</li>
+<li>Mandatory according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Supported by Clearwater for NAT traversal, except for the Flow-Timer
+header (which tells the client how often to send keepalives).</li>
+</ul>
+</div>
+<div class="section" id="fixes-to-record-route-processing-rfc-5658">
+<h3>Fixes to Record-Route processing (<a class="reference external" href="http://www.ietf.org/rfc/rfc5658.txt">RFC 5658</a>)<a class="headerlink" href="#fixes-to-record-route-processing-rfc-5658" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Fixes some interoperability issues in basic SIP handling of
+Record-Route headers, particularly in proxies which have multiple IP
+addresses.</li>
+<li>Clearwater used RFC5658 double-record routing in Bono nodes when
+transitioning between the trusted and untrusted zones on different
+port numbers.</li>
+</ul>
+</div>
+<div class="section" id="fixes-for-ipv6-addresses-in-uris-rfc-5954">
+<h3>Fixes for IPv6 addresses in URIs (<a class="reference external" href="http://www.ietf.org/rfc/rfc5954.txt">RFC 5954</a>)<a class="headerlink" href="#fixes-for-ipv6-addresses-in-uris-rfc-5954" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Fixes a minor problem in the ABNF definition in <a class="reference external" href="http://www.ietf.org/rfc/rfc3261.txt">RFC
+3261</a> relating to IPv6
+addresses, and clarifies URI comparison rules when comparing IPv6
+addresses (in what looks like an obvious way).</li>
+<li>Mandatory according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="q-950-codes-in-reason-header-rfc-6432">
+<h3>Q.950 codes in Reason header (<a class="reference external" href="http://www.ietf.org/rfc/rfc6432.txt">RFC 6432</a>)<a class="headerlink" href="#q-950-codes-in-reason-header-rfc-6432" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines how Q.950 codes can be encoded in Reason header.</li>
+<li>Mandatory for MGCFs, optional for proxy components in IMS.</li>
+<li>Transparent to proxies anyway, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="geolocation-rfc-4483-and-rfc-6442">
+<h3>Geolocation (<a class="reference external" href="http://www.ietf.org/rfc/rfc4483.txt">RFC 4483</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc6442.txt">RFC 6442</a>)<a class="headerlink" href="#geolocation-rfc-4483-and-rfc-6442" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Framework for passing geo-location information within SIP messages.</li>
+<li>According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> only
+required on an E-CSCF.</li>
+<li>Supported by Clearwater as headers will be passed transparently.</li>
+</ul>
+</div>
+<div class="section" id="proxy-feature-capabilities-referenced-as-draft-ietf-sipcore-proxy-feature-12-but-now-rfc-6809">
+<h3>Proxy Feature Capabilities (referenced as <a class="reference external" href="http://datatracker.ietf.org/doc/draft-ietf-sipcore-proxy-feature/">draft-ietf-sipcore-proxy-feature-12</a>, but now <a class="reference external" href="http://www.ietf.org/rfc/rfc6809.txt">RFC 6809</a>)<a class="headerlink" href="#proxy-feature-capabilities-referenced-as-draft-ietf-sipcore-proxy-feature-12-but-now-rfc-6809" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a mechanism to allow SIP intermediaries (such as registrars,
+proxies or B2BUAs) to signal feature capabilities when it would not
+be appropriate to use the feature tags mechanism in the Contact
+header as per <a class="reference external" href="http://www.ietf.org/rfc/rfc3841.txt">RFC 3841</a>.</li>
+<li>Mandatory on P-CSCF according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>, but
+not clear what this actually means as the IMS specs don&#8217;t seem to
+actually define any features to be signalled in these headers.</li>
+<li>Clearwater will forward these headers if specified by other nodes in
+the signaling path, so this is supported.</li>
+</ul>
+</div>
+<div class="section" id="alert-info-urns-draft-ietf-salud-alert-info-urns-06">
+<h3>Alert info URNs (<a class="reference external" href="http://datatracker.ietf.org/doc/draft-ietf-salud-alert-info-urns/">draft-ietf-salud-alert-info-urns-06</a>)<a class="headerlink" href="#alert-info-urns-draft-ietf-salud-alert-info-urns-06" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines family of URNs to be used in Alert-Info header to provide
+better control over how user is alerted on a UE.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Transparent to proxies, so supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="aka-authentication-rfc-3310">
+<h3>AKA Authentication (<a class="reference external" href="http://www.ietf.org/rfc/rfc3310.txt">RFC 3310</a>)<a class="headerlink" href="#aka-authentication-rfc-3310" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>This RFC defines how AKA authentication parameters map into the
+authentication and authorization headers used for digest
+authentication.</li>
+<li>IMS allows AKA authentication as an alternative to SIP digest,
+although it is not mandatory.</li>
+<li>Supported in Clearwater since sprint 39 “WALL-E”.</li>
+</ul>
+</div>
+<div class="section" id="sip-instant-messaging-rfc-3428">
+<h3>SIP Instant Messaging (<a class="reference external" href="http://www.ietf.org/rfc/rfc3428.txt">RFC 3428</a>)<a class="headerlink" href="#sip-instant-messaging-rfc-3428" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines the use of the SIP MESSAGE method to implement an instant
+messaging service.</li>
+<li>Mandatory in proxy components according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Supported in Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="registration-events-rfc-3680">
+<h3>Registration Events (<a class="reference external" href="http://www.ietf.org/rfc/rfc3680.txt">RFC 3680</a>)<a class="headerlink" href="#registration-events-rfc-3680" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines an event package supported by SIP registrars to notify other
+devices of registrations.</li>
+<li>Must be supported by IMS core for the ISC interface, and also needed
+by some UEs.</li>
+<li>Supported in Clearwater since sprint 40 &#8220;Yojimbo&#8221;</li>
+</ul>
+</div>
+<div class="section" id="prack-support-rfc-3262">
+<h3>PRACK support (<a class="reference external" href="http://www.ietf.org/rfc/rfc3262.txt">RFC 3262</a>)<a class="headerlink" href="#prack-support-rfc-3262" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a mechanism for ensuring the reliability of provisional
+responses when using an unreliable transport. Covers the PRACK method
+and the Rseq and Rack headers.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Supported in Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="fixes-to-issues-with-sip-non-invite-transactions-rfc-4320">
+<h3>Fixes to issues with SIP non-INVITE transactions (<a class="reference external" href="http://www.ietf.org/rfc/rfc4320.txt">RFC 4320</a>)<a class="headerlink" href="#fixes-to-issues-with-sip-non-invite-transactions-rfc-4320" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines changes to <a class="reference external" href="http://www.ietf.org/rfc/rfc3261.txt">RFC 3261</a>
+procedures for handling non-INVITE transactions to avoid some issues
+- in particular the potential for an O(N^2) storm of 408 responses if
+a transaction times out.</li>
+<li>Mandatory for all SIP nodes according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Supported in Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="user-agent-capabilities-and-caller-preferences-rfc-3840-and-rfc-3841">
+<h3>User agent capabilities and caller preferences (<a class="reference external" href="http://www.ietf.org/rfc/rfc3840.txt">RFC 3840</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc3841.txt">RFC 3841</a>)<a class="headerlink" href="#user-agent-capabilities-and-caller-preferences-rfc-3840-and-rfc-3841" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>User agent capabilities encoded as feature tags in Contact headers
+during registration (<a class="reference external" href="http://www.ietf.org/rfc/rfc3840.txt">RFC
+3840</a>) and Accept-Contact,
+Reject-Contact and Request-Disposition headers encode filtering rules
+to decide which targets subsequent request should be routed/forked to
+(<a class="reference external" href="http://www.ietf.org/rfc/rfc3841.txt">RFC 3841</a>).</li>
+<li>Used for routing of requests to targets with the appropriate
+features/capabilities in IMS. Mandatory for proxy components.</li>
+<li>Clearwater&#8217;s Sprout registrar has full support for storing, matching,
+filtering and prioritizing bindings based on advertised capabilities
+and requirements as per these specifications.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="relevant-to-clearwater-and-partially-supported">
+<h2>Relevant to Clearwater and partially supported<a class="headerlink" href="#relevant-to-clearwater-and-partially-supported" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="gruus-rfc-5627-plus-rfc-4122-draft-montemurro-gsma-imei-urn-11-and-draft-atarius-device-id-meid-urn-01">
+<h3>GRUUs (<a class="reference external" href="http://www.ietf.org/rfc/rfc5627.txt">RFC 5627</a>, plus <a class="reference external" href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>, <a class="reference external" href="http://datatracker.ietf.org/doc/draft-montemurro-gsma-imei-urn/">draft-montemurro-gsma-imei-urn-11</a> and <a class="reference external" href="http://datatracker.ietf.org/doc/draft-atarius-device-id-meid-urn/">draft-atarius-device-id-meid-urn-01</a>)<a class="headerlink" href="#gruus-rfc-5627-plus-rfc-4122-draft-montemurro-gsma-imei-urn-11-and-draft-atarius-device-id-meid-urn-01" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="http://www.ietf.org/rfc/rfc5627.txt">RFC 5627</a> defines mechanisms
+to assign and propagate a Globally-Routable User Agent URI for each
+client that registers with the SIP network. A GRUU identifies a
+specific user agent rather than a SIP user, and is routable from
+anywhere in the internet. GRUUs are intended to be used in scenarios
+like call transfer where URIs are required for individual user agents
+to ensure the service operates correctly. Standard Contact headers
+would seem to do the job in many cases but don&#8217;t satisfy the globally
+routable requirement in all cases, for example where the client is
+behind certain types of NAT.</li>
+<li>Assignment and use of GRUUs is mandatory for S-CSCF and UEs in an IMS
+network. <a class="reference external" href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>,
+<a class="reference external" href="http://datatracker.ietf.org/doc/draft-montemurro-gsma-imei-urn/">draft-montemurro-gsma-imei-urn-11</a>
+and
+<a class="reference external" href="http://datatracker.ietf.org/doc/draft-atarius-device-id-meid-urn/">draft-atarius-device-id-meid-urn-01</a>
+are referenced from the sections of <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> that
+discuss exactly how GRUUs should be constructed.</li>
+<li>Clearwater supports assigning and routing on public GRUUs as of the
+Ninja Gaiden release. It does not support temporary GRUUs.</li>
+<li>The Blink softphone client can be used to test this, as it provides
+the +sip.instance parameter needed for GRUU support.</li>
+</ul>
+</div>
+<div class="section" id="registration-event-package-for-gruus-rfc-5628">
+<h3>Registration event package for GRUUs (<a class="reference external" href="http://www.ietf.org/rfc/rfc5628.txt">RFC 5628</a>)<a class="headerlink" href="#registration-event-package-for-gruus-rfc-5628" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines an extension to the <a class="reference external" href="http://www.ietf.org/rfc/rfc3680.txt">RFC
+3680</a> registration event
+package to include GRUUs.</li>
+<li>Mandatory on S-CSCF and UEs in an IMS network.</li>
+<li>Clearwater includes public GRUUs in these event notifications as of
+the Ninja Gaiden release. It does not support temporary GRUUs.</li>
+</ul>
+</div>
+<div class="section" id="alternative-uris-rfc-2806-rfc-2368-rfc-3859-rfc-3860-rfc-3966">
+<h3>Alternative URIs (<a class="reference external" href="http://www.ietf.org/rfc/rfc2806.txt">RFC 2806</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc2368.txt">RFC 2368</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc3859.txt">RFC 3859</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc3860.txt">RFC 3860</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc3966.txt">RFC 3966</a>)<a class="headerlink" href="#alternative-uris-rfc-2806-rfc-2368-rfc-3859-rfc-3860-rfc-3966" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Various RFCs defining alternatives to SIP URI - Tel URI (<a class="reference external" href="http://www.ietf.org/rfc/rfc2806.txt">RFC
+2806</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc3966.txt">RFC
+3966</a>), mailto URI (<a class="reference external" href="http://www.ietf.org/rfc/rfc2368.txt">RFC
+2368</a>), pres URI (<a class="reference external" href="http://www.ietf.org/rfc/rfc3859.txt">RFC
+3859</a>), and im URI (<a class="reference external" href="http://www.ietf.org/rfc/rfc3860.txt">RFC
+3860</a>).</li>
+<li>IMS allows use of Tel URIs<ul>
+<li>as a public user identity associated with a subscription (although
+a subscription must have at least on public user identity which is
+a SIP URI)</li>
+<li>as the target URI for a call.</li>
+</ul>
+</li>
+<li>Other URIs can be specified as Request URI for a SIP message.</li>
+<li>Clearwater supports SIP and Tel URIs but not mailto, pres or im URIs.</li>
+</ul>
+</div>
+<div class="section" id="number-portability-parameters-in-tel-uri-rfc-4694">
+<h3>Number portability parameters in Tel URI (<a class="reference external" href="http://www.ietf.org/rfc/rfc4694.txt">RFC 4694</a>)<a class="headerlink" href="#number-portability-parameters-in-tel-uri-rfc-4694" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines additional parameters in Tel URI for signaling related to
+number portability.</li>
+<li>Used in IMS in both Tel and SIP URIs for carrier subscription
+scenarios, and in IMS core for other number portability related
+scenarios.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>The <code class="docutils literal"><span class="pre">rn</span></code> and <code class="docutils literal"><span class="pre">npdi</span></code> parameters are supported by Clearwater;
+Clearwater doesn&#8217;t currently support the other parameters defined in
+this RFC.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="relevant-to-clearwater-but-not-currently-supported">
+<h2>Relevant to Clearwater but not currently supported<a class="headerlink" href="#relevant-to-clearwater-but-not-currently-supported" title="Permalink to this headline">¶</a></h2>
+<p>These are the RFCs which are relevant to Clearwater and not yet
+supported.</p>
+<div class="section" id="dialstring-uri-parameter-rfc-4967">
+<h3>Dialstring URI parameter (<a class="reference external" href="http://www.ietf.org/rfc/rfc4967.txt">RFC 4967</a>)<a class="headerlink" href="#dialstring-uri-parameter-rfc-4967" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a <code class="docutils literal"><span class="pre">user=dialstring</span></code> parameter used in SIP URIs to indicate
+that the user portion of the URI is a dial string (as opposed to a
+number that definitely identifies a phone as in the <code class="docutils literal"><span class="pre">user=phone</span></code>
+case).</li>
+<li>IMS allows this encoding from UEs initiating calls, but doesn&#8217;t
+specify any particular processing within the core of the network. The
+intention is that this can be handled by an application server, or
+captured by filter criteria.</li>
+<li>Clearwater doesn&#8217;t currently support this.</li>
+</ul>
+</div>
+<div class="section" id="p-early-media-header-rfc-5009">
+<h3>P-Early-Media header (<a class="reference external" href="http://www.ietf.org/rfc/rfc5009.txt">RFC 5009</a>)<a class="headerlink" href="#p-early-media-header-rfc-5009" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Used to authorize and control early media.</li>
+<li>If P-CSCF is not gating media then required function is as simple as<ul>
+<li>adding P-Early-Media header with <code class="docutils literal"><span class="pre">supported</span></code> value on requests
+from clients (or modifying header from clients if already in
+message)</li>
+<li>passing the header through transparently on responses.</li>
+</ul>
+</li>
+<li>If P-CSCF is gating media then function is more complex as P-CSCF has
+to operate on values in P-Early-Media headers sent to/from UEs.</li>
+<li>Mandatory in a P-CSCF according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Clearwater doesn&#8217;t currently support this.</li>
+</ul>
+</div>
+<div class="section" id="p-media-authorization-header-rfc-3313">
+<h3>P-Media-Authorization header (<a class="reference external" href="http://www.ietf.org/rfc/rfc3313.txt">RFC 3313</a>)<a class="headerlink" href="#p-media-authorization-header-rfc-3313" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>, only
+required if P-CSCF supporting IMS AKA authentication with IPsec ESP
+encryption, or SIP digest authentication with TLS encryption.</li>
+<li>Not supported, as this is P-CSCF only (and Bono doesn&#8217;t support AKA).</li>
+</ul>
+</div>
+<div class="section" id="signalling-compression-aka-sigcomp-rfc-3320-rfc-3485-rfc-3486-rfc-4077-rfc-4896-rfc-5049-rfc-5112">
+<h3>Signalling Compression aka SigComp (<a class="reference external" href="http://www.ietf.org/rfc/rfc3320.txt">RFC 3320</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc3485.txt">RFC 3485</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc3486.txt">RFC 3486</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc4077.txt">RFC 4077</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc4896.txt">RFC 4896</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc5049.txt">RFC 5049</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc5112.txt">RFC 5112</a>)<a class="headerlink" href="#signalling-compression-aka-sigcomp-rfc-3320-rfc-3485-rfc-3486-rfc-4077-rfc-4896-rfc-5049-rfc-5112" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="http://www.ietf.org/rfc/rfc3320.txt">RFC 3320</a> defines basic
+SigComp (which is not SIP-specific), <a class="reference external" href="http://www.ietf.org/rfc/rfc3485.txt">RFC
+3485</a> defines a static
+dictionary for use in SigComp compression of SIP and SDP, <a class="reference external" href="http://www.ietf.org/rfc/rfc3486.txt">RFC
+3486</a> defines how to use
+SigComp with SIP, <a class="reference external" href="http://www.ietf.org/rfc/rfc4077.txt">RFC 4077</a>
+defines a mechanism for negative acknowledgements to signal errors in
+synchronization between the compressor and decompressor, <a class="reference external" href="http://www.ietf.org/rfc/rfc4896.txt">RFC
+4896</a> contains corrections
+and clarifications to <a class="reference external" href="http://www.ietf.org/rfc/rfc3320.txt">RFC
+3320</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc5049.txt">RFC
+5049</a> contains details and
+clarifications for SigComp compression of SIP, and <a class="reference external" href="http://www.ietf.org/rfc/rfc5112.txt">RFC
+5112</a> defines a static
+dictionary for use in SigComp compression of SIP presence bodies.</li>
+<li><a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS 24.229</a>
+says that SigComp is mandatory between UEs and P-CSCF if access
+network is one of the 3GPP or 802.11 types (specifically it says this
+is mandatory if the UE sends messages with the P-Access-Network-Info
+set to one of these values - ie. the UE knows that is the type of
+access network it is being used on). Compression must use the
+dictionaries defined in both <a class="reference external" href="http://www.ietf.org/rfc/rfc3485.txt">RFC
+3485</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc5112.txt">RFC
+5112</a>.</li>
+<li>Clearwater does not currently support SigComp (although it would be
+relatively straightforward to implement it).</li>
+</ul>
+</div>
+<div class="section" id="reason-header-rfc-3326">
+<h3>Reason header (<a class="reference external" href="http://www.ietf.org/rfc/rfc3326.txt">RFC 3326</a>)<a class="headerlink" href="#reason-header-rfc-3326" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Already supported in Clearwater for responses, would need to add
+support for passing on CANCEL requests (but pretty easy).</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+</ul>
+</div>
+<div class="section" id="security-client-security-server-and-security-verify-headers-rfc-3329">
+<h3>Security-Client, Security-Server and Security-Verify headers (<a class="reference external" href="http://www.ietf.org/rfc/rfc3329.txt">RFC 3329</a>)<a class="headerlink" href="#security-client-security-server-and-security-verify-headers-rfc-3329" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines headers that can be used to negotiate authentication
+mechanisms.</li>
+<li>Only required if P-CSCF supporting IMS AKA authentication with IPsec
+ESP encryption, or SIP digest authentication with TLS encryption.</li>
+<li>Not supported, as these headers are always caught by the P-CSCF (and
+Bono doesn&#8217;t support AKA).</li>
+</ul>
+</div>
+<div class="section" id="sms-over-ip-rfc-3862-and-rfc-5438">
+<h3>SMS over IP (<a class="reference external" href="http://www.ietf.org/rfc/rfc3862.txt">RFC 3862</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc5438.txt">RFC 5438</a>)<a class="headerlink" href="#sms-over-ip-rfc-3862-and-rfc-5438" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Covers CPIM message format used between UEs and AS implementing
+SMS-GW function (<a class="reference external" href="http://www.ietf.org/rfc/rfc3862.txt">RFC 3862</a>)
+and Message Disposition Notifications sent from the SMS-GW to the UE
+(<a class="reference external" href="http://www.ietf.org/rfc/rfc5438.txt">RFC 5438</a>).</li>
+<li>Transported as body in MESSAGE method across IMS core, so transparent
+to proxy components. Therefore should be supported by Clearwater once
+we have tested support for MESSAGE methods.</li>
+</ul>
+</div>
+<div class="section" id="sip-over-sctp-rfc-4168">
+<h3>SIP over SCTP (<a class="reference external" href="http://www.ietf.org/rfc/rfc4168.txt">RFC 4168</a>)<a class="headerlink" href="#sip-over-sctp-rfc-4168" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines how SIP can be transported using SCTP (instead of UDP or
+TCP).</li>
+<li>IMS allows SCTP transport within the core of the network, but not
+between P-CSCF and UEs.</li>
+<li>Clearwater does not support SCTP transport (nor does PJSIP). Strictly
+speaking this is relevant to Clearwater, but it&#8217;s not clear whether
+anyone would use it.</li>
+</ul>
+</div>
+<div class="section" id="signalling-pre-emption-events-rfc-4411">
+<h3>Signalling pre-emption events (<a class="reference external" href="http://www.ietf.org/rfc/rfc4411.txt">RFC 4411</a>)<a class="headerlink" href="#signalling-pre-emption-events-rfc-4411" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines use of the SIP Reason header in BYE messages to signal when a
+session is being terminated because of a network pre-emption event,
+for example, if the resources originally acquired for the call were
+need for a higher priority session.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Not currently supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="resource-priority-rfc-4412">
+<h3>Resource Priority (<a class="reference external" href="http://www.ietf.org/rfc/rfc4412.txt">RFC 4412</a>)<a class="headerlink" href="#resource-priority-rfc-4412" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Covers Resource-Priority and Accept-Resource-Priority headers.
+Intended to allow UEs to signal high priority calls that get
+preferential treatment by the network (for example, emergency service
+use).</li>
+<li>Not currently supported by Clearwater.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+</ul>
+</div>
+<div class="section" id="p-profile-key-header-rfc-5002">
+<h3>P-Profile-Key header (<a class="reference external" href="http://www.ietf.org/rfc/rfc5002.txt">RFC 5002</a>)<a class="headerlink" href="#p-profile-key-header-rfc-5002" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Used solely between I-CSCF and S-CSCF to signal the public service
+identity key to be used when a requested public service identity
+matches a wildcard entry in the HSS. Purely an optimization to avoid
+having to do wildcard matching twice for a single request.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a></li>
+<li>Not currently supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="service-urns-rfc-5031">
+<h3>Service URNs (<a class="reference external" href="http://www.ietf.org/rfc/rfc5031.txt">RFC 5031</a>)<a class="headerlink" href="#service-urns-rfc-5031" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a URN namespace to identify services. IMS allows UEs to use
+such service URNs as target URIs when establishing a call. In
+particular, it is mandatory for UEs to signal emergency calls using a
+service URN of the form <a class="reference external" href="urn:service:sos">urn:service:sos</a> possibly with a subtype, and
+the P-CSCF must be able to handle these requests appropriately,
+routing to an E-CSCF.</li>
+<li>Clearwater currently has no support for service URNs.</li>
+</ul>
+</div>
+<div class="section" id="rejecting-anonymous-requests-rfc-5079">
+<h3>Rejecting anonymous requests (<a class="reference external" href="http://www.ietf.org/rfc/rfc5079.txt">RFC 5079</a>)<a class="headerlink" href="#rejecting-anonymous-requests-rfc-5079" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a status code used to reject anonymous requests if required
+by local policy/configuration.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Not currently supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="subscribing-to-events-on-multiple-resources-rfc-5367">
+<h3>Subscribing to events on multiple resources (<a class="reference external" href="http://www.ietf.org/rfc/rfc5367.txt">RFC 5367</a>)<a class="headerlink" href="#subscribing-to-events-on-multiple-resources-rfc-5367" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Allows a SIP node to subscribe to events on multiple resources with a
+single SUBSCRIBE message by specifying a resource list in the body of
+the message.</li>
+<li>Optional for any IMS node that can be the target of a SUBSCRIBE
+request.</li>
+<li>Not currently supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="max-breadth-header-rfc-5393">
+<h3>Max-Breadth header (<a class="reference external" href="http://www.ietf.org/rfc/rfc5393.txt">RFC 5393</a>)<a class="headerlink" href="#max-breadth-header-rfc-5393" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Intended to plug an amplification vulnerability in SIP forking. Any
+forking proxy must limit the breadth of forking to breadth specified
+in this header.</li>
+<li>According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> is
+mandatory on any node that supports forking.</li>
+<li>Not currently supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="media-feature-tag-for-mime-application-subtypes-rfc-5688">
+<h3>Media feature tag for MIME application subtypes (<a class="reference external" href="http://www.ietf.org/rfc/rfc5688.txt">RFC 5688</a>)<a class="headerlink" href="#media-feature-tag-for-mime-application-subtypes-rfc-5688" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a media feature tag to be used with the mechanisms in <a class="reference external" href="http://www.ietf.org/rfc/rfc3840.txt">RFC
+3840</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc3841.txt">RFC
+3841</a> to direct requests to
+UAs that support a specific MIME application subtype media stream.</li>
+<li>According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> support
+for this feature tag is mandatory on S-CSCFs.</li>
+<li>Not currently supported, but support may drop out of implementing
+<a class="reference external" href="http://www.ietf.org/rfc/rfc3840.txt">RFC 3840</a>/<a class="reference external" href="http://www.ietf.org/rfc/rfc3841.txt">RFC
+3841</a> (depending on the what
+match criteria the tag requires).</li>
+</ul>
+</div>
+<div class="section" id="xcapdiff-event-package-rfc-5875">
+<h3>XCAPdiff event package (<a class="reference external" href="http://www.ietf.org/rfc/rfc5875.txt">RFC 5875</a>)<a class="headerlink" href="#xcapdiff-event-package-rfc-5875" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines an event package allowing applications to get notifications
+of changes to XCAP documents.</li>
+<li>Used by IMS at Ut reference point to allow UEs to control service
+settings. According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>,
+mandatory for XDMS server, but optional for UEs.</li>
+<li>Not supported by Homer.</li>
+</ul>
+</div>
+<div class="section" id="correct-transaction-handling-of-2xx-responses-to-invite-rfc-6026">
+<h3>Correct transaction handling of 2xx responses to INVITE (<a class="reference external" href="http://www.ietf.org/rfc/rfc6026.txt">RFC 6026</a>)<a class="headerlink" href="#correct-transaction-handling-of-2xx-responses-to-invite-rfc-6026" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>A fix to basic SIP transaction model to avoid INVITE retransmissions
+being incorrectly identified as a new transaction and to plug a
+security hole around the forwarding of uncorrelated responses through
+proxies. The change basically adds a new state to the transaction
+state machine when previously the transaction would have been
+considered terminated and therefore deleted.</li>
+<li>This fix is mandatory according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Not supported by Clearwater, and will probably require PJSIP changes.</li>
+</ul>
+</div>
+<div class="section" id="p-asserted-service-and-p-preferred-service-headers-rfc-6050">
+<h3>P-Asserted-Service and P-Preferred-Service headers (<a class="reference external" href="http://www.ietf.org/rfc/rfc6050.txt">RFC 6050</a>)<a class="headerlink" href="#p-asserted-service-and-p-preferred-service-headers-rfc-6050" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a mechanism to allow a UE to signal the service it would like
+(although this is not binding on the network) and other components to
+signal between themselves the service being provided. The UE may
+optionally include a P-Preferred-Service header on any request
+specifying the service it wishes to use. The S-CSCF is responsible
+for checking that the service requested in P-Preferred-Service is (a)
+supported for the subscriber and (b) consistent with the actual
+request. If the request is allowed, the S-CSCF replaces the
+P-Preferred-Service with a P-Asserted-Service header. If either check
+fails, the S-CSCF may reject the request or it may allow it but
+ignore the P-Preferred-Service header. If the UE does not specify a
+P-Preferred-Service header (or the specified one was not valid) the
+S-CSCF should work out the requested service by analysing the request
+parameters, and add a P-Asserted-Service header encoding the result.</li>
+<li>In IMS networks, header should contain an IMS Communication Service
+Identifier (ICSI) - defined values are documented at
+<a class="reference external" href="http://www.3gpp.com/Uniform-Resource-Name-URN-list.html">http://www.3gpp.com/Uniform-Resource-Name-URN-list.html</a> - examples
+include MMTEL (3gpp-service.ims.icsi.mmtel), IPTV
+(3gpp-service.ims.icsi.iptv), Remote Access
+(3gpp-service.ims.icsi.ra), and Converged IP Messaging
+(3gpp-service.ims.icsi.oma.cpm.* depending on exact service being
+requested/provided).</li>
+<li>Mandatory function according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Not currently supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="sip-info-messages-rfc-6086">
+<h3>SIP INFO messages (<a class="reference external" href="http://www.ietf.org/rfc/rfc6086.txt">RFC 6086</a>)<a class="headerlink" href="#sip-info-messages-rfc-6086" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Framework for exchanging application specification information within
+a SIP dialog context.</li>
+<li>Not currently supported by Clearwater.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+</ul>
+</div>
+<div class="section" id="indication-of-support-for-keepalives-rfc-6223">
+<h3>Indication of support for keepalives (<a class="reference external" href="http://www.ietf.org/rfc/rfc6223.txt">RFC 6223</a>)<a class="headerlink" href="#indication-of-support-for-keepalives-rfc-6223" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Adds a parameter to Via headers to allow nodes to agree the type of
+keepalives to be used to keep NAT pinholes open.</li>
+<li>Mandatory for UEs and P-CSCFs, optional elsewhere.</li>
+<li>Not currently supported by Clearwater and would require PJSIP
+changes.</li>
+</ul>
+</div>
+<div class="section" id="response-code-for-indication-of-terminated-dialog-rfc-6228">
+<h3>Response code for indication of terminated dialog (<a class="reference external" href="http://www.ietf.org/rfc/rfc6228.txt">RFC 6228</a>)<a class="headerlink" href="#response-code-for-indication-of-terminated-dialog-rfc-6228" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a new status code to indicate the termination of an early
+dialog (ie. a dialog created by a provisional response) prior to
+sending a final response.</li>
+<li>According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> this
+parameter is mandatory for all UA components than can send or receive
+INVITEs, and mandatory for S-CSCF because it has implications on
+forking proxies.</li>
+<li>This is not currently supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="p-private-network-indication-referenced-as-draft-vanelburg-sipping-private-network-indication-02">
+<h3>P-Private-Network-Indication (referenced as <a class="reference external" href="http://datatracker.ietf.org/doc/draft-vanelburg-sipping-private-network-indication/">draft-vanelburg-sipping-private-network-indication-02</a>)<a class="headerlink" href="#p-private-network-indication-referenced-as-draft-vanelburg-sipping-private-network-indication-02" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Mechanisms for transport of private network information across an IMS
+core.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Not currently supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="session-id-header-referenced-as-draft-kaplan-dispatch-session-id-00">
+<h3>Session-ID header (referenced as <a class="reference external" href="http://datatracker.ietf.org/doc/draft-kaplan-dispatch-session-id/">draft-kaplan-dispatch-session-id-00</a>)<a class="headerlink" href="#session-id-header-referenced-as-draft-kaplan-dispatch-session-id-00" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines an end-to-end globally unique session identifier that is
+preserved even for sessions that traverse B2BUAs).</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Not currently supported by Clearwater.</li>
+</ul>
+</div>
+<div class="section" id="interworking-with-isdn-draft-ietf-cuss-sip-uui-06-and-draft-ietf-cuss-sip-uui-isdn-04">
+<h3>Interworking with ISDN (<a class="reference external" href="http://datatracker.ietf.org/doc/draft-ietf-cuss-sip-uui/">draft-ietf-cuss-sip-uui-06</a> and <a class="reference external" href="http://datatracker.ietf.org/doc/draft-ietf-cuss-sip-uui-isdn/">draft-ietf-cuss-sip-uui-isdn-04</a>)<a class="headerlink" href="#interworking-with-isdn-draft-ietf-cuss-sip-uui-06-and-draft-ietf-cuss-sip-uui-isdn-04" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines mechanisms/encodings for interworking ISDN with SIP.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Not currently supported by Clearwater.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="sdp-media-rfcs">
+<h2>SDP/Media RFCs<a class="headerlink" href="#sdp-media-rfcs" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS 24.229</a>
+references a number of specifications which relate to media function -
+either SDP negotiation or media transport or both. Clearwater currently
+passes SDP transparently and does not get involved in media flows.
+Unless we change this position, Clearwater can either be considered to
+support the RFC (because it supports passing SDP with the relevant
+contents) or that the RFC is not applicable to Clearwater.</p>
+<p>The following is a brief explanation of each RFC, and its relevance to
+IMS.</p>
+<ul class="simple">
+<li>SDP (<a class="reference external" href="http://www.ietf.org/rfc/rfc4566.txt">RFC 4566</a>) - defines
+basic SDP protocol.</li>
+<li>Offer/Answer model for SDP media negotiation (<a class="reference external" href="http://www.ietf.org/rfc/rfc3264.txt">RFC
+3264</a>) - defines how SDP is
+used to negotiate media.</li>
+<li>Default RTP/AV profile (<a class="reference external" href="http://www.ietf.org/rfc/rfc3551.txt">RFC
+3551</a>) - defines default
+mappings from audio and video encodings to RTP payload types.</li>
+<li>Media Resource Reservation (<a class="reference external" href="http://www.ietf.org/rfc/rfc3312.txt">RFC
+3312</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc4032.txt">RFC
+4032</a>) - defines additional
+SDP parameters to signal media resource reservation between two SIP
+UAs. <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>
+requires UEs, MGCFs and ASs to use these mechanisms, and that P-CSCF
+should monitor the flows if it is performing IMS-ALG or media gating
+functions.</li>
+<li>Mapping of media streams to resource reservation (<a class="reference external" href="http://www.ietf.org/rfc/rfc3524.txt">RFC
+3524</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc3388.txt">RFC
+3388</a>) - define how multiple
+media streams can be grouped in SDP and mapped to a single resource
+reservation. IMS requires UEs to use these encodings when doing
+resource reservations.</li>
+<li>Signaling bandwidth required for RTCP (<a class="reference external" href="http://www.ietf.org/rfc/rfc3556.txt">RFC
+3556</a>) - by default RTCP is
+assumed to consume 5% of session bandwidth, but this is not accurate
+for some encodings, so this RFC defines explicit signaling of RTCP
+bandwidth in SDP. This function is optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>TCP media transport (<a class="reference external" href="http://www.ietf.org/rfc/rfc3556.txt">RFC
+3556</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc6544.txt">RFC
+6544</a>) - defines how support
+for TCP media transport is encoded in SDP for basic SDP exchanges and
+for ICE exchanges. According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>, media
+over TCP is optional in most of an IMS network, but mandatory in an
+IBCF implementing IMS-ALG function.</li>
+<li>ICE (<a class="reference external" href="http://www.ietf.org/rfc/rfc5245.txt">RFC 5245</a>) - defines
+ICE media negotiation used to establish efficient media paths through
+NATs. According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> support
+for ICE is optional in most of the IMS network, but mandatory on an
+IBCF implementing IMS-ALG function.</li>
+<li>STUN (<a class="reference external" href="http://www.ietf.org/rfc/rfc5389.txt">RFC 5389</a>) - defines a
+protocol used to allow UAs to obtain their server reflexive address
+for use in ICE.</li>
+<li>TURN (<a class="reference external" href="http://www.ietf.org/rfc/rfc5766.txt">RFC 5766</a>) - defines
+extensions to STUN used to relay media sessions via a TURN server to
+traverse NATs when STUN-only techniques don&#8217;t work.</li>
+<li>Indicating support for ICE in SIP (<a class="reference external" href="http://www.ietf.org/rfc/rfc5768.txt">RFC
+5768</a>) - defines a media
+feature tag used to signal support for ICE.</li>
+<li>SDP for binary floor control protocol (<a class="reference external" href="http://www.ietf.org/rfc/rfc4583.txt">RFC
+4583</a>) - defines SDP
+extensions for establishing conferencing binary floor control
+protocol streams. Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Real-time RTCP feedback (<a class="reference external" href="http://www.ietf.org/rfc/rfc4585.txt">RFC
+4585</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc5104.txt">RFC
+5104</a>) - defines extensions
+to RTCP to provide extended real-time feedback on network conditions.
+Mandatory for most IMS components handling media (MRFs, IBCFs,
+MGCFs), but optional for UEs.</li>
+<li>SDP capability negotiation (<a class="reference external" href="http://www.ietf.org/rfc/rfc5939.txt">RFC
+5939</a>) - defines extensions
+to SDP to allow for signaling and negotiation of media capabilities
+(such as alternate transports - SRTP). Mandatory for most IMS
+components handling media (MRFs, IBCFs, MGCFs), but optional for UEs.</li>
+<li>SDP transport independent bandwidth signaling (<a class="reference external" href="http://www.ietf.org/rfc/rfc3890.txt">RFC
+3890</a>) - defines extensions
+to SDP to signal codec-only (ie. independent of transport) bandwidth
+requirements for a stream. Optional for IMS components handling
+media.</li>
+<li>Secure RTP (<a class="reference external" href="http://www.ietf.org/rfc/rfc3711.txt">RFC 3711</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc4567.txt">RFC
+4567</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc4568.txt">RFC
+4568</a>, <a class="reference external" href="http://www.ietf.org/rfc/rfc6043.txt">RFC
+6043</a>) - defines transport of
+media over a secure variant of RTP, supporting encryption (to prevent
+eavesdropping) and integrity protecting (to protect against
+tampering). Keys are either exchanged in SDP negotiation (specified
+in <a class="reference external" href="http://www.ietf.org/rfc/rfc4567.txt">RFC 4567</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc4568.txt">RFC
+4568</a>) or distributed via a
+separate key management service - termed MIKEY-TICKEY (specified in
+<a class="reference external" href="http://www.ietf.org/rfc/rfc6043.txt">RFC 6043</a>).</li>
+<li>Transcoder invocation using 3PCC (<a class="reference external" href="http://www.ietf.org/rfc/rfc4117.txt">RFC
+4117</a>) - defines how a
+transcoding service can be inserted into the media path when required
+using third-party call control flows. According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> this is
+only applicable to app servers and MRFC, and even then is optional.</li>
+<li>MSRP (<a class="reference external" href="http://www.ietf.org/rfc/rfc4975.txt">RFC 4975</a>) - defines a
+protocol for session-based transmission of a sequence of instant
+messages. Only applicable to UEs, ASs and MRFCs and optional.</li>
+<li>SDP for file transfer (<a class="reference external" href="http://www.ietf.org/rfc/rfc5547.txt">RFC
+5547</a>) - defines SDP
+extensions to support simple file transfers between two IMS nodes.
+Optional.</li>
+<li>Explicit congestion notifications for RTP over UDP (<a class="reference external" href="http://www.ietf.org/rfc/rfc6679.txt">RFC
+6679</a>) - defines RTCP
+extensions for reporting urgent congestion conditions and reporting
+congestion summaries. Optional.</li>
+<li>Setting up audio streams over circuit switched bearers (referenced as
+<a class="reference external" href="http://datatracker.ietf.org/doc/draft-ietf-mmusic-sdp-cs/">draft-ietf-mmusic-sdp-cs-00</a>)
+- defines SDP extensions for negotiating audio streams over a circuit
+switched network. Mandatory for ICS capable UEs and SCC-AS, otherwise
+optional.</li>
+<li>Media capabilities negotiation in SDP (referenced as
+<a class="reference external" href="http://datatracker.ietf.org/doc/draft-ietf-mmusic-sdp-media-capabilities/">draft-ietf-mmusic-sdp-media-capabilities-08</a>)
+- defines SDP extensions for signaling media capabilities such as
+encodings and formats. Mandatory for ICS capable UEs and SCC-AS,
+otherwise optional.</li>
+<li>Miscellaneous capabilities negotiation in SDP (referenced as
+<a class="reference external" href="http://datatracker.ietf.org/doc/draft-ietf-mmusic-sdp-miscellaneous-caps/">draft-ietf-mmusic-sdp-miscellaneous-caps-00</a>)
+- defines SDP extensions for signaling some miscellaneous
+capabilities. Mandatory for ICS capable UEs and SCC-AS, otherwise
+optional.</li>
+</ul>
+<div class="section" id="locating-p-cscf-using-dhcp-rfc-3319-and-rfc-3361">
+<h3>Locating P-CSCF using DHCP (<a class="reference external" href="http://www.ietf.org/rfc/rfc3319.txt">RFC 3319</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc3361.txt">RFC 3361</a>)<a class="headerlink" href="#locating-p-cscf-using-dhcp-rfc-3319-and-rfc-3361" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>These RFCs describe a mechanism for locating a SIP proxy server using
+DHCP. (<a class="reference external" href="http://www.ietf.org/rfc/rfc3319.txt">RFC 3319</a> defines the
+mechanism for IPv6/DHCPv6, and <a class="reference external" href="http://www.ietf.org/rfc/rfc3361.txt">RFC
+3361</a> is the IPv4 equivalent
+- not sure why they happened that way round!).</li>
+<li>The IMS specifications allows this as one option for a UE to locate a
+P-CSCF, although there are other options such as manual configuration
+of a domain name or obtaining it from some access-network specific
+mechanism.</li>
+<li>This is irrelevant to Clearwater - there would be no point in
+Clearwater providing a DHCP server with this function as there will
+be existing mechanisms used by clients to obtain their own IP
+addresses. A service provider might enhance their own DHCP servers to
+support this function if required.</li>
+</ul>
+</div>
+<div class="section" id="proxy-to-proxy-sip-extensions-for-packetcable-dcs-rfc-3603">
+<h3>Proxy-to-proxy SIP extensions for PacketCable DCS (<a class="reference external" href="http://www.ietf.org/rfc/rfc3603.txt">RFC 3603</a>)<a class="headerlink" href="#proxy-to-proxy-sip-extensions-for-packetcable-dcs-rfc-3603" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Only relevance to IMS is that it defines a billing correlation
+parameter (bcid) which is passed in the P-Charging-Vector header from
+DOCSIS access networks.</li>
+</ul>
+</div>
+<div class="section" id="geolocation-rfc-4119-and-rfc-6442">
+<h3>Geolocation (<a class="reference external" href="http://www.ietf.org/rfc/rfc4119.txt">RFC 4119</a> and <a class="reference external" href="http://www.ietf.org/rfc/rfc6442.txt">RFC 6442</a>)<a class="headerlink" href="#geolocation-rfc-4119-and-rfc-6442" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Frameworks for passing geo-location information within SIP messages -
+<a class="reference external" href="http://www.ietf.org/rfc/rfc4119.txt">RFC 4119</a> encodes
+geo-location in a message body, <a class="reference external" href="http://www.ietf.org/rfc/rfc6442.txt">RFC
+6442</a> encodes a URI reference
+where the UEs location can be found.</li>
+<li>According to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> only
+required on an E-CSCF.</li>
+</ul>
+</div>
+<div class="section" id="p-user-database-header-rfc-4457">
+<h3>P-User-Database header (<a class="reference external" href="http://www.ietf.org/rfc/rfc4457.txt">RFC 4457</a>)<a class="headerlink" href="#p-user-database-header-rfc-4457" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Used when an IMS core has multiple HSSs and an SLF - allows I-CSCF to
+signal to S-CSCF which HSS to use to avoid multiple SLF look-ups.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+<li>Not applicable to Clearwater given its stateless architecture.</li>
+</ul>
+</div>
+<div class="section" id="uris-for-voicemail-and-ivr-applications-rfc-4458">
+<h3>URIs for Voicemail and IVR applications (<a class="reference external" href="http://www.ietf.org/rfc/rfc4458.txt">RFC 4458</a>)<a class="headerlink" href="#uris-for-voicemail-and-ivr-applications-rfc-4458" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines conventions for service URIs for redirection services such as
+voicemail and IVR.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a>.</li>
+</ul>
+</div>
+<div class="section" id="emergency-call-requirements-and-terminology-rfc-5012">
+<h3>Emergency call requirements and terminology (<a class="reference external" href="http://www.ietf.org/rfc/rfc5012.txt">RFC 5012</a>)<a class="headerlink" href="#emergency-call-requirements-and-terminology-rfc-5012" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Referenced to define some terminology used in IMS architecture for
+handling emergency calls.</li>
+</ul>
+</div>
+<div class="section" id="answering-modes-rfc-5373">
+<h3>Answering Modes (<a class="reference external" href="http://www.ietf.org/rfc/rfc5373.txt">RFC 5373</a>)<a class="headerlink" href="#answering-modes-rfc-5373" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Defines a mechanism for a caller to control the answer mode at the
+target of the call. Use cases can include invoking some kind of
+auto-answer loopback. Covers the Answer-Mode and Priv-Answer-Mode
+headers.</li>
+<li>In general is transparent to proxies (provided proxies pass headers
+through), but the RFC recommends the mechanism is not used in
+environments that support parallel forking.</li>
+<li>Optional according to <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">TS
+24.229</a> - and
+arguably not a good idea because of bad interactions with forking.</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SIP Interface Specifications</a><ul>
+<li><a class="reference internal" href="#supported">Supported</a><ul>
+<li><a class="reference internal" href="#basic-sip-rfc-3261">Basic SIP (RFC 3261)</a></li>
+<li><a class="reference internal" href="#subscribe-notify-publish-messages-rfc-3265-and-rfc-3903">SUBSCRIBE/NOTIFY/PUBLISH messages (RFC 3265 and RFC 3903)</a></li>
+<li><a class="reference internal" href="#update-method-rfc-3311">UPDATE method (RFC 3311)</a></li>
+<li><a class="reference internal" href="#privacy-header-rfc-3323">Privacy header (RFC 3323)</a></li>
+<li><a class="reference internal" href="#p-asserted-identity-and-p-preferred-identity-headers-rfc-3325">P-Asserted-Identity and P-Preferred-Identity headers (RFC 3325)</a></li>
+<li><a class="reference internal" href="#path-header-rfc-3327">Path header (RFC 3327)</a></li>
+<li><a class="reference internal" href="#message-sipfrag-mime-type-rfc-3420">message/sipfrag MIME type (RFC 3420)</a></li>
+<li><a class="reference internal" href="#p-access-network-info-p-associated-uri-p-called-party-id-p-charging-function-address-p-charging-vector-and-p-visited-network-id-headers-rfc-3455">P-Access-Network-Info, P-Associated-URI, P-Called-Party-ID, P-Charging-Function-Address, P-Charging-Vector and P-Visited-Network-ID headers (RFC 3455)</a></li>
+<li><a class="reference internal" href="#symmetric-sip-response-routing-rfc-3581">Symmetric SIP response routing (RFC 3581)</a></li>
+<li><a class="reference internal" href="#call-transfer-multiparty-call-control-refer-method-and-related-headers-rfc-3515-rfc-3891-rfc-3892-rfc-3911">Call transfer, multiparty call control (REFER method and related headers) (RFC 3515, RFC 3891, RFC 3892, RFC 3911)</a></li>
+<li><a class="reference internal" href="#service-route-header-rfc-3608">Service-Route header (RFC 3608)</a></li>
+<li><a class="reference internal" href="#enum-rfc-3761-and-rfc-4769">ENUM (RFC 3761 and RFC 4769)</a></li>
+<li><a class="reference internal" href="#event-package-for-mwi-rfc-3842">Event package for MWI (RFC 3842)</a></li>
+<li><a class="reference internal" href="#presence-event-package-rfc-3856">Presence event package (RFC 3856)</a></li>
+<li><a class="reference internal" href="#watcher-event-template-package-rfc-3857">Watcher event template package (RFC 3857)</a></li>
+<li><a class="reference internal" href="#session-expiry-rfc-4028">Session-expiry (RFC 4028)</a></li>
+<li><a class="reference internal" href="#early-session-disposition-type-rfc-3959">Early session disposition type (RFC 3959)</a></li>
+<li><a class="reference internal" href="#dialog-events-rfc-4235">Dialog events (RFC 4235)</a></li>
+<li><a class="reference internal" href="#mrfc-control-rfc-4240-rfc-5552-rfc-6230-rfc-6231-rfc-6505">MRFC control (RFC 4240, RFC 5552, RFC 6230, RFC 6231, RFC 6505)</a></li>
+<li><a class="reference internal" href="#history-info-draft-ietf-sipcore-rfc4244bis-not-rfc-4244-which-is-inaccurate-wrt-real-implementations">History-Info (draft-ietf-sipcore-rfc4244bis - not RFC 4244, which is inaccurate wrt real implementations)</a></li>
+<li><a class="reference internal" href="#oms-push-to-talk-over-cellular-service-rfc-4354-rfc-4964-and-rfc-5318">OMS Push-to-Talk over Cellular service (RFC 4354, RFC 4964 and RFC 5318)</a></li>
+<li><a class="reference internal" href="#conference-event-package-rfc-4575">Conference event package (RFC 4575)</a></li>
+<li><a class="reference internal" href="#event-notification-resource-lists-rfc-4662">Event notification resource lists (RFC 4662)</a></li>
+<li><a class="reference internal" href="#consent-based-communications-rfc-5360">Consent based Communications (RFC 5360)</a></li>
+<li><a class="reference internal" href="#multiple-recipient-message-requests-rfc-5365">Multiple-Recipient MESSAGE requests (RFC 5365)</a></li>
+<li><a class="reference internal" href="#creating-multi-party-conferences-rfc-5366">Creating multi-party conferences (RFC 5366)</a></li>
+<li><a class="reference internal" href="#referring-to-multiple-resources-rfc-5368">Referring to multiple resources (RFC 5368)</a></li>
+<li><a class="reference internal" href="#p-served-user-header-rfc-5502">P-Served-User header (RFC 5502)</a></li>
+<li><a class="reference internal" href="#message-body-handling-rfc-5621">Message body handling (RFC 5621)</a></li>
+<li><a class="reference internal" href="#sip-outbound-support-rfc-5626">SIP outbound support (RFC 5626)</a></li>
+<li><a class="reference internal" href="#fixes-to-record-route-processing-rfc-5658">Fixes to Record-Route processing (RFC 5658)</a></li>
+<li><a class="reference internal" href="#fixes-for-ipv6-addresses-in-uris-rfc-5954">Fixes for IPv6 addresses in URIs (RFC 5954)</a></li>
+<li><a class="reference internal" href="#q-950-codes-in-reason-header-rfc-6432">Q.950 codes in Reason header (RFC 6432)</a></li>
+<li><a class="reference internal" href="#geolocation-rfc-4483-and-rfc-6442">Geolocation (RFC 4483 and RFC 6442)</a></li>
+<li><a class="reference internal" href="#proxy-feature-capabilities-referenced-as-draft-ietf-sipcore-proxy-feature-12-but-now-rfc-6809">Proxy Feature Capabilities (referenced as draft-ietf-sipcore-proxy-feature-12, but now RFC 6809)</a></li>
+<li><a class="reference internal" href="#alert-info-urns-draft-ietf-salud-alert-info-urns-06">Alert info URNs (draft-ietf-salud-alert-info-urns-06)</a></li>
+<li><a class="reference internal" href="#aka-authentication-rfc-3310">AKA Authentication (RFC 3310)</a></li>
+<li><a class="reference internal" href="#sip-instant-messaging-rfc-3428">SIP Instant Messaging (RFC 3428)</a></li>
+<li><a class="reference internal" href="#registration-events-rfc-3680">Registration Events (RFC 3680)</a></li>
+<li><a class="reference internal" href="#prack-support-rfc-3262">PRACK support (RFC 3262)</a></li>
+<li><a class="reference internal" href="#fixes-to-issues-with-sip-non-invite-transactions-rfc-4320">Fixes to issues with SIP non-INVITE transactions (RFC 4320)</a></li>
+<li><a class="reference internal" href="#user-agent-capabilities-and-caller-preferences-rfc-3840-and-rfc-3841">User agent capabilities and caller preferences (RFC 3840 and RFC 3841)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#relevant-to-clearwater-and-partially-supported">Relevant to Clearwater and partially supported</a><ul>
+<li><a class="reference internal" href="#gruus-rfc-5627-plus-rfc-4122-draft-montemurro-gsma-imei-urn-11-and-draft-atarius-device-id-meid-urn-01">GRUUs (RFC 5627, plus RFC 4122, draft-montemurro-gsma-imei-urn-11 and draft-atarius-device-id-meid-urn-01)</a></li>
+<li><a class="reference internal" href="#registration-event-package-for-gruus-rfc-5628">Registration event package for GRUUs (RFC 5628)</a></li>
+<li><a class="reference internal" href="#alternative-uris-rfc-2806-rfc-2368-rfc-3859-rfc-3860-rfc-3966">Alternative URIs (RFC 2806, RFC 2368, RFC 3859, RFC 3860, RFC 3966)</a></li>
+<li><a class="reference internal" href="#number-portability-parameters-in-tel-uri-rfc-4694">Number portability parameters in Tel URI (RFC 4694)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#relevant-to-clearwater-but-not-currently-supported">Relevant to Clearwater but not currently supported</a><ul>
+<li><a class="reference internal" href="#dialstring-uri-parameter-rfc-4967">Dialstring URI parameter (RFC 4967)</a></li>
+<li><a class="reference internal" href="#p-early-media-header-rfc-5009">P-Early-Media header (RFC 5009)</a></li>
+<li><a class="reference internal" href="#p-media-authorization-header-rfc-3313">P-Media-Authorization header (RFC 3313)</a></li>
+<li><a class="reference internal" href="#signalling-compression-aka-sigcomp-rfc-3320-rfc-3485-rfc-3486-rfc-4077-rfc-4896-rfc-5049-rfc-5112">Signalling Compression aka SigComp (RFC 3320, RFC 3485, RFC 3486, RFC 4077, RFC 4896, RFC 5049, RFC 5112)</a></li>
+<li><a class="reference internal" href="#reason-header-rfc-3326">Reason header (RFC 3326)</a></li>
+<li><a class="reference internal" href="#security-client-security-server-and-security-verify-headers-rfc-3329">Security-Client, Security-Server and Security-Verify headers (RFC 3329)</a></li>
+<li><a class="reference internal" href="#sms-over-ip-rfc-3862-and-rfc-5438">SMS over IP (RFC 3862 and RFC 5438)</a></li>
+<li><a class="reference internal" href="#sip-over-sctp-rfc-4168">SIP over SCTP (RFC 4168)</a></li>
+<li><a class="reference internal" href="#signalling-pre-emption-events-rfc-4411">Signalling pre-emption events (RFC 4411)</a></li>
+<li><a class="reference internal" href="#resource-priority-rfc-4412">Resource Priority (RFC 4412)</a></li>
+<li><a class="reference internal" href="#p-profile-key-header-rfc-5002">P-Profile-Key header (RFC 5002)</a></li>
+<li><a class="reference internal" href="#service-urns-rfc-5031">Service URNs (RFC 5031)</a></li>
+<li><a class="reference internal" href="#rejecting-anonymous-requests-rfc-5079">Rejecting anonymous requests (RFC 5079)</a></li>
+<li><a class="reference internal" href="#subscribing-to-events-on-multiple-resources-rfc-5367">Subscribing to events on multiple resources (RFC 5367)</a></li>
+<li><a class="reference internal" href="#max-breadth-header-rfc-5393">Max-Breadth header (RFC 5393)</a></li>
+<li><a class="reference internal" href="#media-feature-tag-for-mime-application-subtypes-rfc-5688">Media feature tag for MIME application subtypes (RFC 5688)</a></li>
+<li><a class="reference internal" href="#xcapdiff-event-package-rfc-5875">XCAPdiff event package (RFC 5875)</a></li>
+<li><a class="reference internal" href="#correct-transaction-handling-of-2xx-responses-to-invite-rfc-6026">Correct transaction handling of 2xx responses to INVITE (RFC 6026)</a></li>
+<li><a class="reference internal" href="#p-asserted-service-and-p-preferred-service-headers-rfc-6050">P-Asserted-Service and P-Preferred-Service headers (RFC 6050)</a></li>
+<li><a class="reference internal" href="#sip-info-messages-rfc-6086">SIP INFO messages (RFC 6086)</a></li>
+<li><a class="reference internal" href="#indication-of-support-for-keepalives-rfc-6223">Indication of support for keepalives (RFC 6223)</a></li>
+<li><a class="reference internal" href="#response-code-for-indication-of-terminated-dialog-rfc-6228">Response code for indication of terminated dialog (RFC 6228)</a></li>
+<li><a class="reference internal" href="#p-private-network-indication-referenced-as-draft-vanelburg-sipping-private-network-indication-02">P-Private-Network-Indication (referenced as draft-vanelburg-sipping-private-network-indication-02)</a></li>
+<li><a class="reference internal" href="#session-id-header-referenced-as-draft-kaplan-dispatch-session-id-00">Session-ID header (referenced as draft-kaplan-dispatch-session-id-00)</a></li>
+<li><a class="reference internal" href="#interworking-with-isdn-draft-ietf-cuss-sip-uui-06-and-draft-ietf-cuss-sip-uui-isdn-04">Interworking with ISDN (draft-ietf-cuss-sip-uui-06 and draft-ietf-cuss-sip-uui-isdn-04)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sdp-media-rfcs">SDP/Media RFCs</a><ul>
+<li><a class="reference internal" href="#locating-p-cscf-using-dhcp-rfc-3319-and-rfc-3361">Locating P-CSCF using DHCP (RFC 3319 and RFC 3361)</a></li>
+<li><a class="reference internal" href="#proxy-to-proxy-sip-extensions-for-packetcable-dcs-rfc-3603">Proxy-to-proxy SIP extensions for PacketCable DCS (RFC 3603)</a></li>
+<li><a class="reference internal" href="#geolocation-rfc-4119-and-rfc-6442">Geolocation (RFC 4119 and RFC 6442)</a></li>
+<li><a class="reference internal" href="#p-user-database-header-rfc-4457">P-User-Database header (RFC 4457)</a></li>
+<li><a class="reference internal" href="#uris-for-voicemail-and-ivr-applications-rfc-4458">URIs for Voicemail and IVR applications (RFC 4458)</a></li>
+<li><a class="reference internal" href="#emergency-call-requirements-and-terminology-rfc-5012">Emergency call requirements and terminology (RFC 5012)</a></li>
+<li><a class="reference internal" href="#answering-modes-rfc-5373">Answering Modes (RFC 5373)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="IPv6.html" title="previous chapter">IPv6</a></li>
+      <li>Next: <a href="Automatic_Clustering_Config_Sharing.html" title="next chapter">Clearwater Automatic Clustering and Configuration Sharing</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/SIP_Interface_Specifications.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/SIP_Interface_Specifications.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

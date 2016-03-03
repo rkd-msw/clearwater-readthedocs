@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Using Zoiper with Clearwater &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Upgrading a Clearwater Deployment" href="Upgrading_a_Clearwater_deployment.html" />
+    <link rel="prev" title="Using the Android SIP Client with Clearwater" href="Configuring_the_native_Android_SIP_client.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="using-zoiper-with-clearwater">
+<h1>Using Zoiper with Clearwater<a class="headerlink" href="#using-zoiper-with-clearwater" title="Permalink to this headline">¶</a></h1>
+<p>These instructions detail how to configure the Zoiper Android/iOS SIP
+client to work against a Clearwater system.</p>
+<div class="section" id="instructions">
+<h2>Instructions<a class="headerlink" href="#instructions" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Download the application from the <a class="reference external" href="https://play.google.com/store/apps/details?id=com.zoiper.android.app">Play
+Store</a>
+or
+<a class="reference external" href="https://itunes.apple.com/us/app/zoiper-softphone/id438949960?mt=8">iTunes</a>.</li>
+<li>Once installed, go to Config -&gt; Accounts -&gt; Add account -&gt; SIP</li>
+<li>Fill in the following details:</li>
+</ol>
+<ul class="simple">
+<li>Account name: Clearwater</li>
+<li>Host: the root domain of your Clearwater deployment</li>
+<li>Username: your username, e.g. 6505551234</li>
+<li>Password: password for this account</li>
+<li>Authentication user: &lt;username&gt;&#64;&lt;server&gt; e.g.
+<a class="reference external" href="mailto:6505551234&#37;&#52;&#48;my-clearwater&#46;com">6505551234<span>&#64;</span>my-clearwater<span>&#46;</span>com</a></li>
+</ul>
+<ol class="arabic simple" start="4">
+<li>Hit Save</li>
+<li>If your account was successfully enabled you should see a green tick
+notification</li>
+<li>Go back to the main Config menu and select Codecs</li>
+<li>Unselect everything except uLaw and aLaw.</li>
+<li>Hit Save</li>
+<li>You are now ready to make calls.</li>
+</ol>
+</div>
+<div class="section" id="known-supported-devices">
+<h2>Known supported devices<a class="headerlink" href="#known-supported-devices" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Samsung Galaxy S3</li>
+<li>Samsung Galaxy S2</li>
+<li>Samsung Galaxy S4</li>
+<li>Nexus One</li>
+<li>Huawei G510</li>
+<li>Huawei G610</li>
+<li>Qmobile A8</li>
+<li>HTC 1X</li>
+<li>iPhone 4</li>
+<li>iPhone 4S</li>
+</ul>
+</div>
+<div class="section" id="known-unsupported-devices">
+<h2>Known unsupported devices<a class="headerlink" href="#known-unsupported-devices" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Galaxy Nexus (no media)</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Using Zoiper with Clearwater</a><ul>
+<li><a class="reference internal" href="#instructions">Instructions</a></li>
+<li><a class="reference internal" href="#known-supported-devices">Known supported devices</a></li>
+<li><a class="reference internal" href="#known-unsupported-devices">Known unsupported devices</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Configuring_the_native_Android_SIP_client.html" title="previous chapter">Using the Android SIP Client with Clearwater</a></li>
+      <li>Next: <a href="Upgrading_a_Clearwater_deployment.html" title="next chapter">Upgrading a Clearwater Deployment</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Configuring_Zoiper_Android_iOS_Client.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Configuring_Zoiper_Android_iOS_Client.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

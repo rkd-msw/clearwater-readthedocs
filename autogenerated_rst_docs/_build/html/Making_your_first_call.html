@@ -1,0 +1,237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Making calls through Clearwater &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Using the Android SIP Client with Clearwater" href="Configuring_the_native_Android_SIP_client.html" />
+    <link rel="prev" title="Creating a deployment with Chef" href="Creating_a_deployment_with_Chef.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="making-calls-through-clearwater">
+<h1>Making calls through Clearwater<a class="headerlink" href="#making-calls-through-clearwater" title="Permalink to this headline">¶</a></h1>
+<p>These instructions will take you through the process of making a call on
+a Clearwater deployment.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>You&#8217;ve <a class="reference external" href="Installation_Instructions.md">installed Clearwater</a></li>
+<li>You have access to two SIP clients.</li>
+<li>If you have installed Clearwater on VirtualBox using the All-In-One
+image you must use <a class="reference external" href="http://www.zoiper.com/en">Zoiper</a> as one of
+your clients. For the other client (or for other install modes) you
+may use any standard SIP client, we&#8217;ve tested with the following:<ul>
+<li><a class="reference external" href="http://www.counterpath.com/x-lite.html">X-Lite</a></li>
+<li><a class="reference external" href="http://www.counterpath.com/bria.html‎">Bria</a></li>
+<li><a class="reference external" href="https://jitsi.org/">Jitsi</a></li>
+<li><a class="reference external" href="http://icanblink.com/">Blink</a></li>
+<li><a class="reference external" href="Configuring_the_native_Android_SIP_client.md">Stock Android SIP
+client</a></li>
+<li><a class="reference external" href="Configuring_Zoiper_Android_iOS_Client.md">Zoiper Android/iOS SIP
+client</a></li>
+<li>Media5-fone iOS SIP client (on iPhone 4 and 4S)</li>
+</ul>
+</li>
+<li>You have access to a web-browser. We&#8217;ve tested with:</li>
+<li>Google Chrome</li>
+</ul>
+</div>
+<div class="section" id="work-out-your-base-domain">
+<h2>Work out your base domain<a class="headerlink" href="#work-out-your-base-domain" title="Permalink to this headline">¶</a></h2>
+<p>If you installed Clearwater manually, your base DNS name will simply be
+<code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code>. If you installed using the automated install process, your
+base DNS name will be <code class="docutils literal"><span class="pre">&lt;name&gt;.&lt;zone&gt;</span></code>. If you installed an All-in-One
+node, your base name will be <code class="docutils literal"><span class="pre">example.com</span></code>.</p>
+<p>For the rest of these instructions, the base DNS name will be referred
+to as <code class="docutils literal"><span class="pre">&lt;domain&gt;</span></code>.</p>
+</div>
+<div class="section" id="work-out-your-all-in-one-node-s-identity">
+<h2>Work out your All-in-One node&#8217;s identity<a class="headerlink" href="#work-out-your-all-in-one-node-s-identity" title="Permalink to this headline">¶</a></h2>
+<p>This step is only required if you installed an All-in-One node, either
+from an AMI or an OVF. If you installed manually or using the automated
+install process, just move on to the next step.</p>
+<p>If you installed an All-in-One node from an Amazon AMI, you need the
+public DNS name that EC2 has assigned to your node. This will look
+something like <code class="docutils literal"><span class="pre">ec2-12-34-56-78.compute-1.amazonaws.com</span></code> and can be
+found on the EC2 Dashboard on the &#8220;instances&#8221; panel.</p>
+<p>If you installed an All-in-One node from an OVF image in VMPlayer or
+VMWare, you need the IP address that was assigned to the node via DHCP.
+You can find this out by logging into the node&#8217;s console and typing
+<code class="docutils literal"><span class="pre">hostname</span> <span class="pre">-I</span></code>.</p>
+<p>If you installed an All-in-One node from an OVF in VirtualBox, you
+simply need <code class="docutils literal"><span class="pre">localhost</span></code>.</p>
+<p>For the rest of these instructions, the All-in-One node&#8217;s identity will
+be referred to as <code class="docutils literal"><span class="pre">&lt;aio-identity&gt;</span></code>.</p>
+</div>
+<div class="section" id="work-out-your-ellis-url">
+<h2>Work out your Ellis URL<a class="headerlink" href="#work-out-your-ellis-url" title="Permalink to this headline">¶</a></h2>
+<p>If you installed Clearwater manually or using the automated install
+process, your Ellis URL will simply be <code class="docutils literal"><span class="pre">http://ellis.&lt;domain&gt;</span></code>. If you
+installed an All-in-One node, your Ellis URL will be
+<code class="docutils literal"><span class="pre">http://&lt;aio-identity&gt;</span></code>.</p>
+</div>
+<div class="section" id="create-a-number-for-your-client">
+<h2>Create a number for your client<a class="headerlink" href="#create-a-number-for-your-client" title="Permalink to this headline">¶</a></h2>
+<p>In your browser, navigate to the Ellis URL you worked out above.</p>
+<p>Sign up as a new user, using the signup code you set as <code class="docutils literal"><span class="pre">signup_key</span></code>
+when <a class="reference external" href="Installing_a_Chef_workstation.md#add-deployment-specific-configuration">configuring your
+deployment</a>.</p>
+<p>Ellis will automatically allocate you a new number and display its
+password to you. Remember this password as it will only be displayed
+once. From now on, we will use <code class="docutils literal"><span class="pre">&lt;username&gt;</span></code> to refer to the SIP
+username (e.g. <code class="docutils literal"><span class="pre">6505551234</span></code>) and <code class="docutils literal"><span class="pre">&lt;password&gt;</span></code> to refer to the
+password.</p>
+</div>
+<div class="section" id="configure-your-client">
+<h2>Configure your client<a class="headerlink" href="#configure-your-client" title="Permalink to this headline">¶</a></h2>
+<p>Client configuration methods vary by client, but the following
+information should be sufficient to allow your client to register with
+Clearwater.</p>
+<ul class="simple">
+<li>SIP Username: <code class="docutils literal"><span class="pre">&lt;username&gt;</span></code></li>
+<li>SIP Password: <code class="docutils literal"><span class="pre">&lt;password&gt;</span></code></li>
+<li>SIP Domain: <code class="docutils literal"><span class="pre">&lt;domain&gt;</span></code></li>
+<li>Authorization Name: <code class="docutils literal"><span class="pre">&lt;username&gt;&#64;&lt;domain&gt;</span></code></li>
+<li>Transport: <code class="docutils literal"><span class="pre">TCP</span></code></li>
+<li>STUN/TURN/ICE:</li>
+<li>Enabled: <code class="docutils literal"><span class="pre">true</span></code></li>
+<li>Server: <code class="docutils literal"><span class="pre">&lt;domain&gt;</span></code> (or <code class="docutils literal"><span class="pre">&lt;aio-identity&gt;</span></code> on an All-in-One node)</li>
+<li>Username: <code class="docutils literal"><span class="pre">&lt;username&gt;&#64;&lt;domain&gt;</span></code></li>
+<li>Password: <code class="docutils literal"><span class="pre">&lt;password&gt;</span></code></li>
+</ul>
+<p><em>Extra configuration to use an All-in-One node</em></p>
+<p>If you are using an All-in-One node, you will also need to configure an
+outbound proxy at your client.</p>
+<ul class="simple">
+<li>Outbound Proxy address: <code class="docutils literal"><span class="pre">&lt;aio-identity&gt;</span></code></li>
+<li>Port: 5060 (or 8060 if installed in VirtualBox)</li>
+</ul>
+<p>Once these settings have been applied, your client will register with
+Clearwater. Note that X-Lite may need to be restarted before it will set
+up a STUN connection.</p>
+</div>
+<div class="section" id="configure-a-second-number-and-client">
+<h2>Configure a second number and client<a class="headerlink" href="#configure-a-second-number-and-client" title="Permalink to this headline">¶</a></h2>
+<p>Create a new number in Ellis, either by creating a new Ellis user, or by
+clicking the <code class="docutils literal"><span class="pre">Add</span> <span class="pre">Number</span></code> button in the Ellis UI to add one for the
+existing user.</p>
+<p>Configure a second SIP client with the new number&#8217;s credentials as
+above.</p>
+</div>
+<div class="section" id="make-the-call">
+<h2>Make the call<a class="headerlink" href="#make-the-call" title="Permalink to this headline">¶</a></h2>
+<p>From one client (Zoiper if running an All-in-One node in VirtualBox),
+dial the <code class="docutils literal"><span class="pre">&lt;username&gt;</span></code> of the other client to make the call. Answer the
+call and check you have two-way media.</p>
+</div>
+<div class="section" id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this headline">¶</a></h2>
+<p>Now that you&#8217;ve got a basic call working, check that all the features of
+your deployment are working by running the <a class="reference external" href="Running_the_live_tests.md">live
+tests</a> or <a class="reference external" href="Exploring_Clearwater.md">explore
+Clearwater</a> to see what else Clearwater
+offers.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Making calls through Clearwater</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#work-out-your-base-domain">Work out your base domain</a></li>
+<li><a class="reference internal" href="#work-out-your-all-in-one-node-s-identity">Work out your All-in-One node&#8217;s identity</a></li>
+<li><a class="reference internal" href="#work-out-your-ellis-url">Work out your Ellis URL</a></li>
+<li><a class="reference internal" href="#create-a-number-for-your-client">Create a number for your client</a></li>
+<li><a class="reference internal" href="#configure-your-client">Configure your client</a></li>
+<li><a class="reference internal" href="#configure-a-second-number-and-client">Configure a second number and client</a></li>
+<li><a class="reference internal" href="#make-the-call">Make the call</a></li>
+<li><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Creating_a_deployment_with_Chef.html" title="previous chapter">Creating a deployment with Chef</a></li>
+      <li>Next: <a href="Configuring_the_native_Android_SIP_client.html" title="next chapter">Using the Android SIP Client with Clearwater</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Making_your_first_call.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Making_your_first_call.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

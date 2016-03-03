@@ -1,0 +1,202 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Multiple Domains &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Multiple Network Support" href="Multiple_Network_Support.html" />
+    <link rel="prev" title="Off-net Calling with BGCF and IBCF" href="IBCF.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="multiple-domains">
+<h1>Multiple Domains<a class="headerlink" href="#multiple-domains" title="Permalink to this headline">¶</a></h1>
+<p>A single Clearwater deployment can support subscribers in multiple
+domains. This document</p>
+<ul class="simple">
+<li>gives some background context</li>
+<li>describes how to configure multiple domains</li>
+<li>covers some restrictions on this support.</li>
+</ul>
+<div class="section" id="background">
+<h2>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater acts as an S-CSCF for one or more home domains. It can only
+provide service to users within a home domain for which it is the
+S-CSCF. Traffic to or from users in any other home domains must go via
+the S-CSCF for those other domains.</p>
+<p>Home domains are a routing concept. There is a similar (but distinct)
+concept of authentication realms. When a user authenticates, as well as
+providing their username and digest, they must also provide a realm,
+which describes which user database to authenticate against. Many
+clients default their home domain to match their authentication realm.</p>
+<p>A single Clearwater deployment can support multiple home domains and
+multiple realms.</p>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>There are three steps to configuring multiple home domains and/or
+multiple realms.</p>
+<ul class="simple">
+<li>Configure the Clearwater deployment to know about all the home
+domains it is responsible for.</li>
+<li>Add DNS records to point all home domains at the deployment.</li>
+<li>Create subscribers within these multiple home domains, and optionally
+using multiple different realms.</li>
+</ul>
+<div class="section" id="configuring-the-clearwater-deployment">
+<h3>Configuring the Clearwater Deployment<a class="headerlink" href="#configuring-the-clearwater-deployment" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> file can contain two properties
+that are relevant to this function.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">home_domain</span></code> - defines the &#8220;default&#8221; home domain and must always
+be set</li>
+<li><code class="docutils literal"><span class="pre">additional_home_domains</span></code> - optionally defines additional home
+domains</li>
+</ul>
+<p>The only difference between the default home domain and the additional
+home domains is that the default home domain is used whenever Clearwater
+must guess the home domain for a TEL URI, e.g. when filling in the
+orig-ioi or term-ioi parameters on the P-Charging-Vector header. This is
+fairly minor, and generally you can consider the default home domain and
+additional home domains as equivalent.</p>
+</div>
+<div class="section" id="adding-dns-records">
+<h3>Adding DNS Records<a class="headerlink" href="#adding-dns-records" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference external" href="Clearwater_DNS_Usage.md">Clearwater DNS Usage</a> document
+describes how to configure DNS for a simple single-domain deployment.
+This includes creating NAPTR, SRV and A records that resolve the home
+domain (or <code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code>) to the bono nodes. If you have additional home
+domains, you should repeat this for each additional home domain. This
+ensures that SIP clients can find the bono nodes without needing to be
+explicitly configured with a proxy.</p>
+</div>
+<div class="section" id="creating-subscribers">
+<h3>Creating subscribers.<a class="headerlink" href="#creating-subscribers" title="Permalink to this headline">¶</a></h3>
+<p>Once the deployment has multiple domain support enabled, you can create
+subscribers in any of the domains, and with any realm.</p>
+<ul class="simple">
+<li>If you use ellis, the
+<code class="docutils literal"><span class="pre">`create-numbers.py</span></code> &lt;<a class="reference external" href="https://github.com/Metaswitch/ellis/blob/dev/docs/create-numbers.md">https://github.com/Metaswitch/ellis/blob/dev/docs/create-numbers.md</a>&gt;`__
+script accepts a <code class="docutils literal"><span class="pre">--realm</span></code> parameter to specify the realm in which
+the directory numbers are created. When a number is allocated in the
+ellis UI, ellis picks any valid number/realm combination.</li>
+<li>If you
+<a class="reference external" href="https://github.com/Metaswitch/crest/blob/dev/docs/Bulk-Provisioning%20Numbers.md">bulk-provision</a>
+numbers, the home domain and realm can be specified in the input CSV
+file.</li>
+<li>If you use homestead&#8217;s <a class="reference external" href="https://github.com/Metaswitch/crest/blob/dev/docs/homestead_prov_api.md">provisioning
+API</a>
+(i.e. without an external HSS), you can specify the home domain and
+realm as parameters.</li>
+</ul>
+<p>Alternatively, you can use an external HSS, and configure the
+subscribers using its provisioning interface.</p>
+</div>
+</div>
+<div class="section" id="restriction">
+<h2>Restriction<a class="headerlink" href="#restriction" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater does not support connections to multiple Diameter realms for
+the Cx interface to the HSS or the Rf interface to the CDF - only a
+single Diameter realm is supported.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Multiple Domains</a><ul>
+<li><a class="reference internal" href="#background">Background</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li><a class="reference internal" href="#configuring-the-clearwater-deployment">Configuring the Clearwater Deployment</a></li>
+<li><a class="reference internal" href="#adding-dns-records">Adding DNS Records</a></li>
+<li><a class="reference internal" href="#creating-subscribers">Creating subscribers.</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#restriction">Restriction</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="IBCF.html" title="previous chapter">Off-net Calling with BGCF and IBCF</a></li>
+      <li>Next: <a href="Multiple_Network_Support.html" title="next chapter">Multiple Network Support</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Multiple_Domains.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Multiple_Domains.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

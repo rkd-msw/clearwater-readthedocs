@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installing a Chef server &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Installing a Chef Client" href="Installing_a_Chef_workstation.html" />
+    <link rel="prev" title="All-in-one OVF Installation" href="All_in_one_OVF_Installation.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installing-a-chef-server">
+<h1>Installing a Chef server<a class="headerlink" href="#installing-a-chef-server" title="Permalink to this headline">¶</a></h1>
+<p>This is the first step in preparing to install a Clearwater deployment
+using the <a class="reference external" href="Automated_Install.md">automated install</a> process. These
+instructions will guide you through installing a Chef server on an EC2
+instance.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>An Amazon EC2 account.</li>
+<li>A DNS root domain configured as a hosted zone with Route53 (Amazon&#8217;s
+built-in DNS service, accessible from the EC2 console). This domain
+will be referred to as <code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> in this document.</li>
+</ul>
+</div>
+<div class="section" id="create-the-instance">
+<h2>Create the instance<a class="headerlink" href="#create-the-instance" title="Permalink to this headline">¶</a></h2>
+<p>Create a <code class="docutils literal"><span class="pre">t2.small</span></code> AWS EC2 instance running
+<code class="docutils literal"><span class="pre">Ubuntu</span> <span class="pre">Server</span> <span class="pre">14.04.2</span> <span class="pre">LTS</span></code> using the AWS web interface. The SSH
+keypair you provide here is referred to below as <code class="docutils literal"><span class="pre">&lt;amazon_ssh_key&gt;</span></code>.
+It is easiest if you use the same SSH keypair for all of your instances.</p>
+<p>Configure its security group to allow access SSH, HTTP, and HTTPS
+access.</p>
+<p>Configure a DNS entry for this machine, <code class="docutils literal"><span class="pre">chef-server.&lt;zone&gt;</span></code>. (The
+precise name isn&#8217;t important, but we use this consistently in the
+documentation that follows.) It should have a non-aliased A record
+pointing at the public IP address of the instance as displayed in the
+EC2 console.</p>
+<p>Once the instance is up and running and you can connect to it over SSH,
+you may continue to the next steps.</p>
+<p>If you make a mistake, simply delete the instance permanently by
+selecting &#8220;Terminate&#8221; in the EC2 console, and start again. The
+terminated instance may take a few minutes to disappear from the
+console.</p>
+</div>
+<div class="section" id="install-and-configure-the-chef-server">
+<h2>Install and configure the Chef server<a class="headerlink" href="#install-and-configure-the-chef-server" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="http://docs.chef.io/install_server.html">chef documentation</a>
+explains how to install and configure the chef server. These
+instructions involve setting up a user and an organization.</p>
+<ul class="simple">
+<li>The user represents you as a user of chef. Pick whatever user name
+and password you like. We refer to these as <code class="docutils literal"><span class="pre">&lt;chef-user-name&gt;</span></code> and
+<code class="docutils literal"><span class="pre">&lt;chef-user-password&gt;</span></code></li>
+<li>Organizations allow different groups to use the same chef server, but
+be isolated from one another. You can choose any organization name
+you like (e.g. &#8220;clearwater&#8221;). We refer to this as <code class="docutils literal"><span class="pre">&lt;org-name&gt;</span></code></li>
+</ul>
+<p>Follow steps 1-6 in the <a class="reference external" href="http://docs.chef.io/install_server.html">chef
+docs</a>.</p>
+<p>Once you have completed these steps, copy the <code class="docutils literal"><span class="pre">&lt;chef-user-name&gt;.pem</span></code>
+file off of the chef server - you will need it when installing a chef
+workstation.</p>
+</div>
+<div class="section" id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this headline">¶</a></h2>
+<p>Once your server is installed, you can continue on to <a class="reference external" href="Installing_a_Chef_workstation.md">install a chef
+workstation</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installing a Chef server</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#create-the-instance">Create the instance</a></li>
+<li><a class="reference internal" href="#install-and-configure-the-chef-server">Install and configure the Chef server</a></li>
+<li><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="All_in_one_OVF_Installation.html" title="previous chapter">All-in-one OVF Installation</a></li>
+      <li>Next: <a href="Installing_a_Chef_workstation.html" title="next chapter">Installing a Chef Client</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Installing_a_Chef_server.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Installing_a_Chef_server.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

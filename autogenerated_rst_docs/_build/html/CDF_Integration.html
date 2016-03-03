@@ -1,0 +1,202 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CDF Integration &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Clearwater IP Port Usage" href="Clearwater_IP_Port_Usage.html" />
+    <link rel="prev" title="OpenIMS HSS Integration" href="OpenIMSCore_HSS_Integration.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cdf-integration">
+<h1>CDF Integration<a class="headerlink" href="#cdf-integration" title="Permalink to this headline">¶</a></h1>
+<p>Project Clearwater deployments include a cluster of
+<a class="reference external" href="https://github.com/Metaswitch/ralf">Ralf</a> nodes. The nodes provide
+an HTTP interface to Sprout and Bono on which they can report billable
+events. Ralf then acts as a CTF (Charging Triggering Function) and may
+pass these events on to a configured CDF (Charging Data Function) over
+the <a class="reference external" href="http://www.3gpp.org/DynaReport/32299.htm">Rf interface</a>.</p>
+<p>By default, having spun up a Clearwater deployment, either manually or
+through the automated Chef install process, your deployment is not
+configured with a CDF and thus will not generate billing records. This
+document describes how the CDF is chosen and used and how to integrate
+your Project Clearwater deployment with a CDF and thus enable Rf
+billing.</p>
+<div class="section" id="how-it-works">
+<h2>How it works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h2>
+<p>When Sprout or Bono have handled an item of work for a given subscriber,
+they generate a record of that work and transmit it to the Ralf cluster
+for billing to the CDF. This record will be used by Ralf to generate an
+Rf billing ACR (Accounting-Request) message.</p>
+<p>To determine which CDF to send the ACR to, the node acting as the
+P-CSCF/IBCF is responsible for adding a
+<code class="docutils literal"><span class="pre">P-Charging-Function-Addresses</span></code> header to all SIP messages it proxies
+into the core. This header contains a prioritised list of CDFs to send
+ACRs to.</p>
+<p>Bono supports adding this header when acting as either a P-CSCF or IBCF
+and configuring the contents of this header is the only requirement for
+enabling Rf billing in your deployment.</p>
+</div>
+<div class="section" id="how-to-enable-it">
+<h2>How to enable it<a class="headerlink" href="#how-to-enable-it" title="Permalink to this headline">¶</a></h2>
+<p>This section discusses how to enable Rf billing to a given CDF.</p>
+<div class="section" id="before-you-begin">
+<h3>Before you begin<a class="headerlink" href="#before-you-begin" title="Permalink to this headline">¶</a></h3>
+<p>Before connecting your deployment to a CDF, you must</p>
+<ul class="simple">
+<li><a class="reference external" href="Installation_Instructions.md">install Clearwater</a></li>
+<li>install an external CDF - details for this will vary depending on
+which CDF you are using.</li>
+<li>ensure your CDF&#8217;s firewall allows incoming connections from the nodes
+in the Ralf cluster on the DIAMETER port (default 3868).</li>
+</ul>
+</div>
+<div class="section" id="setting-up-dns">
+<h3>Setting up DNS<a class="headerlink" href="#setting-up-dns" title="Permalink to this headline">¶</a></h3>
+<p>Ralf implements the behavior specified in
+<a class="reference external" href="http://www.ietf.org/rfc/rfc3588.txt">RFC3588</a> to locate and connect
+to the billing realm. This requires either:</p>
+<ul class="simple">
+<li>The DIAMETER realm resolves to a <code class="docutils literal"><span class="pre">NAPTR</span></code> record which returns an
+<code class="docutils literal"><span class="pre">AAA+D2T</span></code> entry which in turn resolves to <code class="docutils literal"><span class="pre">SRV</span></code>/<code class="docutils literal"><span class="pre">A</span></code> records
+which finally resolve to IPv4 addresses of reachable nodes in the
+realm.</li>
+<li>The DIAMETER realm resolves to a collection of <code class="docutils literal"><span class="pre">A</span></code> records which
+directly resolve to reachable nodes in the realm.</li>
+</ul>
+</div>
+<div class="section" id="configuring-the-billing-realm">
+<h3>Configuring the billing realm<a class="headerlink" href="#configuring-the-billing-realm" title="Permalink to this headline">¶</a></h3>
+<p>To point Ralf at the billing DIAMETER realm, add the following line to
+<code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> and follow <a class="reference external" href="Modifying_Clearwater_settings">this
+process</a> to apply the change</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>billing_realm=&lt;DIAMETER billing realm&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="selecting-a-specific-cdf-in-the-realm">
+<h3>Selecting a specific CDF in the realm<a class="headerlink" href="#selecting-a-specific-cdf-in-the-realm" title="Permalink to this headline">¶</a></h3>
+<p><em>Note:</em> Bono only has support for selecting CDF identities based of
+static configuration of a single identity. Other P-CSCFs may have
+support for load-balancing or enabling backup CDF identities.</p>
+<p>If you have a CDF set up to receive Rf billing messages from your
+deployment, you will need to modify the
+<code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> file and follow <a class="reference external" href="Modifying_Clearwater_settings">this
+process</a> to apply the change:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>cdf_identity=&lt;CDF DIAMETER Identity&gt;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="restrictions">
+<h2>Restrictions<a class="headerlink" href="#restrictions" title="Permalink to this headline">¶</a></h2>
+<p>The very first release of Ralf, from the Counter-Strike release of
+Project Clearwater, does not generate Rf billing messages since the
+related changes to Sprout and Bono (to report billable events) were not
+enabled. This version was released to allow systems integrators to get a
+head start on spinning up and configuring Ralf nodes rather than having
+to wait for the next release.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">CDF Integration</a><ul>
+<li><a class="reference internal" href="#how-it-works">How it works</a></li>
+<li><a class="reference internal" href="#how-to-enable-it">How to enable it</a><ul>
+<li><a class="reference internal" href="#before-you-begin">Before you begin</a></li>
+<li><a class="reference internal" href="#setting-up-dns">Setting up DNS</a></li>
+<li><a class="reference internal" href="#configuring-the-billing-realm">Configuring the billing realm</a></li>
+<li><a class="reference internal" href="#selecting-a-specific-cdf-in-the-realm">Selecting a specific CDF in the realm</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#restrictions">Restrictions</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="OpenIMSCore_HSS_Integration.html" title="previous chapter">OpenIMS HSS Integration</a></li>
+      <li>Next: <a href="Clearwater_IP_Port_Usage.html" title="next chapter">Clearwater IP Port Usage</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/CDF_Integration.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/CDF_Integration.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

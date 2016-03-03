@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Modifying Clearwater Settings &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Clearwater Configuration Options Reference" href="Clearwater_Configuration_Options_Reference.html" />
+    <link rel="prev" title="Upgrading a Clearwater Deployment" href="Upgrading_a_Clearwater_deployment.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="modifying-clearwater-settings">
+<h1>Modifying Clearwater Settings<a class="headerlink" href="#modifying-clearwater-settings" title="Permalink to this headline">¶</a></h1>
+<p>This page discusses how to change settings on a Clearwater system. Most
+settings can be changed on an existing deployment (e.g. security keys
+and details of external servers), but some are so integral to the system
+(e.g. the SIP home domain) that the best way to change it is to recreate
+the Clearwater deployment entirely.</p>
+<div class="section" id="modifying-settings-in-etc-clearwater-shared-config">
+<h2>Modifying Settings in /etc/clearwater/shared_config<a class="headerlink" href="#modifying-settings-in-etc-clearwater-shared-config" title="Permalink to this headline">¶</a></h2>
+<p><em>This will have a service impact of up to five minutes.</em></p>
+<p>Settings in <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> can be safely changed
+without entirely recreating the system. The one exception to this is the
+<code class="docutils literal"><span class="pre">home_domain</span></code>; if you want to change this go to the &#8220;Starting from
+scratch&#8221; section instead.</p>
+<p>To change one of these settings, if you are using Clearwater&#8217;s
+<a class="reference external" href="Automatic_Clustering_Config_Sharing">automatic configuration
+sharing</a> functionality:</p>
+<ul class="simple">
+<li>Edit <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> on <em>one</em> node and change to
+the new value.</li>
+<li>Run
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config</span></code>
+to upload the new config to etcd.</li>
+</ul>
+<p>If you are not using automatic clustering, do the following on <em>each</em>
+node:</p>
+<ul class="simple">
+<li>Edit <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> and change the setting to the
+new value.</li>
+<li>Run <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">clearwater-infrastructure</span> <span class="pre">restart</span></code> to ensure that
+the configuration changes are applied consistently across the node.</li>
+<li>Restart the individual component by running the appropriate command
+below. This will stop the service and allow monit to restart it.<ul>
+<li>Sprout - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">sprout</span> <span class="pre">quiesce</span></code></li>
+<li>Bono - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">bono</span> <span class="pre">quiesce</span></code></li>
+<li>Homestead -
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homestead</span> <span class="pre">stop</span> <span class="pre">&amp;&amp;</span> <span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homestead-prov</span> <span class="pre">stop</span></code></li>
+<li>Homer - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homer</span> <span class="pre">stop</span></code></li>
+<li>Ralf -<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ralf</span> <span class="pre">stop</span></code></li>
+<li>Ellis - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ellis</span> <span class="pre">stop</span></code></li>
+<li>Memento - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">memento</span> <span class="pre">stop</span></code></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="modifying-sprout-json-configuration">
+<h2>Modifying Sprout JSON Configuration<a class="headerlink" href="#modifying-sprout-json-configuration" title="Permalink to this headline">¶</a></h2>
+<p><em>This configuration can be freely modified without impacting service.</em></p>
+<p>Some of the more complex sprout-specific configuration is stored in JSON
+files</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">/etc/clearwater/s-cscf.json</span></code> - contains information to allow the
+Sprout I-CSCF to select an appropriate S-CSCF to handle some
+requests.</li>
+<li><code class="docutils literal"><span class="pre">/etc/clearwater/bgcf.json</span></code> - contains routing rules for the Sprout
+BGCF.</li>
+<li><code class="docutils literal"><span class="pre">/etc/clearwater/enum.json</span></code> - contains ENUM rules when using
+file-based ENUM instead of an external ENUM server.</li>
+</ul>
+<p>To change one of these files, if you are using Clearwater&#8217;s <a class="reference external" href="Automatic_Clustering_Config_Sharing">automatic
+configuration sharing</a>
+functionality:</p>
+<ul class="simple">
+<li>Edit the file on <em>one</em> of your sprout nodes.</li>
+<li>Run one of
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/upload_{scscf|bgcf|enum}_json</span></code>
+depending on which file you modified.</li>
+<li>The change will be automatically propagated around the deployment and
+will start being used.</li>
+</ul>
+<p>If you are not using automatic clustering do the following on <em>each</em>
+node:</p>
+<ul class="simple">
+<li>Make the necessary changes to the file.</li>
+<li>Run <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">sprout</span> <span class="pre">reload</span></code> to make sprout pick up the
+changes.</li>
+</ul>
+</div>
+<div class="section" id="starting-from-scratch">
+<h2>Starting from scratch<a class="headerlink" href="#starting-from-scratch" title="Permalink to this headline">¶</a></h2>
+<p><em>This will have a service impact of up to half an hour.</em></p>
+<p>If other settings (such as the Clearwater home domain) are being
+changed, we recommend that users delete their old deployment and create
+a new one from scratch, either <a class="reference external" href="Creating_a_deployment_with_Chef.md">with
+Chef</a> or
+<a class="reference external" href="Manual_Install.md">manually</a>. This ensures that the new settings are
+consistently applied.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Modifying Clearwater Settings</a><ul>
+<li><a class="reference internal" href="#modifying-settings-in-etc-clearwater-shared-config">Modifying Settings in /etc/clearwater/shared_config</a></li>
+<li><a class="reference internal" href="#modifying-sprout-json-configuration">Modifying Sprout JSON Configuration</a></li>
+<li><a class="reference internal" href="#starting-from-scratch">Starting from scratch</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Upgrading_a_Clearwater_deployment.html" title="previous chapter">Upgrading a Clearwater Deployment</a></li>
+      <li>Next: <a href="Clearwater_Configuration_Options_Reference.html" title="next chapter">Clearwater Configuration Options Reference</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Modifying_Clearwater_settings.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Modifying_Clearwater_settings.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

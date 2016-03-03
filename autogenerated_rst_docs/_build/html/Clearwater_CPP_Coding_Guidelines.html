@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>C++ Coding Guidelines &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Ruby Coding Guidelines" href="Clearwater_Ruby_Coding_Guidelines.html" />
+    <link rel="prev" title="Dealing with Failed Nodes" href="Handling_Failed_Nodes.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="c-coding-guidelines">
+<h1>C++ Coding Guidelines<a class="headerlink" href="#c-coding-guidelines" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="naming">
+<h2>Naming<a class="headerlink" href="#naming" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Class names are CamelCase, beginning with a capital letter.</li>
+<li>Constant names are ALL_CAPITALS with underscores separating words.</li>
+<li>Method, method parameter and local variable names are lowercase with
+underscores separating words, e.g. <code class="docutils literal"><span class="pre">method_name</span></code>.</li>
+<li>Member variable names are lowercase with underscores separating words
+and also begin with an underscore, e.g. <code class="docutils literal"><span class="pre">_member_variable</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="c-feature-use">
+<h2>C++ Feature Use<a class="headerlink" href="#c-feature-use" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>We assume a C++11-compliant compiler, so C++11 features are allowed
+with some exceptions.</li>
+<li>No use of <code class="docutils literal"><span class="pre">auto</span></code> type declarations.</li>
+<li>No use of <code class="docutils literal"><span class="pre">using</span> <span class="pre">namespace</span> <span class="pre">...</span></code>, if the namespace is particularly
+lengthy, consider using namespace aliasing (e.g.
+<code class="docutils literal"><span class="pre">namespace</span> <span class="pre">po</span> <span class="pre">=</span> <span class="pre">boost::program_options</span></code>).</li>
+<li>Avoid using Boost (or similar) libraries that return special
+library-specific pointers, to minimize &#8220;infection&#8221; of the code-base.
+Consider using the C++11 equivalents instead.</li>
+</ul>
+</div>
+<div class="section" id="formatting">
+<h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline">¶</a></h2>
+<p>C++ code contributed to Clearwater should be formatted according to the
+following conventions:</p>
+<ul class="simple">
+<li>Braces on a separate line from function definitions, <code class="docutils literal"><span class="pre">if</span></code>
+statements, etc.</li>
+<li>Two-space indentation</li>
+<li>Pointer operators attached to the variable type (i.e. <code class="docutils literal"><span class="pre">int*</span> <span class="pre">foo</span></code>
+rather than <code class="docutils literal"><span class="pre">int</span> <span class="pre">*foo</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">if</span></code> blocks must be surrounded by braces</li>
+</ul>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>if (x)
+       int *foo = do_something();
+</pre></div>
+</div>
+<p>will be replaced with</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>if (x)
+{
+ int* foo = do_something();
+}
+</pre></div>
+</div>
+<p>It&#8217;s possible to fix up some code automatically using
+<a class="reference external" href="http://astyle.sourceforge.net/">astyle</a>, with the options
+<code class="docutils literal"><span class="pre">astyle</span> <span class="pre">--style=ansi</span> <span class="pre">-s2</span> <span class="pre">-M80</span> <span class="pre">-O</span> <span class="pre">-G</span> <span class="pre">-k1</span> <span class="pre">-j</span> <span class="pre">-o</span></code>. This fixes up a lot of
+the most common errors (brace style, indentation, overly long lines),
+but isn&#8217;t perfect - there are some cases where breaking the rules makes
+the code clearer, and some edge cases (e.g. around switch statements and
+casts on multiple lines) where our style doesn&#8217;t always match astyle&#8217;s.</p>
+</div>
+<div class="section" id="language-features">
+<h2>Language Features<a class="headerlink" href="#language-features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Use of the <code class="docutils literal"><span class="pre">auto</span></code> keyword is forbidden.</li>
+</ul>
+</div>
+<div class="section" id="commenting">
+<h2>Commenting<a class="headerlink" href="#commenting" title="Permalink to this headline">¶</a></h2>
+<p>Where it is necessary to document the interface of classes, this should
+be done with Doxygen-style comments - three slashes and appropriate
+<code class="docutils literal"><span class="pre">&#64;param</span></code> and <code class="docutils literal"><span class="pre">&#64;returns</span></code> tags.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>/// Apply first AS (if any) to initial request.
+//
+// See 3GPP TS 23.218, especially s5.2 and s6, for an overview of how
+// this works, and 3GPP TS 24.229 s5.4.3.2 and s5.4.3.3 for
+// step-by-step details.
+//
+// @Returns whether processing should stop, continue, or skip to the end.
+AsChainLink::Disposition
+AsChainLink::on_initial_request(CallServices* call_services,
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">C++ Coding Guidelines</a><ul>
+<li><a class="reference internal" href="#naming">Naming</a></li>
+<li><a class="reference internal" href="#c-feature-use">C++ Feature Use</a></li>
+<li><a class="reference internal" href="#formatting">Formatting</a></li>
+<li><a class="reference internal" href="#language-features">Language Features</a></li>
+<li><a class="reference internal" href="#commenting">Commenting</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Handling_Failed_Nodes.html" title="previous chapter">Dealing with Failed Nodes</a></li>
+      <li>Next: <a href="Clearwater_Ruby_Coding_Guidelines.html" title="next chapter">Ruby Coding Guidelines</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_CPP_Coding_Guidelines.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_CPP_Coding_Guidelines.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation Instructions &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="All-in-one Images" href="All_in_one_Images.html" />
+    <link rel="prev" title="Troubleshooting and Recovery" href="Troubleshooting_and_Recovery.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation-instructions">
+<h1>Installation Instructions<a class="headerlink" href="#installation-instructions" title="Permalink to this headline">¶</a></h1>
+<p>These pages will guide you through installing a Clearwater deployment
+from scratch.</p>
+<div class="section" id="installation-methods">
+<h2>Installation Methods<a class="headerlink" href="#installation-methods" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="what-are-my-choices">
+<h3>What are my choices?<a class="headerlink" href="#what-are-my-choices" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first">All-in-one image, either using an
+<a class="reference external" href="https://aws.amazon.com/amis/">AMI</a> on <a class="reference external" href="http://aws.amazon.com/ec2/">Amazon
+EC2</a> or an
+<a class="reference external" href="http://dmtf.org/standards/ovf">OVF</a> image on a private
+virtualization platform such as <a class="reference external" href="http://www.vmware.com/">VMware</a>
+or <a class="reference external" href="https://www.virtualbox.org/">VirtualBox</a>. This is the
+recommended method for trying Clearwater out.</p>
+<p>This installation method is very easy but offers no redundancy or
+scalability and relatively limited performance. As a result, it is
+great for familiarizing yourself with Clearwater before moving up to
+a larger-scale deployment using one of the following methods.</p>
+</li>
+<li><p class="first">An automated install, using the
+<a class="reference external" href="http://www.opscode.com/chef/">Chef</a> orchestration system. This is
+the recommended install for spinning up large scale deployments since
+it can handle creating an arbitrary sized deployment in a single
+command.</p>
+<p>This installation method does have its limitations though. It is
+currently only supported on Amazon&#8217;s EC2 cloud and assumes that DNS
+is being handled by Amazon&#8217;s Route53 and that Route53 controls the
+deployment&#8217;s root domain. It also requires access to a running Chef
+server. Setting this up is non-trivial but only needs to be done
+once, after which multiple deployments can be spun up very easily.</p>
+</li>
+<li><p class="first">A manual install, using Debian packages and hand configuring each
+machine. This is the recommended method if chef is not supported on
+your virtualization platform or your DNS is not provided by Amazon&#8217;s
+Route53.</p>
+<p>This install can be performed on any collection of machines (at least
+5 are needed) running Ubuntu 14.04 as it makes no assumptions about
+the environment in which the machines are running. On the other hand,
+it requires manually configuring every machine, firewalls and DNS
+entries, meaning it is not a good choice for spinning up a
+large-scale deployment.</p>
+</li>
+<li><p class="first">Installing from source. If you are running on a non-Ubuntu-based OS,
+or need to test a code fix or enhancement you&#8217;ve made, you can also
+install Clearwater from source, building the code yourself.
+Per-component instructions are provided that cover the route from
+source code to running services. Familiarity with performing a manual
+install on Ubuntu will help with configuring your network correctly
+after the software is installed.</p>
+<p>If you install from source, especially on a non-Ubuntu OS, we&#8217;d love
+to hear about your experience, good or bad.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="installation-steps">
+<h2>Installation Steps<a class="headerlink" href="#installation-steps" title="Permalink to this headline">¶</a></h2>
+<p>The installation process for a full Clearwater deployment (i.e. not an
+all-in-one) can be described at a high level as follows:</p>
+<ul class="simple">
+<li>Sourcing enough machines to host the deployment (minimum is 6) and
+installing an OS on them all. <a class="reference external" href="http://releases.ubuntu.com/trusty/">Ubuntu
+14.04</a> is the recommended and
+tested OS for hosting Clearwater.</li>
+<li>Preparing each machine to allow installation of the Clearwater
+software.</li>
+<li>Installing the Clearwater software onto the machines.</li>
+<li>Configuring firewalls to allow the various machines to talk to each
+other as required.</li>
+<li>Configuring DNS records to allow the machines to find each other and
+to expose the deployment to clients.</li>
+</ul>
+<div class="section" id="detailed-instructions">
+<h3>Detailed Instructions<a class="headerlink" href="#detailed-instructions" title="Permalink to this headline">¶</a></h3>
+<p>Once you&#8217;ve decided on your install method, follow the appropriate link
+below.</p>
+<ul class="simple">
+<li><a class="reference external" href="All_in_one_Images.md">All-in-one Images</a></li>
+<li><a class="reference external" href="Automated_Install.md">Automated Install</a></li>
+<li><a class="reference external" href="Manual_Install.md">Manual Install</a></li>
+<li>For source installs, see the per-component instructions
+(<a class="reference external" href="https://github.com/Metaswitch/sprout/blob/master/docs/Development.md">Sprout/Bono</a>,
+<a class="reference external" href="https://github.com/Metaswitch/ellis/blob/master/docs/development.md">Ellis</a>,
+<a class="reference external" href="https://github.com/Metaswitch/crest/blob/master/docs/development.md">Homer/Homestead</a>).</li>
+</ul>
+<p>If you hit problems during this process, see the <a class="reference external" href="Troubleshooting_and_Recovery.md">Troubleshooting and
+Recovery</a> steps.</p>
+<p>If you want to deploy with IPv6 addresses, see the <a class="reference external" href="IPv6.md">IPv6</a>
+notes.</p>
+</div>
+</div>
+<div class="section" id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Permalink to this headline">¶</a></h2>
+<p>Once you have installed your deployment, you&#8217;ll want to test that it
+works.</p>
+<ul class="simple">
+<li><a class="reference external" href="Making_your_first_call.md">Making your first call</a></li>
+<li><a class="reference external" href="Running_the_live_tests.md">Running the live test suite</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation Instructions</a><ul>
+<li><a class="reference internal" href="#installation-methods">Installation Methods</a><ul>
+<li><a class="reference internal" href="#what-are-my-choices">What are my choices?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#installation-steps">Installation Steps</a><ul>
+<li><a class="reference internal" href="#detailed-instructions">Detailed Instructions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#next-steps">Next Steps</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Troubleshooting_and_Recovery.html" title="previous chapter">Troubleshooting and Recovery</a></li>
+      <li>Next: <a href="All_in_one_Images.html" title="next chapter">All-in-one Images</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Installation_Instructions.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Installation_Instructions.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

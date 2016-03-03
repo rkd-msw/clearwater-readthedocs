@@ -1,0 +1,435 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Backups &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Call Barring" href="Clearwater_Call_Barring_Support.html" />
+    <link rel="prev" title="IR.92 Supplementary Services" href="IR.92_Supplementary_Services.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="backups">
+<h1>Backups<a class="headerlink" href="#backups" title="Permalink to this headline">¶</a></h1>
+<p>Within a Clearwater deployment, ellis, homestead, homer and memento all
+store persistent data. (Bono and sprout do not.) To prevent data loss in
+disaster scenarios, ellis, homestead, homer and memento all have data
+backup and restore mechanisms. Specifically, all support</p>
+<ul class="simple">
+<li>manual backup</li>
+<li>periodic automated local backup</li>
+<li>manual restore.</li>
+</ul>
+<p>This document describes</p>
+<ul class="simple">
+<li>how to list the backups that have been taken</li>
+<li>how to take a manual backup</li>
+<li>the periodic automated local backup behavior</li>
+<li>how to restore from a backup.</li>
+</ul>
+<p>Note that if your Clearwater deployment is <a class="reference external" href="External_HSS_Integration.md">integrated with an external
+HSS</a>, the HSS is the master of ellis and
+homestead&#8217;s data, and those nodes do not need to be backed up. However,
+homer&#8217;s data still needs to be backed up.</p>
+<div class="section" id="listing-backups">
+<h2>Listing Backups<a class="headerlink" href="#listing-backups" title="Permalink to this headline">¶</a></h2>
+<p>The process for listing backups varies between ellis and homestead,
+homer and memento.</p>
+<div class="section" id="ellis">
+<h3>Ellis<a class="headerlink" href="#ellis" title="Permalink to this headline">¶</a></h3>
+<p>To list the backups that have been taken on ellis, run
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/ellis/backup/list_backups.sh</span></code>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>Backups for ellis:
+1372294741  /usr/share/clearwater/ellis/backup/backups/1372294741
+1372294681  /usr/share/clearwater/ellis/backup/backups/1372294681
+1372294621  /usr/share/clearwater/ellis/backup/backups/1372294621
+1372294561  /usr/share/clearwater/ellis/backup/backups/1372294561
+</pre></div>
+</div>
+</div>
+<div class="section" id="homestead-homer-and-memento">
+<h3>Homestead, Homer and Memento<a class="headerlink" href="#homestead-homer-and-memento" title="Permalink to this headline">¶</a></h3>
+<p>Homestead actually contains two databases (<code class="docutils literal"><span class="pre">homestead_provisioning</span></code>
+and <code class="docutils literal"><span class="pre">homestead_cache</span></code>) and these must be backed up together. This is
+why there are two commands for each homestead operation. Homer and
+memento only contain one database and so there is only one command for
+each operation.</p>
+<p>To list the backups that have been taken on homestead, homer or memento,
+run</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/list_backups.sh</span> <span class="pre">homestead_provisioning</span></code>
+and
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/list_backups.sh</span> <span class="pre">homestead_cache</span></code>
+for homestead</li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/list_backups.sh</span> <span class="pre">homer</span></code>
+for homer</li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/list_backups.sh</span> <span class="pre">memento</span></code>
+for memento.</li>
+</ul>
+<p>This produces output of the following form, listing each of the
+available backups.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>No backup directory specified, defaulting to /usr/share/clearwater/homestead/backup/backups
+provisioning1372812963174
+provisioning1372813022822
+provisioning1372813082506
+provisioning1372813143119
+</pre></div>
+</div>
+<p>You can also specify a directory to search in for backups, e.g. for
+homestead:</p>
+<p><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/list_backups.sh</span> <span class="pre">homestead_provisioning</span> <span class="pre">&lt;backup</span> <span class="pre">dir&gt;</span></code></p>
+</div>
+</div>
+<div class="section" id="taking-a-manual-backup">
+<h2>Taking a Manual Backup<a class="headerlink" href="#taking-a-manual-backup" title="Permalink to this headline">¶</a></h2>
+<p>The process for taking a manual backup varies between ellis and
+homestead, homer and memento. Note that in all cases,</p>
+<ul class="simple">
+<li>the backup is stored locally and should be copied to a secure backup
+server to ensure resilience</li>
+<li>this process only backs up a single local node, so the same process
+must be run on all nodes in a cluster to ensure a complete set of
+backups</li>
+<li>these processes cause a small amount of extra load on the disk, so it
+is recommended not to perform this during periods of high load</li>
+<li>only 4 backups are stored locally - when a fifth backup is taken, the
+oldest is deleted.</li>
+</ul>
+<div class="section" id="id1">
+<h3>Ellis<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>To take a manual backup on ellis, run
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/ellis/backup/do_backup.sh</span></code>.</p>
+<p>This produces output of the following form, reporting the
+successfully-created backup.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>Creating backup in /usr/share/clearwater/ellis/backup/backups/1372336317/db_backup.sql
+</pre></div>
+</div>
+<p>Make a note of the snapshot directory (<code class="docutils literal"><span class="pre">1372336317</span></code> in the example
+above) - this will be referred to as <code class="docutils literal"><span class="pre">&lt;snapshot&gt;</span></code> below.</p>
+<p>This file is only accessible by the root user. To copy it to the current
+user&#8217;s home directory, run</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>snapshot=&lt;snapshot&gt;
+sudo bash -c &#39;cp /usr/share/clearwater/ellis/backup/backups/&#39;$snapshot&#39;/db_backup.sql ~&#39;$USER&#39; &amp;&amp;
+              chown &#39;$USER.$USER&#39; db_backup.sql&#39;
+</pre></div>
+</div>
+<p>This file can, and should, be copied off the ellis node to a secure
+backup server.</p>
+</div>
+<div class="section" id="id2">
+<h3>Homestead, Homer and Memento<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>To take a manual backup on homestead, homer or memento, run</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/do_backup.sh</span> <span class="pre">homestead_provisioning</span></code>
+and
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/do_backup.sh</span> <span class="pre">homestead_cache</span></code>
+on homestead</li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/do_backup.sh</span> <span class="pre">homer</span></code>
+on homer</li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/do_backup.sh</span> <span class="pre">memento</span></code>
+on memento.</li>
+</ul>
+<p>This produces output of the following form, reporting the
+successfully-created backup.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>...
+Deleting old backup: /usr/share/clearwater/homestead/backup/backups/1372812963174
+Creating backup for keyspace homestead_provisoning...
+Requested snapshot for: homestead_provisioning
+Snapshot directory: 1372850637124
+Backups can be found at: /usr/share/clearwater/homestead/backup/backups/provisioning/
+</pre></div>
+</div>
+<p>Make a note of the snapshot directory - this will be referred to as
+<code class="docutils literal"><span class="pre">&lt;snapshot&gt;</span></code> below.</p>
+<p>The backups are only stored locally - the resulting backup is stored in
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/homestead/backup/backups/provisioning/&lt;snapshot&gt;</span></code></p>
+<p>These should be copied off the node to a secure backup server. For
+example, from a remote location execute
+<code class="docutils literal"><span class="pre">scp</span> <span class="pre">-r</span> <span class="pre">ubuntu&#64;&lt;homestead</span> <span class="pre">node&gt;:/usr/share/clearwater/homestead/backup/backups/provisioning/&lt;snapshot&gt;</span> <span class="pre">.</span></code>.</p>
+</div>
+</div>
+<div class="section" id="periodic-automated-local-backups">
+<h2>Periodic Automated Local Backups<a class="headerlink" href="#periodic-automated-local-backups" title="Permalink to this headline">¶</a></h2>
+<p>Ellis, homestead, homer and memento are all automatically configured to
+take daily backups if you&#8217;ve installed them through chef, at midnight
+local time every night.</p>
+<p>If you want to turn this on, edit your crontab by running
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">crontab</span> <span class="pre">-e</span></code> and add the following lines if not already present:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">0</span> <span class="pre">0</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">/usr/share/clearwater/ellis/backup/do_backup.sh</span></code> on
+ellis</li>
+<li><code class="docutils literal"><span class="pre">0</span> <span class="pre">0</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/do_backup.sh</span> <span class="pre">homestead_provisioning</span></code>
+and
+<code class="docutils literal"><span class="pre">5</span> <span class="pre">0</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/do_backup.sh</span> <span class="pre">homestead_cache</span></code>
+on homestead</li>
+<li><code class="docutils literal"><span class="pre">0</span> <span class="pre">0</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/do_backup.sh</span> <span class="pre">homer</span></code>
+on homer</li>
+<li><code class="docutils literal"><span class="pre">0</span> <span class="pre">0</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/do_backup.sh</span> <span class="pre">memento</span></code>
+on memento.</li>
+</ul>
+<p>These backups are stored locally, in the same locations as they would be
+generated for a manual backup.</p>
+</div>
+<div class="section" id="restoring-from-a-backup">
+<h2>Restoring from a Backup<a class="headerlink" href="#restoring-from-a-backup" title="Permalink to this headline">¶</a></h2>
+<p>There are three stages to restoring from a backup.</p>
+<ol class="arabic simple">
+<li>Copying the backup files to the correct location.</li>
+<li>Running the restore backup script.</li>
+<li>Synchronizing ellis, homestead, homer and memento&#8217;s views of the
+system state.</li>
+</ol>
+<p><strong>This process will impact service and overwrite data in your
+database.</strong></p>
+<div class="section" id="copying-backup-files">
+<h3>Copying Backup Files<a class="headerlink" href="#copying-backup-files" title="Permalink to this headline">¶</a></h3>
+<p>The first step in restoring from a backup is getting the backup
+files/directories into the correct locations on the ellis, homer,
+homestead or memento node.</p>
+<p>If you are restoring from a backup that was taken on the node on which
+you are restoring (and haven&#8217;t moved it), you can just move onto the
+next step.</p>
+<p>If not, create a directory on your system that you want to put your
+backups into (we&#8217;ll use <code class="docutils literal"><span class="pre">~/backup</span></code> in this example). Then copy the
+backups there. For example, from a remote location that contains your
+backup directory <code class="docutils literal"><span class="pre">&lt;snapshot&gt;</span></code> execute
+<code class="docutils literal"><span class="pre">scp</span> <span class="pre">-r</span> <span class="pre">&lt;snapshot&gt;</span> <span class="pre">ubuntu&#64;&lt;homestead</span> <span class="pre">node&gt;:backup/&lt;snapshot&gt;</span></code>.</p>
+<p>On ellis, run the following commands.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>snapshot=&lt;snapshot&gt;
+sudo chown root.root db_backup.sql
+sudo mkdir -p /usr/share/clearwater/ellis/backup/backups/$snapshot
+sudo mv ~/backup/$snapshot/db_backup.sql /usr/share/clearwater/ellis/backup/backups/$snapshot
+</pre></div>
+</div>
+<p>On homestead/homer/memento there is no need to further move the files as
+the backup script takes a optional backup directory parameter.</p>
+</div>
+<div class="section" id="running-the-restore-backup-script">
+<h3>Running the Restore Backup Script<a class="headerlink" href="#running-the-restore-backup-script" title="Permalink to this headline">¶</a></h3>
+<p>To actually restore from the backup file, run</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/ellis/backup/restore_backup.sh</span> <span class="pre">&lt;snapshot&gt;</span></code>
+on ellis</li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/restore_backup.sh</span> <span class="pre">homestead_provisioning</span> <span class="pre">&lt;snapshot&gt;</span> <span class="pre">&lt;backup</span> <span class="pre">directory&gt;</span></code>
+and
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/restore_backup.sh</span> <span class="pre">homestead_cache</span> <span class="pre">&lt;snapshot&gt;</span> <span class="pre">&lt;backup</span> <span class="pre">directory&gt;</span></code>
+on homestead</li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/restore_backup.sh</span> <span class="pre">homer</span> <span class="pre">&lt;snapshot&gt;</span> <span class="pre">&lt;backup</span> <span class="pre">directory&gt;</span></code>
+on homer</li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/run-in-signaling-namespace</span> <span class="pre">/usr/share/clearwater/bin/restore_backup.sh</span> <span class="pre">memento</span> <span class="pre">&lt;snapshot&gt;</span> <span class="pre">&lt;backup</span> <span class="pre">directory&gt;</span></code>
+on memento.</li>
+</ul>
+<p>Ellis will produce output of the following form.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>Will attempt to backup from backup 1372336317
+Found backup directory 1372336317
+Restoring backup for ellis...
+--------------
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */
+--------------
+
+...
+
+--------------
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */
+--------------
+</pre></div>
+</div>
+<p>Homestead, homer or memento will produce output of the following form.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>Will attempt to backup from backup 1372336442947
+Will attempt to backup from directory /home/ubuntu/bkp_test/
+Found backup directory /home/ubuntu/bkp_test//1372336442947
+Restoring backup for keyspace homestead_provisioning...
+xss =  -ea -javaagent:/usr/share/cassandra/lib/jamm-0.2.5.jar -XX:+UseThreadPriorities -XX:ThreadPriorityPolicy=42 -Xm
+s826M -Xmx826M -Xmn100M -XX:+HeapDumpOnOutOfMemoryError -Xss180k
+Clearing commitlog...
+filter_criteria: Deleting old .db files...
+filter_criteria: Restoring from backup: 1372336442947
+private_ids: Deleting old .db files...
+private_ids: Restoring from backup: 1372336442947
+public_ids: Deleting old .db files...
+public_ids: Restoring from backup: 1372336442947
+sip_digests: Deleting old .db files...
+sip_digests: Restoring from backup: 1372336442947
+</pre></div>
+</div>
+<p>At this point, this node has been restored.</p>
+</div>
+<div class="section" id="synchronization">
+<h3>Synchronization<a class="headerlink" href="#synchronization" title="Permalink to this headline">¶</a></h3>
+<p>It is possible (and likely) that when backups are taken on different
+boxes the data will be out of sync, e.g. ellis will know about a
+subscriber, but there will no digest in homestead. To restore the system
+to a consistent state we have a synchronization tool within ellis, which
+can be run over a deployment to get the databases in sync. To run, log
+into an ellis box and execute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>cd /usr/share/clearwater/ellis
+sudo env/bin/python src/metaswitch/ellis/tools/sync_databases.py
+</pre></div>
+</div>
+<p>This will:</p>
+<ul class="simple">
+<li>Run through all the lines on ellis that have an owner and verify that
+there is a private identity associated with the public identity
+stored in ellis. If successful, it will verify that a digest exists
+in homestead for that private identity. If either of these checks
+fail, the line is considered lost and is removed from ellis. If both
+checks pass, it will check that there is a valid IFC - if this is
+missing, it will be replaced with the default IFC.</li>
+<li>Run through all the lines on ellis without an owner and make sure
+there is no orphaned data in homestead and homer, i.e. deleting the
+simservs, IFC and digest for those lines.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="shared-configuration">
+<h2>Shared Configuration<a class="headerlink" href="#shared-configuration" title="Permalink to this headline">¶</a></h2>
+<p>In addition to the data stored in ellis, homer, homestead and memento, a
+Clearwater deployment also has shared configuration that is
+<a class="reference external" href="Automatic_Clustering_Config_Sharing.md">automatically shared between
+nodes</a>. This is stored in a
+distributed database, and mirrored to files on the disk of each node.</p>
+<div class="section" id="backing-up">
+<h3>Backing Up<a class="headerlink" href="#backing-up" title="Permalink to this headline">¶</a></h3>
+<p>To backup the shared configuration:</p>
+<ul>
+<li><p class="first">If you are in the middle of <a class="reference external" href="Modifying_Clearwater_settings.md">modifying shared
+config</a>, complete the process to
+apply the config change to all nodes.</p>
+</li>
+<li><p class="first">Log onto one of the sprout nodes in the deployment.</p>
+</li>
+<li><p class="first">Copy the following files to somewhere else for safe keeping (e.g.
+another directory on the node, or another node entirely).</p>
+<p>/etc/clearwater/shared_config /etc/clearwater/bgcf.json
+/etc/clearwater/enum.json /etc/clearwater/s-cscf.json</p>
+</li>
+</ul>
+</div>
+<div class="section" id="restoring-configuration">
+<h3>Restoring Configuration<a class="headerlink" href="#restoring-configuration" title="Permalink to this headline">¶</a></h3>
+<p>To restore a previous backup, copy the four files listed above to
+<code class="docutils literal"><span class="pre">/etc/clearwater</span></code> on one of your sprout nodes. Then run the following
+commands on that node:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>/usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
+/usr/share/clearwater/clearwater-config-manager/scripts/upload_bgcf_json
+/usr/share/clearwater/clearwater-config-manager/scripts/upload_enum_json
+/usr/share/clearwater/clearwater-config-manager/scripts/upload_scscf_json
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Backups</a><ul>
+<li><a class="reference internal" href="#listing-backups">Listing Backups</a><ul>
+<li><a class="reference internal" href="#ellis">Ellis</a></li>
+<li><a class="reference internal" href="#homestead-homer-and-memento">Homestead, Homer and Memento</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#taking-a-manual-backup">Taking a Manual Backup</a><ul>
+<li><a class="reference internal" href="#id1">Ellis</a></li>
+<li><a class="reference internal" href="#id2">Homestead, Homer and Memento</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#periodic-automated-local-backups">Periodic Automated Local Backups</a></li>
+<li><a class="reference internal" href="#restoring-from-a-backup">Restoring from a Backup</a><ul>
+<li><a class="reference internal" href="#copying-backup-files">Copying Backup Files</a></li>
+<li><a class="reference internal" href="#running-the-restore-backup-script">Running the Restore Backup Script</a></li>
+<li><a class="reference internal" href="#synchronization">Synchronization</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#shared-configuration">Shared Configuration</a><ul>
+<li><a class="reference internal" href="#backing-up">Backing Up</a></li>
+<li><a class="reference internal" href="#restoring-configuration">Restoring Configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="IR.92_Supplementary_Services.html" title="previous chapter">IR.92 Supplementary Services</a></li>
+      <li>Next: <a href="Clearwater_Call_Barring_Support.html" title="next chapter">Call Barring</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Backups.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Backups.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

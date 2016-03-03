@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>All-in-one EC2 AMI Installation &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="All-in-one OVF Installation" href="All_in_one_OVF_Installation.html" />
+    <link rel="prev" title="Manual Install Instructions" href="Manual_Install.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="all-in-one-ec2-ami-installation">
+<h1>All-in-one EC2 AMI Installation<a class="headerlink" href="#all-in-one-ec2-ami-installation" title="Permalink to this headline">¶</a></h1>
+<p>This pages describes how to launch and run an <a class="reference external" href="All_in_one_Images.md">all-in-one
+image</a> in Amazon&#8217;s EC2 environment.</p>
+<div class="section" id="launch-process">
+<h2>Launch Process<a class="headerlink" href="#launch-process" title="Permalink to this headline">¶</a></h2>
+<p>Project Clearwater&#8217;s all-in-one node is already available as a pre-built
+AMI, which can be found in the Community AMIs list on the US East region
+of EC2. Launching this follows exactly the same process as for other EC2
+AMIs.</p>
+<p>Before you launch the node, you will need an EC2 keypair, and a security
+group configured to provide access to the <a class="reference external" href="Clearwater_IP_Port_Usage.md">required
+ports</a>.</p>
+<p>To launch the node</p>
+<ul class="simple">
+<li>From the EC2 console, make sure you&#8217;re in the US East region, then
+select &#8220;Instances&#8221;, &#8220;Launch instance&#8221; and then &#8220;Classic Wizard&#8221;</li>
+<li>Select the &#8220;Community AMIs&#8221; tab, and search for &#8220;Clearwater&#8221;</li>
+<li>Press &#8220;Select&#8221; for the Clearwater all-in-one AMI. Take the most
+recent version unless you have a good reason not to.</li>
+<li>Choose the Instance Type you require (the node runs fine for basic
+functional testing on an t2.small)</li>
+<li>From the remaining pages of parameters, the only ones that need to be
+set are Name (give the node whatever convenient name you wish),
+keypair and security group.</li>
+</ul>
+<p>On the last page, press &#8220;Launch&#8221;, and wait for the node to be started by
+EC2.</p>
+</div>
+<div class="section" id="running-and-using-the-image">
+<h2>Running and Using the Image<a class="headerlink" href="#running-and-using-the-image" title="Permalink to this headline">¶</a></h2>
+<p>Once the node has launched, you can SSH to it using the keypair you
+supplied at launch time, and username <code class="docutils literal"><span class="pre">ubuntu</span></code>.</p>
+<p>You can then try <a class="reference external" href="Making_your_first_call.md">making your first call</a>
+and <a class="reference external" href="Running_the_live_tests.md">running the live tests</a> - for these
+you will need the signup key, which is <code class="docutils literal"><span class="pre">secret</span></code>. You will probably
+want to change this to a more secure value - see <a class="reference external" href="Modifying_Clearwater_settings.md">&#8220;Modifying Clearwater
+settings&#8221;</a> for how to do this.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">All-in-one EC2 AMI Installation</a><ul>
+<li><a class="reference internal" href="#launch-process">Launch Process</a></li>
+<li><a class="reference internal" href="#running-and-using-the-image">Running and Using the Image</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Manual_Install.html" title="previous chapter">Manual Install Instructions</a></li>
+      <li>Next: <a href="All_in_one_OVF_Installation.html" title="next chapter">All-in-one OVF Installation</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/All_in_one_EC2_AMI_Installation.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/All_in_one_EC2_AMI_Installation.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

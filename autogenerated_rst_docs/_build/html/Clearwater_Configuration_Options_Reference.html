@@ -1,0 +1,678 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Clearwater Configuration Options Reference &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Migrating to Automatic Clustering and Configuration Sharing" href="Migrating_To_etcd.html" />
+    <link rel="prev" title="Modifying Clearwater Settings" href="Modifying_Clearwater_settings.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="clearwater-configuration-options-reference">
+<h1>Clearwater Configuration Options Reference<a class="headerlink" href="#clearwater-configuration-options-reference" title="Permalink to this headline">¶</a></h1>
+<p>This document describes all the Clearwater configuration options that
+can be set in /etc/clearwater/shared_config,
+/etc/clearwater/local_config or /etc/clearwater/user_settings.</p>
+<p>You should follow <a class="reference external" href="Modifying_Clearwater_settings">this process</a> when
+changing most of these settings. However for settings in the &#8220;Local
+settings&#8221; or &#8220;User settings&#8221; you should:</p>
+<ul class="simple">
+<li>Modify the configuration file</li>
+<li>Run <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">clearwater-infrastructure</span> <span class="pre">restart</span></code> to regenerate
+any dependent configuration files</li>
+<li>Restart the relevant Clearwater service(s) using the following
+commands as appropriate for the node.<ul>
+<li>Sprout - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">sprout</span> <span class="pre">quiesce</span></code></li>
+<li>Bono - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">bono</span> <span class="pre">quiesce</span></code></li>
+<li>Homestead -
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homestead</span> <span class="pre">stop</span> <span class="pre">&amp;&amp;</span> <span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homestead-prov</span> <span class="pre">stop</span></code></li>
+<li>Homer - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homer</span> <span class="pre">stop</span></code></li>
+<li>Ralf -<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ralf</span> <span class="pre">stop</span></code></li>
+<li>Ellis - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ellis</span> <span class="pre">stop</span></code></li>
+<li>Memento - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">memento</span> <span class="pre">stop</span></code></li>
+</ul>
+</li>
+</ul>
+<div class="section" id="local-settings">
+<h2>Local Settings<a class="headerlink" href="#local-settings" title="Permalink to this headline">¶</a></h2>
+<p>This section describes settings that are specific to a single node and
+are not applicable to any other nodes in the deployment. They are
+entered early on in the node&#8217;s life and are not normally changed. These
+options should be set in <code class="docutils literal"><span class="pre">/etc/clearwater/local_config</span></code>. Once this
+file has been created it is highly recommended that you do not change it
+unless instructed to do so. If you find yourself needing to change these
+settings, you should destroy and recreate then node instead.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">local_ip</span></code> - this should be set to an IP address which is
+configured on an interface on this system, and can communicate on an
+internal network with other Clearwater nodes and IMS core components
+like the HSS.</li>
+<li><code class="docutils literal"><span class="pre">public_ip</span></code> - this should be set to an IP address accessible to
+external clients (SIP UEs for Bono, web browsers for Ellis). It does
+not need to be configured on a local interface on the system - for
+example, in a cloud environment which puts instances behind a NAT.</li>
+<li><code class="docutils literal"><span class="pre">public_hostname</span></code> - this should be set to a hostname which resolves
+to <code class="docutils literal"><span class="pre">public_ip</span></code>, and will communicate with only this node (i.e. not
+be round-robined to other nodes). It can be set to <code class="docutils literal"><span class="pre">public_ip</span></code> if
+necessary.</li>
+<li><code class="docutils literal"><span class="pre">node_idx</span></code> - an index number used to distinguish this node from
+others of the same type in the cluster (for example, sprout-1 and
+sprout-2). Optional.</li>
+<li><code class="docutils literal"><span class="pre">etcd_cluster</span></code> - this is a comma separated list of IP addresses,
+for example <code class="docutils literal"><span class="pre">etcd_cluster=10.0.0.1,10.0.0.2</span></code>. It should be set on
+one of two ways:</li>
+<li>If the node is forming a new deployment, it should contain the IP
+addresses of all the nodes that are forming the new deployment
+(including this node).</li>
+<li>If the node is joining an existing deployment, it should contain the
+IP addresses of all the nodes that are currently in the deployment.</li>
+<li><code class="docutils literal"><span class="pre">etcd_cluster_key</span></code> - this is the name of the etcd datastore
+clusters that this node should join. It defaults to the function of
+the node (e.g. a Homestead node defaults to using &#8216;homestead&#8217; as its
+etcd datastore cluster name when it joins the Cassandra cluster).
+This must be set explicitly on nodes that colocate function.</li>
+</ul>
+</div>
+<div class="section" id="core-options">
+<h2>Core options<a class="headerlink" href="#core-options" title="Permalink to this headline">¶</a></h2>
+<p>This section describes options for the basic configuration of a
+Clearwater deployment - such as the hostnames of the six node types and
+external services such as email servers or the Home Subscriber Server.
+These options should be set in the <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code>
+file (in the format <code class="docutils literal"><span class="pre">name=value</span></code>, e.g. <code class="docutils literal"><span class="pre">home_domain=example.com</span></code>).</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">home_domain</span></code> - this is the main SIP domain of the deployment, and
+determines which SIP URIs Clearwater will treat as local. It will
+usually be a hostname resolving to all the P-CSCFs (e.g. the Bono
+nodes). Other domains can be specified through
+additional_home_domains, but Clearwater will treat this one as the
+default (for example, when handling <code class="docutils literal"><span class="pre">tel:</span></code> URIs).</li>
+<li><code class="docutils literal"><span class="pre">sprout_hostname</span></code> - a hostname that resolves by DNS round-robin to
+all Sprout nodes in the cluster.</li>
+<li><code class="docutils literal"><span class="pre">bono_hostname</span></code> - a hostname that resolves by DNS round-robin to
+all Bono nodes in the cluster.</li>
+<li><code class="docutils literal"><span class="pre">hs_hostname</span></code> - a hostname that resolves by DNS round-robin to all
+Homesteads in the cluster. Should include the HTTP port (usually
+8888). This is also used (without the port) as the Origin-Realm of
+the Diameter messages Homestead sends.</li>
+<li><code class="docutils literal"><span class="pre">hs_provisioning_hostname</span></code> - a hostname that resolves by DNS
+round-robin to all Homesteads in the cluster. Should include the HTTP
+provisioning port (usually 8889). Not needed when using an external
+HSS.</li>
+<li><code class="docutils literal"><span class="pre">ralf_hostname</span></code> - a hostname that resolves by DNS round-robin to
+all Ralf nodes in the cluster. Should include the port (usually
+9888). This is also used (without the port) as the Origin-Realm of
+the Diameter messages Ralf sends. Optional if no Ralf nodes exist.</li>
+<li><code class="docutils literal"><span class="pre">cdf_identity</span></code> - a Diameter identity that represents the address of
+an online Charging Function. Subscribers provisioned through Ellis
+will have this set as their Primary Charging Collection Function on
+P-Charging-Function-Addresses headers on responses to their
+successful REGISTERs, and Bono will add similarly in originating
+requests.</li>
+<li><code class="docutils literal"><span class="pre">xdms_hostname</span></code> - a hostname that resolves by DNS round-robin to
+all Homer nodes in the cluster. Should include the port (usually
+7888).</li>
+<li><code class="docutils literal"><span class="pre">hss_realm</span></code> - this sets the Destination-Realm of your external HSS.
+When this field is set, Homestead will then attempt to set up
+multiple Diameter connections using an SRV lookup on this realm.</li>
+<li><code class="docutils literal"><span class="pre">hss_hostname</span></code> - this sets the Destination-Host of your external
+HSS, if you have one. Homestead will also try and establish a
+Diameter connection to this host (on port 3868) if no SRV-discovered
+peers exist.</li>
+<li><code class="docutils literal"><span class="pre">signup_key</span></code> - this sets the password which Ellis will require
+before allowing self-sign-up.</li>
+<li><code class="docutils literal"><span class="pre">turn_workaround</span></code> - if your STUN/TURN clients are not able to
+authenticate properly (for example, because they can&#8217;t send the &#64;
+sign), this specifies an additional password which will authenticate
+clients even without a correct username.</li>
+<li><code class="docutils literal"><span class="pre">smtp_smarthost</span></code> - Ellis allows password recovery by email. This
+sets the SMTP server used to send those emails.</li>
+<li><code class="docutils literal"><span class="pre">smtp_username</span></code> - Ellis allows password recovery by email. This
+sets the username used to log in to the SMTP server.</li>
+<li><code class="docutils literal"><span class="pre">smtp_password</span></code> - Ellis allows password recovery by email. This
+sets the password used to log in to the SMTP server.</li>
+<li><code class="docutils literal"><span class="pre">email_recovery_sender</span></code> - Ellis allows password recovery by email.
+This sets the email address those emails are sent from.</li>
+<li><code class="docutils literal"><span class="pre">ellis_api_key</span></code> - sets a key which can be used to authenticate
+automated requests to Ellis, by setting it as the value of the
+X-NGV-API header. This is used to expire demo users regularly.</li>
+<li><code class="docutils literal"><span class="pre">ellis_hostname</span></code> - a hostname that resolves to Ellis, if you don&#8217;t
+want to use <code class="docutils literal"><span class="pre">ellis.home_domain</span></code>. This should match Ellis&#8217;s SSL
+certificate, if you are using one.</li>
+<li><code class="docutils literal"><span class="pre">memento_hostname</span></code> - a hostname that resolves by DNS round-robin to
+all Mementos in the cluster (the default is
+<code class="docutils literal"><span class="pre">memento.&lt;home_domain&gt;</span></code>). This should match Memento&#8217;s SSL
+certificate, if you are using one.</li>
+</ul>
+</div>
+<div class="section" id="advanced-options">
+<h2>Advanced options<a class="headerlink" href="#advanced-options" title="Permalink to this headline">¶</a></h2>
+<p>This section describes optional configuration options, particularly for
+ensuring conformance with other IMS devices such as HSSes, ENUM servers,
+application servers with strict requirements on Record-Route headers,
+and non-Clearwater I-CSCFs. These options should be set in the
+<code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> file (in the format <code class="docutils literal"><span class="pre">name=value</span></code>,
+e.g. <code class="docutils literal"><span class="pre">icscf=5052</span></code>).</p>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">icscf</span></code> - the port which Sprout nodes are providing I-CSCF service
+on. If not set, Sprout will only provide S-CSCF function.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">scscf</span></code> - the port which Sprout nodes are providing S-CSCF service
+on. If this not set but <code class="docutils literal"><span class="pre">icscf</span></code> is, Sprout will only provide I-CSCF
+function. If neither is set, this will default to 5054 and Sprout
+will only provide S-CSCF function.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">homestead_provisioning_port</span></code> - the HTTP port the Homestead
+provisioning interface listens on. Defaults to 8889. Not needed when
+using an external HSS.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">sas_server</span></code> - the IP address or hostname of your Metaswitch
+Service Assurance Server for call logging and troubleshooting.
+Optional.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">reg_max_expires</span></code> - determines the maximum expires= parameter
+Sprout will set on Contact headers at registrations, and therefore
+the amount of time before a UE has to re-register - must be less than
+2^31 ms (approximately 25 days). Default is 300 (seconds).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">sub_max_expires</span></code> - determines the maximum Expires header Sprout
+will set in subscription responses, and therefore the amount of time
+before a UE has to re-subscribe - must be less than 2^31 ms
+(approximately 25 days).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">upstream_hostname</span></code> - the I-CSCF which Bono should pass requests
+to. Defaults to the sprout_hostname.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">upstream_port</span></code> - the port on the I-CSCF which Bono should pass
+requests to. Defaults to 5052. If set to 0, Bono will use SRV
+resolution of the <code class="docutils literal"><span class="pre">upstream_hostname</span></code> hostname to determine a
+target for traffic.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">sprout_rr_level</span></code> - this determines how the Sprout S-CSCF adds
+Record-Route headers. Possible values are:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">pcscf</span></code> - a Record-Route header is only added just after
+requests come from or go to a P-CSCF - that is, at the start of
+originating handling and the end of terminating handling</li>
+<li><code class="docutils literal"><span class="pre">pcscf,icscf</span></code> - a Record-Route header is added just after
+requests come from or go to a P-CSCF or I-CSCF - that is, at the
+start and end of originating handling and the start and end of
+terminating handling</li>
+<li><code class="docutils literal"><span class="pre">pcscf,icscf,as</span></code> - a Record-Route header is added after requests
+come from or go to a P-CSCF, I-CSCF or application server - that
+is, at the start and end of originating handling, the start and
+end of terminating handling, and between each application server
+invoked</li>
+</ul>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">force_hss_peer</span></code> - when set to an IP address or hostname, Homestead
+will create a connection to the HSS using this value, but will still
+use the <code class="docutils literal"><span class="pre">hss_realm</span></code> and <code class="docutils literal"><span class="pre">hss_hostname</span></code> settings for the
+Destination-Host and Destination-Realm Diameter AVPs. This is useful
+when your HSS&#8217;s Diameter configuration does not match the DNS
+records.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">hss_mar_lowercase_unknown</span></code> - some Home Subscriber Servers
+(particularly old releases of OpenIMSCore HSS) expect the string
+&#8216;unknown&#8217; rather than &#8216;Unknown&#8217; in Multimedia-Auth-Requests when
+Clearwater cannot tell what authentication type is expected. Setting
+this option to &#8216;Y&#8217; will make Homestead send requests in this format.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">hss_mar_force_digest</span></code> - if Clearwater cannot tell what
+authentication type a subscriber is trying to use, this forces it to
+assume &#8216;SIP Digest&#8217; and report that in the Multimedia-Auth-Request,
+rather than &#8216;Unknown&#8217;.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">hss_mar_force_aka</span></code> - if Clearwater cannot tell what authentication
+type a subscriber is trying to use, this forces it to assume
+&#8216;Digest-AKA-v1&#8217; and report that in the Multimedia-Auth-Request,
+rather than &#8216;Unknown&#8217;.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">force_third_party_reg_body</span></code> - if the HSS does not allow the
+IncludeRegisterRequest/IncludeRegisterResponse fields (which were
+added in 3GPP Rel 9) to be configured, setting
+<code class="docutils literal"><span class="pre">force_third_party_reg_body=Y</span></code> makes Clearwater behave as though
+they had been sent, allowing interop with application servers that
+need them.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">enforce_user_phone</span></code> - by default, Clearwater will do an ENUM
+lookup on any SIP URI that looks like a phone number, due to client
+support for user-phone not being widespread. When this option is set
+to &#8216;Y&#8217;, Clearwater will only do ENUM lookups for URIs which have the
+user=phone parameter.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">enforce_global_only_lookups</span></code> - by default, Clearwater will do ENUM
+lookups for SIP and Tel URIs containing global and local numbers (as
+defined in RFC 3966). When this option is set to ‘Y’, Clearwater will
+only do ENUM lookups for SIP and Tel URIs that contain global
+numbers.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">hs_listen_port</span></code> - the Diameter port which Homestead listens on.
+Defaults to 3868.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">ralf_listen_port</span></code> - the Diameter port which Ralf listens on.
+Defaults to 3869 to avoid clashes when colocated with Homestead.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">alias_list</span></code> - this defines additional hostnames and IP addresses
+which Sprout or Bono will treat as local for the purposes of SIP
+routing (e.g. when removing Route headers).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">default_session_expires</span></code> - determines the Session-Expires value
+which Sprout will add to INVITEs, to force UEs to send keepalive
+messages during calls so they can be tracked for billing purposes.
+This cannot be set to a value less than 90 seconds, as specified in
+<a class="reference external" href="https://tools.ietf.org/html/rfc4028#section-4">RFC 4028, section
+4</a>.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">max_session_expires</span></code> - determines the maximum
+Session-Expires/Min-SE value which Sprout will accept in requests.
+This cannot be set to a value less than 90 seconds, as specified in
+<a class="reference external" href="https://tools.ietf.org/html/rfc4028#section-4">RFC 4028, sections 4 and
+5</a>.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">enum_server</span></code> - a comma-separated list of DNS servers which can
+handle ENUM queries.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">enum_suffix</span></code> - determines the DNS suffix used for ENUM requests
+(after the digits of the number). Defaults to &#8220;e164.arpa&#8221;</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">enum_file</span></code> - if set (to a file path), and if <code class="docutils literal"><span class="pre">enum_server</span></code> is
+not set, Sprout will use this local JSON file for ENUM lookups rather
+than a DNS server. An example file is at
+<a class="reference external" href="http://clearwater.readthedocs.org/en/stable/ENUM/index.html#deciding-on-enum-rules">http://clearwater.readthedocs.org/en/stable/ENUM/index.html#deciding-on-enum-rules</a>.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">icscf_uri</span></code> - the SIP address of the external I-CSCF integrated
+with your Sprout node (if you have one).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">scscf_uri</span></code> - the SIP address of the Sprout S-CSCF. This defaults
+to <code class="docutils literal"><span class="pre">sip:$sprout_hostname:$scscf;transport=TCP</span></code> - this includes a
+specific port, so if you need NAPTR/SRV resolution, it must be
+changed to not include the port.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">additional_home_domains</span></code> - this option defines a set of home
+domains which Sprout and Bono will regard as locally hosted (i.e.
+allowing users to register, not routing calls via an external trunk).
+It is a comma-separated list.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">billing_realm</span></code> - this sets the Destination-Realm on Diameter
+messages to your external CDR. CDR connections are not based on this
+but on configuration at the P-CSCF (which sets the
+P-Charging-Function-Addresses header).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">diameter_timeout_ms</span></code> - determines the number of milliseconds
+Homestead will wait for a response from the HSS before failing a
+request. Defaults to 200.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">max_peers</span></code> - determines the maximum number of Diameter peers which
+Ralf or Homestead can have open connections to at the same time.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">num_http_threads</span></code> (Ralf/Memento) - determines the number of
+threads that will be used to process HTTP requests. For Memento this
+defaults to the number of CPU cores on the system. For Ralf it
+defaults to 50 times the number of CPU cores (Memento and Ralf use
+different threading models, hence the different defaults). Note that
+for Homestead, this can only be set in
+/etc/clearwater/user_settings.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">num_http_worker_threads</span></code> - determines the number of threads that
+will be used to process HTTP requests once they have been parsed.
+Only used by Memento.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">ralf_diameteridentity</span></code> - determines the Origin-Host that will be
+set on the Diameter messages Ralf sends. Defaults to public_hostname
+(with some formatting changes if public_hostname is an IPv6
+address).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">hs_diameteridentity</span></code> - determines the Origin-Host that will be set
+on the Diameter messages Homestead sends. Defaults to
+public_hostname (with some formatting changes if public_hostname is
+an IPv6 address).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">gemini_enabled</span></code> - When this field is set to &#8216;Y&#8217;, then the node
+(either a Sprout or a standalone application server) will include a
+Gemini AS.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">memento_enabled</span></code> - When this field is set to &#8216;Y&#8217;, then the node
+(either a Sprout or a standalone application server) will include a
+Memento AS.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">max_call_list_length</span></code> - determines the maximum number of complete
+calls a subscriber can have in the call list store. This defaults to
+no limit. This is only relevant if the node includes a Memento AS.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">call_list_store_ttl</span></code> - determines how long each call list fragment
+should be kept in the call list store. This defaults to 604800
+seconds (1 week). This is only relevant if the node includes a
+Memento AS.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">memento_disk_limit</span></code> - determines the maximum size that the call
+lists database may occupy. This defaults to 20% of disk space. This
+is only relevant if the node includes a Memento AS. Can be specified
+in Bytes, Kilobytes, Megabytes, Gigabytes, or a percentage of the
+available disk. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>memento_disk_limit=10240 # Bytes
+memento_disk_limit=100k  # Kilobytes
+memento_disk_limit=100M  # Megabytes
+memento_disk_limit=100G  # Gigabytes
+memento_disk_limit=45%   # Percentage of available disk
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">memento_threads</span></code> - determines the number of threads dedicated to
+adding call list fragments to the call list store. This defaults to
+25 threads. This is only relevant if the node includes a Memento AS.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">memento_notify_url</span></code> - If set to an HTTP URL, memento will make a
+POST request to this URL whenever a subscriber&#8217;s call list changes.
+The body of the POST request will be a JSON document with the
+subscriber&#8217;s IMPU in a field named <code class="docutils literal"><span class="pre">impu</span></code>. This is only relevant if
+the node includes a Memento AS. If empty, no notifications will be
+sent. Defaults to empty.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">signaling_dns_server</span></code> - a comma-separated list of DNS servers for
+non-ENUM queries. Defaults to 127.0.0.1 (i.e. uses <code class="docutils literal"><span class="pre">dnsmasq</span></code>)</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">target_latency_us</span></code> - Target latency (in microsecs) for requests
+above which
+<a class="reference external" href="http://www.projectclearwater.org/clearwater-performance-and-our-load-monitor/">throttling</a>
+applies. This defaults to 100000 microsecs</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">max_tokens</span></code> - Maximum number of tokens allowed in the token bucket
+(used by the throttling code). This defaults to 20 tokens</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">init_token_rate</span></code> - Initial token refill rate of tokens in the
+token bucket (used by the throttling code). This defaults to 250
+tokens per second per core</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">min_token_rate</span></code> - Minimum token refill rate of tokens in the token
+bucket (used by the throttling code). This defaults to 10.0</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">override_npdi</span></code> - Whether the I-CSCF, S-CSCF and BGCF should check
+for number portability data on requests that already have the &#8216;npdi&#8217;
+indicator. This defaults to false</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">exception_max_ttl</span></code> - determines the maximum time before a process
+exits if it crashes. This defaults to 600 seconds</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">check_destination_host</span></code> - determines whether the node checks the
+Destination-Host on a Diameter request when deciding whether it
+should process the request. This defaults to true.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">astaire_cpu_limit_percentage</span></code> - the maximum percentage of total
+CPU that Astaire is allowed to consume when resyncing memcached data
+(as part of a scale-up, scale-down, or following a memcached
+failure). Note that this only limits the CPU usage of the Astaire
+process, and does not affect memcached&#8217;s CPU usage. Must be an
+integer. Defaults to 5.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">sip_blacklist_duration</span></code> - the time in seconds for which SIP peers
+are blacklisted when they are unresponsive (defaults to 30 seconds).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">http_blacklist_duration</span></code> - the time in seconds for which HTTP
+peers are blacklisted when they are unresponsive (defaults to 30
+seconds).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">diameter_blacklist_duration</span></code> - the time in seconds for which
+Diameter peers are blacklisted when they are unresponsive (defaults
+to 30 seconds).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">snmp_ip</span></code> - the IP address to send alarms to (defaults to being
+unset). If this is set then Sprout, Ralf, Homestead and Chronos will
+send alarms - more details on the alarms are
+<a class="reference external" href="http://clearwater.readthedocs.org/en/stable/SNMP_Alarms/index.html">here</a>.
+This can be a single IP address, or a comma-separated list of IP
+addresses.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">impu_cache_ttl</span></code> - the number of seconds for which Homestead will
+cache the SIP Digest from a Multimedia-Auth-Request. Defaults to 0,
+as Sprout does enough caching to ensure that it can handle an
+authenticated REGISTER after a challenge, and subsequent challenges
+should be rare.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">sip_tcp_connect_timeout</span></code> - the time in milliseconds to wait for a
+SIP TCP connection to be established (defaults to 2000 milliseconds).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">sip_tcp_send_timeout</span></code> - the time in milliseconds to wait for sent
+data to be acknowledgered at the TCP level on a SIP TCP connection
+(defaults to 2000 milliseconds).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">session_continued_timeout_ms</span></code> - if an Application Server with
+default handling of &#8216;continue session&#8217; is unresponsive, this is the
+time that Sprout will wait (in milliseconds) before bypassing the AS
+and moving onto the next AS in the chain (defaults to 2000
+milliseconds).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">session_terminated_timeout_ms</span></code> - if an Application Server with
+default handling of &#8216;terminate session&#8217; is unresponsive, this is the
+time that Sprout will wait (in milliseconds) before terminating the
+session (defaults to 4000 milliseconds).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">pbxes</span></code> - a comma separated list of IP address that Bono considers
+to be PBXes that are incapable of registering. Non-REGISTER requests
+from these addresses are passed upstream to Sprout with a
+<code class="docutils literal"><span class="pre">Proxy-Authorization</span></code> header. It is strongly recommended that
+Sprout&#8217;s <code class="docutils literal"><span class="pre">non_register_authentication</span></code> option is set to
+<code class="docutils literal"><span class="pre">if_proxy_authorization_present</span></code> so that the request will be
+challenged. Bono also permits requests to these addresses from the
+core to pass through it.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">pbx_service_route</span></code> - the SIP URI to which Bono routes originating
+calls from non-registering PBXes (which are identified by the
+<code class="docutils literal"><span class="pre">pbxes</span></code> option). This is used to route requests directly to the
+S-CSCF rather than going via an I-CSCF (which could change the route
+header and prevent the S-CSCF from processing the request properly).
+This URI is used verbatim and should almost always include the
+<code class="docutils literal"><span class="pre">lr</span></code>, <code class="docutils literal"><span class="pre">orig</span></code>, and <code class="docutils literal"><span class="pre">auto-reg</span></code> parameters. If this option is not
+specified, the requests are routed to the address specified by the
+<code class="docutils literal"><span class="pre">upstream_hostname</span></code> and <code class="docutils literal"><span class="pre">upstream_port</span></code> options.</p>
+<ul class="simple">
+<li>e.g.
+<code class="docutils literal"><span class="pre">sip:sprout.example.com:5054;transport=tcp;lr;orig;auto-reg</span></code></li>
+</ul>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">non_register_authentication</span></code> - controls when Sprout will challenge
+a non-REGISTER request using SIP Proxy-Authentication. Possible
+values are <code class="docutils literal"><span class="pre">never</span></code> (meaning Sprout will never challenge) or
+<code class="docutils literal"><span class="pre">if_proxy_authorization_present</span></code> (meaning Sprout will only
+challenge requests that have a Proxy-Authorization header).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">ralf_threads</span></code> - used on Sprout nodes, this determines how many
+worker threads should be started to do Ralf request processing
+(defaults to 25).</p>
+</li>
+</ul>
+</div>
+<div class="section" id="experimental-options">
+<h2>Experimental options<a class="headerlink" href="#experimental-options" title="Permalink to this headline">¶</a></h2>
+<p>This section describes optional configuration options which may be
+useful, but are not heavily-used or well-tested by the main Clearwater
+development team. These options should be set in the
+<code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> file (in the format <code class="docutils literal"><span class="pre">name=value</span></code>,
+e.g. <code class="docutils literal"><span class="pre">cassandra_hostname=db.example.com</span></code>).</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">cassandra_hostname</span></code> - if using an external Cassandra cluster
+(which is a fairly uncommon configuration), a hostname that resolves
+to one or more Cassandra nodes.</li>
+<li><code class="docutils literal"><span class="pre">ralf_secure_listen_port</span></code> - this determines the port Ralf listens
+on for TLS-secured Diameter connections.</li>
+<li><code class="docutils literal"><span class="pre">hs_secure_listen_port</span></code> - this determines the port Homestead
+listens on for TLS-secured Diameter connections.</li>
+<li><code class="docutils literal"><span class="pre">ellis_cookie_key</span></code> - an arbitrary string that enables Ellis nodes
+to determine whether they should be in the same cluster. This
+function is not presently used.</li>
+<li><code class="docutils literal"><span class="pre">stateless_proxies</span></code> - a comma separated list of domain names that
+are treated as SIP stateless proxies. Stateless proxies are not
+blacklisted if a SIP transaction sent to them times out. This field
+should reflect how the servers are identified in SIP. For example if
+a cluster of nodes is identified by the name &#8216;cluster.example.com&#8217;,
+the option should be set to &#8216;cluster.example.com&#8217; instead of the
+hostnames or IP addresses of individual servers.</li>
+<li><code class="docutils literal"><span class="pre">hss_reregistration_time</span></code> - determines how many seconds should pass
+before Homestead sends a Server-Assignment-Request with type
+RE_REGISTRATION to the HSS. (On first registration, it will always
+send a SAR with type REGISTRATION). This determines a minimum value -
+after this many seconds have passed, Homestead will send the
+Server-Assignment-Request when the next REGISTER is received. Note
+that Homestead invalidates its cache of the registration and iFCs
+after twice this many seconds have passed, so it is not safe to set
+this to less than half of <code class="docutils literal"><span class="pre">reg_max_expires</span></code>. The default value of
+this option is whichever is the greater of the following.<ul>
+<li><ol class="first arabic" start="1800">
+<li></li>
+</ol>
+</li>
+<li>Half of the value of reg_max_expires.</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="user-settings">
+<h2>User settings<a class="headerlink" href="#user-settings" title="Permalink to this headline">¶</a></h2>
+<p>This section describes settings that may vary between systems in the
+same deployment, such as log level (which may be increased on certain
+machines to track down specific issues) and performance settings (which
+may vary if some servers in your deployment are more powerful than
+others). These settings are set in <code class="docutils literal"><span class="pre">/etc/clearwater/user_settings</span></code>,
+not <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> (in the format <code class="docutils literal"><span class="pre">name=value</span></code>,
+e.g. <code class="docutils literal"><span class="pre">log_level=5</span></code>).</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">log_level</span></code> - determines how verbose Clearwater&#8217;s logging is, from
+1 (error logs only) to 5 (debug-level logs). Defaults to 2.</li>
+<li><code class="docutils literal"><span class="pre">log_directory</span></code> - determines which folder the logs are created in.
+This folder must exist, and be owned by the service. Defaults to
+/var/log/ (this folder is created and has the correct permissions set
+for it by the install scripts of the service).</li>
+<li><code class="docutils literal"><span class="pre">max_log_directory_size</span></code> - determines the maximum size of each
+Clearwater process&#8217;s log_directory in bytes. Defaults to 1GB. If you
+are co-locating multiple Clearwater processes, you&#8217;ll need to reduce
+this value proportionally.</li>
+<li><code class="docutils literal"><span class="pre">num_pjsip_threads</span></code> - determines how many PJSIP transport-layer
+threads should run at once. Defaults to 1, and it may be dangerous to
+change this as it is not necessarily thread-safe.</li>
+<li><code class="docutils literal"><span class="pre">num_worker_threads</span></code> - for Sprout and Bono nodes, determines how
+many worker threads should be started to do SIP/IMS processing.
+Defaults to 50 times the number of CPU cores on the system.</li>
+<li><code class="docutils literal"><span class="pre">upstream_connections</span></code> - determines the maximum number of TCP
+connections which Bono will open to the I-CSCF(s). Defaults to 50.</li>
+<li><code class="docutils literal"><span class="pre">upstream_recycle_connections</span></code> - the average number of seconds
+before Bono will destroy and re-create a connection to Sprout. A
+higher value means slightly less work, but means that DNS changes
+will not take effect as quickly (as new Sprout nodes added to DNS
+will only start to receive messages when Bono creates a new
+connection and does a fresh DNS lookup).</li>
+<li><code class="docutils literal"><span class="pre">authentication</span></code> - by default, Clearwater performs authentication
+challenges (SIP Digest or IMS AKA depending on HSS configuration).
+When this is set to &#8216;Y&#8217;, it simply accepts all REGISTERs - obviously
+this is very insecure and should not be used in production.</li>
+<li><code class="docutils literal"><span class="pre">num_http_threads</span></code> (Homestead) - determines the number of HTTP
+worker threads that will be used to process requests. Defaults to 50
+times the number of CPU cores on the system.</li>
+</ul>
+</div>
+<div class="section" id="other-configuration-options">
+<h2>Other configuration options<a class="headerlink" href="#other-configuration-options" title="Permalink to this headline">¶</a></h2>
+<p>There is further documentation for Chronos configuration
+<a class="reference external" href="https://github.com/Metaswitch/chronos/blob/dev/doc/configuration.md">here</a>
+and Homer/Homestead-prov configuration
+<a class="reference external" href="https://github.com/Metaswitch/crest/blob/master/docs/development.md#local-settings">here</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Clearwater Configuration Options Reference</a><ul>
+<li><a class="reference internal" href="#local-settings">Local Settings</a></li>
+<li><a class="reference internal" href="#core-options">Core options</a></li>
+<li><a class="reference internal" href="#advanced-options">Advanced options</a></li>
+<li><a class="reference internal" href="#experimental-options">Experimental options</a></li>
+<li><a class="reference internal" href="#user-settings">User settings</a></li>
+<li><a class="reference internal" href="#other-configuration-options">Other configuration options</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Modifying_Clearwater_settings.html" title="previous chapter">Modifying Clearwater Settings</a></li>
+      <li>Next: <a href="Migrating_To_etcd.html" title="next chapter">Migrating to Automatic Clustering and Configuration Sharing</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_Configuration_Options_Reference.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_Configuration_Options_Reference.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

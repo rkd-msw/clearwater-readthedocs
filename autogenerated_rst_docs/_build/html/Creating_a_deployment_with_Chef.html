@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Creating a deployment with Chef &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Making calls through Clearwater" href="Making_your_first_call.html" />
+    <link rel="prev" title="Creating a Chef deployment environment" href="Creating_a_deployment_environment.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="creating-a-deployment-with-chef">
+<h1>Creating a deployment with Chef<a class="headerlink" href="#creating-a-deployment-with-chef" title="Permalink to this headline">¶</a></h1>
+<p>This is the final stage in creating a Clearwater deployment using the
+<a class="reference external" href="Automated_Install.md">automated install process</a>. Here we will
+actually create the deployment - commissioning servers and configuring
+DNS records.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>You must have <a class="reference external" href="Installing_a_Chef_workstation.md">created the chef workstation
+machine</a> and have SSH access to
+the ubuntu user on it.</li>
+<li>You must have <a class="reference external" href="Creating_a_deployment_environment.md">created a deployment
+environment</a> and know its
+name, <code class="docutils literal"><span class="pre">&lt;name&gt;</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="creating-a-deployment">
+<h2>Creating a Deployment<a class="headerlink" href="#creating-a-deployment" title="Permalink to this headline">¶</a></h2>
+<p>You now have two options - you can create an All-in-One node, where all
+the Clearwater components are run on a single machine instance, or a
+larger deployment which can potentially have numerous instances of each
+component.</p>
+<div class="section" id="creating-an-all-in-one-aio-node">
+<h3>Creating an All-in-One (&#8220;AIO&#8221;) node<a class="headerlink" href="#creating-an-all-in-one-aio-node" title="Permalink to this headline">¶</a></h3>
+<p>To create a single machine instance running all the Clearwater
+components, run the following on the chef workstation machine.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>cd ~/chef
+knife box create cw_aio -E &lt;name&gt;
+</pre></div>
+</div>
+<div class="section" id="optional-arguments">
+<h4>Optional arguments<a class="headerlink" href="#optional-arguments" title="Permalink to this headline">¶</a></h4>
+<p>The following modifier is available.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--index</span> <span class="pre">&lt;value&gt;</span></code> - Name the new node <code class="docutils literal"><span class="pre">&lt;name&gt;-cw_aio-&lt;value&gt;</span></code> to
+permit distinguishing it from others.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="creating-a-larger-deployment">
+<h3>Creating a larger deployment<a class="headerlink" href="#creating-a-larger-deployment" title="Permalink to this headline">¶</a></h3>
+<p>To kick off construction of the deployment, run the following on the
+chef workstation machine.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>cd ~/chef
+knife deployment resize -E &lt;name&gt; --ralf-count 1 -V
+</pre></div>
+</div>
+<p>Follow the on-screen prompts.</p>
+<p>This will:</p>
+<ul class="simple">
+<li>Commission AWS instances</li>
+<li>Install the Clearwater software</li>
+<li>Configure security groups</li>
+<li>Configure DNS</li>
+<li>Start the Clearwater services</li>
+</ul>
+<div class="section" id="id1">
+<h4>Optional arguments<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<p>The following modifiers are available to set the scale of your
+deployment.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--bono-count</span> <span class="pre">NUM</span></code> - Create <code class="docutils literal"><span class="pre">NUM</span></code> Bono nodes (default is 1)</li>
+<li><code class="docutils literal"><span class="pre">--sprout-count</span> <span class="pre">NUM</span></code> - Create <code class="docutils literal"><span class="pre">NUM</span></code> Sprout nodes (default is 1)</li>
+<li><code class="docutils literal"><span class="pre">--homer-count</span> <span class="pre">NUM</span></code> - Create <code class="docutils literal"><span class="pre">NUM</span></code> Homer nodes (default is 1)</li>
+<li><code class="docutils literal"><span class="pre">--homestead-count</span> <span class="pre">NUM</span></code> - Create <code class="docutils literal"><span class="pre">NUM</span></code> Homestead nodes (default
+is 1)</li>
+<li><code class="docutils literal"><span class="pre">--ralf-count</span> <span class="pre">NUM</span></code> - Create <code class="docutils literal"><span class="pre">NUM</span></code> Ralf nodes (default is 0)</li>
+<li><code class="docutils literal"><span class="pre">--subscribers</span> <span class="pre">NUM</span></code> - Auto-scale the deployment to handle <code class="docutils literal"><span class="pre">NUM</span></code>
+subscribers.</li>
+<li>Due to a known limitation of the install process, Ellis will allocate
+1000 numbers regardless of this value.</li>
+<li>To bulk provision subscribers (without using Ellis), follow <a class="reference external" href="https://github.com/Metaswitch/crest/blob/master/src/metaswitch/crest/tools/sstable_provisioning/README.md">these
+instructions</a></li>
+</ul>
+<p>More detailed documentation on the available Chef commands is available
+<a class="reference external" href="https://github.com/Metaswitch/chef/blob/master/docs/knife_commands.mdhttps://github.com/Metaswitch/chef/blob/master/docs/knife_commands.md">here</a>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this headline">¶</a></h2>
+<p>Now your deployment is installed and ready to use, you&#8217;ll want to test
+it.</p>
+<ul class="simple">
+<li><a class="reference external" href="Making_your_first_call.md">Making your first call</a></li>
+<li><a class="reference external" href="Running_the_live_tests.md">Running the live tests</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Creating a deployment with Chef</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#creating-a-deployment">Creating a Deployment</a><ul>
+<li><a class="reference internal" href="#creating-an-all-in-one-aio-node">Creating an All-in-One (&#8220;AIO&#8221;) node</a><ul>
+<li><a class="reference internal" href="#optional-arguments">Optional arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#creating-a-larger-deployment">Creating a larger deployment</a><ul>
+<li><a class="reference internal" href="#id1">Optional arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Creating_a_deployment_environment.html" title="previous chapter">Creating a Chef deployment environment</a></li>
+      <li>Next: <a href="Making_your_first_call.html" title="next chapter">Making calls through Clearwater</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Creating_a_deployment_with_Chef.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Creating_a_deployment_with_Chef.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

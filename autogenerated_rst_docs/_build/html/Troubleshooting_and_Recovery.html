@@ -1,0 +1,316 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Troubleshooting and Recovery &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Installation Instructions" href="Installation_Instructions.html" />
+    <link rel="prev" title="Support" href="Support.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="troubleshooting-and-recovery">
+<h1>Troubleshooting and Recovery<a class="headerlink" href="#troubleshooting-and-recovery" title="Permalink to this headline">¶</a></h1>
+<p>This document describes how to troubleshoot some common problems, and
+associated recovery strategies.</p>
+<div class="section" id="general">
+<h2>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Clearwater components are monitored by
+<a class="reference external" href="http://mmonit.com/monit/">monit</a> and should be restarted by it if
+the component fails or hangs. You can check that components are
+running by issuing <code class="docutils literal"><span class="pre">monit</span> <span class="pre">status</span></code>. If components are not being
+monitored as expected, run <code class="docutils literal"><span class="pre">monit</span> <span class="pre">monitor</span> <span class="pre">&lt;component&gt;</span></code> to monitor
+it. To restart a component, we recommend using
+<code class="docutils literal"><span class="pre">service</span> <span class="pre">&lt;component&gt;</span> <span class="pre">stop</span></code> to stop the component, and allowing
+monit to automatically start the component again.</li>
+<li>The <a class="reference external" href="https://github.com/Metaswitch/clearwater-infrastructure/blob/master/clearwater-diags-monitor.md">Clearwater diagnostics
+monitor</a>
+detects crashes in native clearwater processes (Bono, Sprout and
+Homestead) and captures a diagnostics bundle containing a core file
+(among other useful information). A diagnostics bundle can also be
+created by running a command line script
+(<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/gather_diags</span></code>).</li>
+<li>By default each component logs to <code class="docutils literal"><span class="pre">/var/log/&lt;service&gt;/</span></code>, at log
+level 2 (which only includes errors and very high level events). To
+see more detailed logs you can enable debug logging; details for how
+to do this for each component are below. Note that if you want to run
+stress through your deployment, you should revert the log levels back
+to the default level.</li>
+</ul>
+</div>
+<div class="section" id="ellis">
+<h2>Ellis<a class="headerlink" href="#ellis" title="Permalink to this headline">¶</a></h2>
+<p>The most common problem from Ellis is it reporting &#8220;Failed to update
+server&#8221;. This can happen for several reasons.</p>
+<ul class="simple">
+<li>If Ellis reports &#8220;Failed to update server&#8221; when allocating a new
+number (either after an explicit request or as part of creating a
+whole new account), check that ellis has free numbers to allocate.
+The <a class="reference external" href="https://github.com/Metaswitch/ellis/blob/dev/docs/create-numbers.md">create_numbers.py
+script</a>
+is safe to re-run, to ensure that numbers have been allocated.</li>
+<li>Check the <code class="docutils literal"><span class="pre">/var/log/ellis/ellis-*.log</span></code> files. If these indicate
+that a timeout occurred communicating with Homer or Homestead-prov,
+check that the DNS entries for Homer and Homestead-prov exist and are
+configured correctly. If these are already correct, check Homer or
+Homestead-prov to see if they are behaving incorrectly.</li>
+<li>To turn on debug logging for Ellis, write
+<code class="docutils literal"><span class="pre">LOG_LEVEL</span> <span class="pre">=</span> <span class="pre">logging.DEBUG</span></code> to the <code class="docutils literal"><span class="pre">local_settings.py</span></code> file (at
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/ellis/local_settings.py</span></code>). Then restart
+clearwater-infrastructure
+(<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">clearwater-infrastructure</span> <span class="pre">restart</span></code>), and restart
+Ellis (<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ellis</span> <span class="pre">stop</span></code> - it will be restarted by monit).</li>
+</ul>
+<p>To examine Ellis&#8217; database, run <code class="docutils literal"><span class="pre">mysql</span></code> (as root), then type
+<code class="docutils literal"><span class="pre">use</span> <span class="pre">ellis;</span></code> to set the correct database. You can then issue standard
+SQL queries on the users and numbers tables, e.g.
+<code class="docutils literal"><span class="pre">SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">users</span> <span class="pre">WHERE</span> <span class="pre">email</span> <span class="pre">=</span> <span class="pre">'&lt;email</span> <span class="pre">address&gt;'</span></code>.</p>
+</div>
+<div class="section" id="homer-and-homestead">
+<h2>Homer and Homestead<a class="headerlink" href="#homer-and-homestead" title="Permalink to this headline">¶</a></h2>
+<p>The most common problem on Homer and Homestead is failing to read or
+write to the Cassandra database.</p>
+<ul class="simple">
+<li>Check that Cassandra is running (<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">monit</span> <span class="pre">status</span></code>). If not,
+check its <code class="docutils literal"><span class="pre">/var/log/cassandra/*.log</span></code> files.</li>
+<li>Check that Cassandra is configured correctly. First access the
+command-line CQL interface by running <code class="docutils literal"><span class="pre">cqlsh</span></code>.<ul>
+<li>If you&#8217;re on Homer, type <code class="docutils literal"><span class="pre">use</span> <span class="pre">homer;</span></code> to set the correct
+database and then <code class="docutils literal"><span class="pre">describe</span> <span class="pre">tables;</span></code> - this should report
+<code class="docutils literal"><span class="pre">simservs</span></code>. If this is missing, recreate it by running
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/cassandra-schemas/homer.sh</span></code>.</li>
+<li>If you&#8217;re on Homestead, there are 2 databases.</li>
+<li>Type <code class="docutils literal"><span class="pre">use</span> <span class="pre">homestead_provisioning;</span></code> to set the provisioning
+database and then <code class="docutils literal"><span class="pre">describe</span> <span class="pre">tables;</span></code> - this should report
+<code class="docutils literal"><span class="pre">service_profiles</span></code>, <code class="docutils literal"><span class="pre">public</span></code>, <code class="docutils literal"><span class="pre">implicit_registration_sets</span></code>
+and <code class="docutils literal"><span class="pre">private</span></code>.</li>
+<li>Type <code class="docutils literal"><span class="pre">use</span> <span class="pre">homestead_cache;</span></code> to set the cache database and then
+<code class="docutils literal"><span class="pre">describe</span> <span class="pre">tables;</span></code> as before - this should report <code class="docutils literal"><span class="pre">impi</span></code>,
+<code class="docutils literal"><span class="pre">impi_mapping</span></code> and <code class="docutils literal"><span class="pre">impu</span></code>.</li>
+<li>If any of these are missing, recreate them by running
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/cassandra-schemas/homestead_cache.sh</span></code> and
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/cassandra-schemas/homestead_provisioning.sh</span></code>.</li>
+</ul>
+</li>
+<li>Check that Cassandra is clustered correctly (if running a multi-node
+system). <code class="docutils literal"><span class="pre">nodetool</span> <span class="pre">status</span></code> tells you which nodes are in the
+cluster, and how the keyspace is distributed among them.</li>
+<li>If this doesn&#8217;t help, Homer logs to <code class="docutils literal"><span class="pre">/var/log/homer/homer-*.log</span></code>
+and Homestead logs to <code class="docutils literal"><span class="pre">/var/log/homestead/homestead-*.log</span></code> and
+<code class="docutils literal"><span class="pre">/var/log/homestead-prov/homestead-*.log</span></code>. To turn on debug logging
+for Homer or Homestead-prov, write <code class="docutils literal"><span class="pre">LOG_LEVEL</span> <span class="pre">=</span> <span class="pre">logging.DEBUG</span></code> to
+the <code class="docutils literal"><span class="pre">local_settings.py</span></code> file (at
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/&lt;homer|homestead&gt;/local_settings.py</span></code>). Then
+restart clearwater-infrastructure
+(<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">clearwater-infrastructure</span> <span class="pre">restart</span></code>), and restart
+Homer/Homestead-prov (<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">&lt;homer|homestead-prov&gt;</span> <span class="pre">stop</span></code> -
+they will be restarted by monit). To turn on debug logging for
+Homestead write <code class="docutils literal"><span class="pre">log_level=5</span></code> to <code class="docutils literal"><span class="pre">/etc/clearwater/user_settings</span></code>
+(creating it if it doesn&#8217;t exist already), then restart Homestead
+(<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homestead</span> <span class="pre">stop</span></code> - it will be restarted by monit).</li>
+</ul>
+<p>To examine Homer or Homestead&#8217;s database, run <code class="docutils literal"><span class="pre">cqlsh</span></code> and then type
+<code class="docutils literal"><span class="pre">use</span> <span class="pre">homer;</span></code>, <code class="docutils literal"><span class="pre">use</span> <span class="pre">homestead_provisioning;</span></code> or
+<code class="docutils literal"><span class="pre">use</span> <span class="pre">homestead_cache</span></code> to set the correct database. You can then issue
+CQL queries such as
+<code class="docutils literal"><span class="pre">SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">impi</span> <span class="pre">WHERE</span> <span class="pre">private_id</span> <span class="pre">=</span> <span class="pre">'&lt;private</span> <span class="pre">user</span> <span class="pre">ID&gt;'</span></code>.</p>
+</div>
+<div class="section" id="sprout">
+<h2>Sprout<a class="headerlink" href="#sprout" title="Permalink to this headline">¶</a></h2>
+<p>The most common problem on Sprout is lack of communication with other
+nodes and processes, causing registration or calls to fail. Check that
+Homer, Homestead and memcached are reachable and responding.</p>
+<p>Sprout maintains registration state in a memcached cluster. It&#8217;s a
+little clunky to examine this data but you can get some basic
+information out by running
+<code class="docutils literal"><span class="pre">.</span> <span class="pre">/etc/clearwater/config</span> <span class="pre">;</span> <span class="pre">telnet</span> <span class="pre">$local_ip</span> <span class="pre">11211</span></code> to connect to
+memcached, issuing <code class="docutils literal"><span class="pre">stats</span> <span class="pre">items</span></code>. This returns a list of entries of
+the form <code class="docutils literal"><span class="pre">STAT</span> <span class="pre">items:&lt;slab</span> <span class="pre">ID&gt;:...</span></code>. You can then query the keys in
+each of the slabs with <code class="docutils literal"><span class="pre">stats</span> <span class="pre">cachedump</span> <span class="pre">&lt;slab</span> <span class="pre">ID&gt;</span> <span class="pre">0</span></code>.</p>
+<p>Memcached logs to <code class="docutils literal"><span class="pre">/var/log/memcached.log</span></code>. It logs very little by
+default, but it is possible to make it more verbose by editing
+<code class="docutils literal"><span class="pre">/etc/memcached_11211.conf</span></code>, uncommenting the <code class="docutils literal"><span class="pre">-vv</span></code> line, and then
+restarting memcached.</p>
+<p>To turn on debug logging for Sprout write <code class="docutils literal"><span class="pre">log_level=5</span></code> to
+<code class="docutils literal"><span class="pre">/etc/clearwater/user_settings</span></code> (creating it if it doesn&#8217;t exist
+already), then restart Sprout (<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">sprout</span> <span class="pre">stop</span></code> - it will be
+restarted by monit).</p>
+<p>Sprout also uses <a class="reference external" href="https://github.com/Metaswitch/chronos">Chronos</a> to
+track registration, subscription and authorization timeouts. Chronos
+logs to <code class="docutils literal"><span class="pre">/var/log/chronos/chronos*</span></code>. Details of how to edit the
+Chronos configuration are
+<a class="reference external" href="https://github.com/Metaswitch/chronos/blob/dev/doc/configuration.md">here</a>.</p>
+<p>If you see Sprout dying/restarting with no apparent cause in
+<code class="docutils literal"><span class="pre">/var/log/sprout/sprout*.txt</span></code>, check <code class="docutils literal"><span class="pre">/var/log/monit.log</span></code> and
+<code class="docutils literal"><span class="pre">/var/log/syslog</span></code> around that time - these can sometimes give clues as
+to the cause.</p>
+</div>
+<div class="section" id="bono">
+<h2>Bono<a class="headerlink" href="#bono" title="Permalink to this headline">¶</a></h2>
+<p>The most common problem on Bono is lack of communication with Sprout.
+Check that Sprout is reachable and responding.</p>
+<p>To turn on debug logging for Bono write <code class="docutils literal"><span class="pre">log_level=5</span></code> to
+<code class="docutils literal"><span class="pre">/etc/clearwater/user_settings</span></code> (creating it if it doesn&#8217;t exist
+already), then restart Bono (<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">bono</span> <span class="pre">stop</span></code> - it will be
+restarted by monit).</p>
+<p>If you see Bono dying/restarting with no apparent cause in
+<code class="docutils literal"><span class="pre">/var/log/bono/bono*.txt</span></code>, check <code class="docutils literal"><span class="pre">/var/log/monit.log</span></code> and
+<code class="docutils literal"><span class="pre">/var/log/syslog</span></code> around that time - these can sometimes give clues as
+to the cause.</p>
+</div>
+<div class="section" id="ralf">
+<h2>Ralf<a class="headerlink" href="#ralf" title="Permalink to this headline">¶</a></h2>
+<p>The most common problem on Ralf is lack of communication with a CCF.
+Check that your CCF is reachable and responding (if you don&#8217;t have a
+CCF, you don&#8217;t need a Ralf).</p>
+<p>To turn on debug logging for Ralf write <code class="docutils literal"><span class="pre">log_level=5</span></code> to
+<code class="docutils literal"><span class="pre">/etc/clearwater/user_settings</span></code> (creating it if it doesn&#8217;t exist
+already), then restart Ralf (<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ralf</span> <span class="pre">stop</span></code> - it will be
+restarted by monit).</p>
+<p>Ralf also uses <a class="reference external" href="https://github.com/Metaswitch/chronos">Chronos</a> to
+track call timeouts. Chronos logs to <code class="docutils literal"><span class="pre">/var/log/chronos/chronos*</span></code>.
+Details of how to edit the Chronos configuration are
+<a class="reference external" href="https://github.com/Metaswitch/chronos/blob/dev/doc/configuration.md">here</a>.</p>
+<p>If you see Ralf dying/restarting with no apparent cause in
+<code class="docutils literal"><span class="pre">/var/log/ralf/ralf*.txt</span></code>, check <code class="docutils literal"><span class="pre">/var/log/monit.log</span></code> and
+<code class="docutils literal"><span class="pre">/var/log/syslog</span></code> around that time - these can sometimes give clues as
+to the cause.</p>
+</div>
+<div class="section" id="deployment-management">
+<h2>Deployment Management<a class="headerlink" href="#deployment-management" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater comes with a system that <a class="reference external" href="Automatic_Clustering_Config_Sharing.md">automate clustering and
+configuration sharing</a>. If
+you cannot scale your deployment up or down, or if configuration changes
+are not being applied, this system may not be working.</p>
+<ul>
+<li><p class="first">The management system logs to <code class="docutils literal"><span class="pre">/var/log/clearwater-etcd</span></code>,
+<code class="docutils literal"><span class="pre">/var/log/clearwater-cluster-manager</span></code> and
+<code class="docutils literal"><span class="pre">/var/log/clearwater-config-manager</span></code>. To turn on debug logging
+write <code class="docutils literal"><span class="pre">log_level=5</span></code> to <code class="docutils literal"><span class="pre">etc/clearwater/user_settings</span></code> (creating
+it if it doesn&#8217;t exist already), then restart the etcd processes
+(<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">&lt;clearwater-config-manager|clearwater-cluster-manager&gt;</span> <span class="pre">stop</span></code>
+- they will be restarted by monit)</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">/usr/share/clearwater/clearwater-cluster-manager/scripts/check_cluster_state</span></code>
+will display information about the state of the various data-store
+clusters used by Clearwater.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/check_config_sync</span></code>
+will display whether the node has learned shared configuration.</p>
+</li>
+<li><p class="first">The following commands can be useful for inspecting the state of the
+underlying etcd cluster used by the management system:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>clearwater-etcdctl cluster-health
+clearwater-etcdctl member list
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="getting-help">
+<h2>Getting Help<a class="headerlink" href="#getting-help" title="Permalink to this headline">¶</a></h2>
+<p>If none of the above helped, please try the <a class="reference external" href="http://lists.projectclearwater.org/listinfo/clearwater">mailing
+list</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Troubleshooting and Recovery</a><ul>
+<li><a class="reference internal" href="#general">General</a></li>
+<li><a class="reference internal" href="#ellis">Ellis</a></li>
+<li><a class="reference internal" href="#homer-and-homestead">Homer and Homestead</a></li>
+<li><a class="reference internal" href="#sprout">Sprout</a></li>
+<li><a class="reference internal" href="#bono">Bono</a></li>
+<li><a class="reference internal" href="#ralf">Ralf</a></li>
+<li><a class="reference internal" href="#deployment-management">Deployment Management</a></li>
+<li><a class="reference internal" href="#getting-help">Getting Help</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Support.html" title="previous chapter">Support</a></li>
+      <li>Next: <a href="Installation_Instructions.html" title="next chapter">Installation Instructions</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Troubleshooting_and_Recovery.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Troubleshooting_and_Recovery.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

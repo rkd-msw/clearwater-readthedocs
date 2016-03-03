@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Configuring an Application Server &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="External HSS Integration" href="External_HSS_Integration.html" />
+    <link rel="prev" title="Migrating to Automatic Clustering and Configuration Sharing" href="Migrating_To_etcd.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="configuring-an-application-server">
+<h1>Configuring an Application Server<a class="headerlink" href="#configuring-an-application-server" title="Permalink to this headline">¶</a></h1>
+<p>This document explains how to configure an application server for use in
+a Clearwater deployment.</p>
+<div class="section" id="network-configuration">
+<h2>Network configuration<a class="headerlink" href="#network-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Each application server must be able to communicate with Sprout and Bono
+in both directions.</p>
+<ul class="simple">
+<li>The application server must be able to contact all sprout and bono
+nodes on the trusted SIP ports, 5054 and 5058 (respectively, for both
+TCP and UDP).</li>
+<li>All sprout and bono nodes must be able to contact the application
+server on the port and protocol configured in your subscribers&#8217; iFCs
+(typically TCP and UDP port 5060).</li>
+<li>The application server must also be able to exchange SIP messages (in
+both directions) with any other application server that may appear in
+the signaling path of any call going through it.</li>
+<li>Since the application server is in the trusted zone, it should <em>not</em>
+be accessible to untrusted SIP entities.</li>
+</ul>
+<p>If Clearwater and your application server are both in the Amazon EC2
+cloud, you can achieve all of these by placing the application server in
+the <code class="docutils literal"><span class="pre">&lt;deployment&gt;-sprout</span></code> security group.</p>
+</div>
+<div class="section" id="application-server-configuration">
+<h2>Application server configuration<a class="headerlink" href="#application-server-configuration" title="Permalink to this headline">¶</a></h2>
+<p>No special application server configuration is required.</p>
+<ul class="simple">
+<li>Your application server should be prepared to accept SIP messages
+from any of your deployment&#8217;s bono or sprout nodes, and from any SIP
+entity that may appear in the signaling path of any call going
+through it.</li>
+<li>If your application server needs to spontaneously originate calls, it
+should do this via Sprout&#8217;s trusted interface:
+<code class="docutils literal"><span class="pre">sprout.&lt;deployment-domain&gt;:5054</span></code> over either TCP or UDP.</li>
+</ul>
+<p>The headers set by Clearwater are described in the <a class="reference external" href="Application_Server_Guide">Application Server
+Guide</a>.</p>
+</div>
+<div class="section" id="ifc-configuration">
+<h2>iFC configuration<a class="headerlink" href="#ifc-configuration" title="Permalink to this headline">¶</a></h2>
+<p>To configure a subscriber to invoke your application server, you must
+configure the appropriate iFCs for that subscriber. You can do this via
+the Ellis UI, the Homestead API, or if you are using an HSS, directly in
+the HSS.</p>
+<div class="section" id="web-ui-configuration-via-ellis">
+<h3>Web UI configuration via Ellis<a class="headerlink" href="#web-ui-configuration-via-ellis" title="Permalink to this headline">¶</a></h3>
+<p>Ellis allows you to specify a mapping between application server names
+and XML nodes. This is done by editing the
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/ellis/web-content/js/app-servers.json</span></code> file,
+which is in
+<a class="reference external" href="http://en.wikipedia.org/wiki/JSON#Data_types.2C_syntax_and_example">JSON</a>
+format. An example file would be:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="s2">&quot;MMTEL&quot;</span> <span class="p">:</span> <span class="s2">&quot;&lt;InitialFilterCriteria&gt;&lt;Priority&gt;0&lt;/Priority&gt;&lt;TriggerPoint&gt;&lt;ConditionTypeCNF&gt;&lt;/ConditionTypeCNF&gt;&lt;SPT&gt;&lt;ConditionNegated&gt;0&lt;/ConditionNegated&gt;&lt;Group&gt;0&lt;/Group&gt;&lt;Method&gt;INVITE&lt;/Method&gt;&lt;Extension&gt;&lt;/Extension&gt;&lt;/SPT&gt;&lt;/TriggerPoint&gt;&lt;ApplicationServer&gt;&lt;ServerName&gt;sip:mmtel.example.com&lt;/ServerName&gt;&lt;DefaultHandling&gt;0&lt;/DefaultHandling&gt;&lt;/ApplicationServer&gt;&lt;/InitialFilterCriteria&gt;&quot;</span><span class="p">,</span>
+<span class="s2">&quot;Voicemail&quot;</span> <span class="p">:</span> <span class="s2">&quot;&lt;InitialFilterCriteria&gt;&lt;Priority&gt;1&lt;/Priority&gt;&lt;TriggerPoint&gt;&lt;ConditionTypeCNF&gt;&lt;/ConditionTypeCNF&gt;&lt;SPT&gt;&lt;ConditionNegated&gt;0&lt;/ConditionNegated&gt;&lt;Group&gt;0&lt;/Group&gt;&lt;Method&gt;INVITE&lt;/Method&gt;&lt;Extension&gt;&lt;/Extension&gt;&lt;/SPT&gt;&lt;/TriggerPoint&gt;&lt;ApplicationServer&gt;&lt;ServerName&gt;sip:vm.example.com&lt;/ServerName&gt;&lt;DefaultHandling&gt;0&lt;/DefaultHandling&gt;&lt;/ApplicationServer&gt;&lt;/InitialFilterCriteria&gt;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Once this is saved, the list of application server names will appear in
+the Ellis UI (on the &#8216;Application Servers&#8217; tab of the Configure dialog),
+and selecting or deselecting them will add or remove the relevant XML
+from Homestead. This change takes effect immediately. If an node in the
+iFC XML is not included in app-servers.json, Ellis will leave it
+untouched.</p>
+</div>
+<div class="section" id="direct-configuration-via-curl">
+<h3>Direct configuration via cURL<a class="headerlink" href="#direct-configuration-via-curl" title="Permalink to this headline">¶</a></h3>
+<p>You can also configure iFCs directly using Homestead.</p>
+<p>Here is an example of how to use <code class="docutils literal"><span class="pre">curl</span></code> to configure iFCs directly.
+This configures a very basic iFC, which fires on INVITEs only, with no
+conditions on session case. See an iFC reference for more details, e.g.,
+<a class="reference external" href="http://www.3gpp.org/ftp/Specs/archive/29_series/29.228/29228-b70.zip">3GPP TS
+29.228</a>
+appendices B and F.</p>
+<p>To simplify the following commands, define the following variables - set
+the user, application server(s), and Homestead name as appropriate for
+your deployment.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>user=sip:6505550269@example.com
+as_hostnames=&quot;as1.example.com mmtel.example.com&quot; # the list of zero or more application servers to invoke - don&#39;t forget mmtel
+hs_hostname=hs.example.com:8888
+</pre></div>
+</div>
+<p>Be careful - the user must be <em>exactly</em> right, including the <code class="docutils literal"><span class="pre">sip:</span></code>
+prefix, and also <code class="docutils literal"><span class="pre">+1</span></code> if and only if it is a PSTN line. We have seen
+problems with PSTN lines; if the above syntax does not work, try
+URL-encoding the user, e.g., for <a class="reference external" href="mailto:+16505550269&#37;&#52;&#48;example&#46;com">+16505550269<span>&#64;</span>example<span>&#46;</span>com</a> write
+<code class="docutils literal"><span class="pre">user=sip%3A%2B16505550269%40example.com</span></code>.</p>
+<p>To retrieve the current configuration, invoke <code class="docutils literal"><span class="pre">curl</span></code> as follows. You
+must be able to access $hs_hostname; check your firewall configuration.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>curl http://$hs_hostname:8889/public/$user/service_profile
+</pre></div>
+</div>
+<p>This will return a 303 if the user exists, with the service profile URL
+in the Location header, e.g.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>Location: /irs/&lt;irs-uuid&gt;/service_profiles/&lt;service-profile-uuid&gt;
+</pre></div>
+</div>
+<p>Then invoke <code class="docutils literal"><span class="pre">curl</span></code> as follows, using the values from the Location
+header retrieved above:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>curl http://$hs_hostname:8889/irs/&lt;irs-uuid&gt;/service_profiles/&lt;service-profile-uuid&gt;/filter_criteria
+</pre></div>
+</div>
+<p>To update the configuration, invoke <code class="docutils literal"><span class="pre">curl</span></code> as follows. The first stage
+builds the new XML document and the second pushes it to the server.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>{ cat &lt;&lt;EOF
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;ServiceProfile&gt;
+EOF
+for as_hostname in $as_hostnames ; do
+  cat &lt;&lt;EOF
+  &lt;InitialFilterCriteria&gt;
+    &lt;Priority&gt;1&lt;/Priority&gt;
+    &lt;TriggerPoint&gt;
+      &lt;ConditionTypeCNF&gt;0&lt;/ConditionTypeCNF&gt;
+      &lt;SPT&gt;
+        &lt;ConditionNegated&gt;0&lt;/ConditionNegated&gt;
+        &lt;Group&gt;0&lt;/Group&gt;
+        &lt;Method&gt;INVITE&lt;/Method&gt;
+        &lt;Extension&gt;&lt;/Extension&gt;
+      &lt;/SPT&gt;
+    &lt;/TriggerPoint&gt;
+    &lt;ApplicationServer&gt;
+      &lt;ServerName&gt;sip:$as_hostname&lt;/ServerName&gt;
+      &lt;DefaultHandling&gt;0&lt;/DefaultHandling&gt;
+    &lt;/ApplicationServer&gt;
+  &lt;/InitialFilterCriteria&gt;
+EOF
+done
+cat &lt;&lt;EOF
+&lt;/ServiceProfile&gt;
+EOF
+} | curl -X PUT http://$hs_hostname:8889/irs/&lt;irs-uuid&gt;/service_profiles/&lt;service-profile-uuid&gt;/filter_criteria --data-binary @-
+</pre></div>
+</div>
+<p>The subscriber will now have the desired configuration. You can confirm
+this by running the retrieval command again.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Configuring an Application Server</a><ul>
+<li><a class="reference internal" href="#network-configuration">Network configuration</a></li>
+<li><a class="reference internal" href="#application-server-configuration">Application server configuration</a></li>
+<li><a class="reference internal" href="#ifc-configuration">iFC configuration</a><ul>
+<li><a class="reference internal" href="#web-ui-configuration-via-ellis">Web UI configuration via Ellis</a></li>
+<li><a class="reference internal" href="#direct-configuration-via-curl">Direct configuration via cURL</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Migrating_To_etcd.html" title="previous chapter">Migrating to Automatic Clustering and Configuration Sharing</a></li>
+      <li>Next: <a href="External_HSS_Integration.html" title="next chapter">External HSS Integration</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Configuring_an_Application_Server.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Configuring_an_Application_Server.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

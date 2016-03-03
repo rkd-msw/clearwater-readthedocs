@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Automated Install Instructions &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Manual Install Instructions" href="Manual_Install.html" />
+    <link rel="prev" title="All-in-one Images" href="All_in_one_Images.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="automated-install-instructions">
+<h1>Automated Install Instructions<a class="headerlink" href="#automated-install-instructions" title="Permalink to this headline">¶</a></h1>
+<p>These instructions will take you through preparing for an automated
+install of Clearwater using Chef. For a high level look at the install
+process, and a discussion of the various install methods, see
+<a class="reference external" href="Installation_Instructions.md">Installation Instructions</a>. The
+automated install is the suggested method for installing a large-scale
+deployment of Clearwater. It can also be used to install an all-in-one
+node.</p>
+<p>The automated install is only supported for deployments running in
+Amazon&#8217;s EC2 cloud, where DNS is being provided by Amazon&#8217;s Route53
+service. If your proposed deployment doesn&#8217;t meet these requirements,
+you should use the <a class="reference external" href="Manual_Install.md">Manual Install</a> instructions
+instead.</p>
+<div class="section" id="the-install-process">
+<h2>The Install Process<a class="headerlink" href="#the-install-process" title="Permalink to this headline">¶</a></h2>
+<p>The automated install system is made up of two phases:</p>
+<ul class="simple">
+<li>A series of steps that need to be performed once, before any
+deployment is created.</li>
+<li>A simpler set of instructions that will actually create the
+deployment.</li>
+</ul>
+<p>Once the first phase has been completed, multiple deployments (of
+various sizes) can be created by repeating the second phase multiple
+times.</p>
+<p>The first phase:</p>
+<ul class="simple">
+<li><a class="reference external" href="Installing_a_Chef_server.md">Installing a Chef server</a></li>
+<li>This server will track the created Clearwater nodes and allow the
+client access to them.</li>
+<li><a class="reference external" href="Installing_a_Chef_workstation.md">Configuring a Chef workstation</a></li>
+<li>This machine will be the one on which deployments will be defined and
+managed.</li>
+</ul>
+<p>The second phase:</p>
+<ul class="simple">
+<li><a class="reference external" href="Creating_a_deployment_environment.md">Creating a deployment
+environment</a></li>
+<li>The automated install supports the existence and management of
+multiple deployments simultaneously, each deployment lives in an
+environment to keep them separate.</li>
+<li><a class="reference external" href="Creating_a_deployment_with_Chef.md">Creating the deployment</a></li>
+<li>Actually provisioning the servers, installing the Clearwater software
+and configuring DNS.</li>
+</ul>
+</div>
+<div class="section" id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this headline">¶</a></h2>
+<p>Once you&#8217;ve followed the instructions above, your Clearwater deployment
+is ready for use. Be aware that the newly created DNS entries may take
+some time to propagate fully through your network and until propagation
+is complete, your deployment may not function correctly. This
+propagation usually takes no more than 5 minutes.</p>
+<p>To test the deployment, you can try making some real calls, or run the
+provided live test framework.</p>
+<ul class="simple">
+<li><a class="reference external" href="Making_your_first_call.md">Making your first call</a></li>
+<li><a class="reference external" href="Running_the_live_tests.md">Running the live test framework</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Automated Install Instructions</a><ul>
+<li><a class="reference internal" href="#the-install-process">The Install Process</a></li>
+<li><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="All_in_one_Images.html" title="previous chapter">All-in-one Images</a></li>
+      <li>Next: <a href="Manual_Install.html" title="next chapter">Manual Install Instructions</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Automated_Install.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Automated_Install.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

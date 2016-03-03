@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenIMS HSS Integration &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="CDF Integration" href="CDF_Integration.html" />
+    <link rel="prev" title="External HSS Integration" href="External_HSS_Integration.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="openims-hss-integration">
+<h1>OpenIMS HSS Integration<a class="headerlink" href="#openims-hss-integration" title="Permalink to this headline">¶</a></h1>
+<p>As discussed on the <a class="reference external" href="External_HSS_Integration.md">External HSS
+Integration</a> page, Clearwater can
+integrate with an external HSS.</p>
+<p>This page describes how to install and configure the
+<a class="reference external" href="http://www.openimscore.org/">OpenIMSCore</a> HSS as this external HSS.
+It assumes that you have already read the <a class="reference external" href="External_HSS_Integration.md">External HSS
+Integration</a> page.</p>
+<div class="section" id="installation-with-chef">
+<h2>Installation with Chef<a class="headerlink" href="#installation-with-chef" title="Permalink to this headline">¶</a></h2>
+<p>If you have a deployment environment created by following the <a class="reference external" href="Automated_Install.md">automated
+install instructions</a>, then you can create a
+HSS by running <code class="docutils literal"><span class="pre">knife</span> <span class="pre">box</span> <span class="pre">create</span> <span class="pre">-E</span> <span class="pre">&lt;env&gt;</span> <span class="pre">openimscorehss</span></code>. You should
+then follow <a class="reference external" href="OpenIMSCore_HSS_Integration.md/#configuration">the configuration instructions
+below</a>.</p>
+</div>
+<div class="section" id="installing-openimscore-hss-manually">
+<h2>Installing OpenIMSCore HSS manually<a class="headerlink" href="#installing-openimscore-hss-manually" title="Permalink to this headline">¶</a></h2>
+<p>To install OpenIMSCore HSS,</p>
+<ol class="arabic simple">
+<li>Follow the &#8220;Adding this PPA to your system&#8221; steps at
+<a class="reference external" href="https://launchpad.net/~rkd-u/+archive/ubuntu/fhoss">https://launchpad.net/~rkd-u/+archive/ubuntu/fhoss</a></li>
+<li>Run <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">update;</span> <span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">openimscore-fhoss</span></code></li>
+<li>Answer the installation questions appropriately, including providing
+the IMS home domain, your local IP, and the MySQL root password
+(which you will have to provide both when installing MySQL and when
+intalling the HSS).</li>
+</ol>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="logging-in">
+<h3>Logging in<a class="headerlink" href="#logging-in" title="Permalink to this headline">¶</a></h3>
+<p>OpenIMSCore HSS provides the administration UI over port 8080. The admin
+username is hssAdmin.</p>
+<ul class="simple">
+<li>If the HSS was installed using Chef, the hssAdmin password will be
+<a class="reference external" href="Installing_a_Chef_client/index.html#add-deployment-specific-configuration">the signup_key setting from
+knife.rb</a>.</li>
+<li>If the HSS was installed manually, the hssAdmin password will be
+&#8220;hss&#8221;. This can be changed by editing
+<code class="docutils literal"><span class="pre">/usr/share/java/fhoss-0.2/conf/tomcat-users.xml</span></code> and running
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">openimscore-fhoss</span> <span class="pre">restart</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="adding-the-mmtel-application-server">
+<h3>Adding the MMTEL Application Server<a class="headerlink" href="#adding-the-mmtel-application-server" title="Permalink to this headline">¶</a></h3>
+<p>To enable the MMTEL application server built into Clearwater for all
+subscribers,</p>
+<ol class="arabic simple">
+<li>access the OpenIMSCore HSS web UI, running on port 8080</li>
+<li>log in as hssAdmin</li>
+<li>navigate to <code class="docutils literal"><span class="pre">Services</span></code>-&gt;``Application Servers``-&gt;``Search``</li>
+<li>perform a search with no search string to find all application
+servers</li>
+<li>select default_as</li>
+<li>change <code class="docutils literal"><span class="pre">server_name</span></code> to be <code class="docutils literal"><span class="pre">sip:mmtel.your.home.domain</span></code>, where
+<code class="docutils literal"><span class="pre">your.home.domain</span></code> is replaced with your home domain</li>
+<li>save your change.</li>
+</ol>
+</div>
+<div class="section" id="configuring-subscribers">
+<h3>Configuring Subscribers<a class="headerlink" href="#configuring-subscribers" title="Permalink to this headline">¶</a></h3>
+<p>To configure a subscriber,</p>
+<ol class="arabic simple">
+<li>create an IMS subscription</li>
+<li>create an associated public user identity</li>
+<li>create an associated private user identity, specifying<ol class="arabic">
+<li>the private ID to be the public ID without the <code class="docutils literal"><span class="pre">sip:</span></code> scheme
+prefix</li>
+<li>SIP Digest authentication.</li>
+</ol>
+</li>
+<li>add the home domain to the subscriber&#8217;s visited networks</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">OpenIMS HSS Integration</a><ul>
+<li><a class="reference internal" href="#installation-with-chef">Installation with Chef</a></li>
+<li><a class="reference internal" href="#installing-openimscore-hss-manually">Installing OpenIMSCore HSS manually</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li><a class="reference internal" href="#logging-in">Logging in</a></li>
+<li><a class="reference internal" href="#adding-the-mmtel-application-server">Adding the MMTEL Application Server</a></li>
+<li><a class="reference internal" href="#configuring-subscribers">Configuring Subscribers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="External_HSS_Integration.html" title="previous chapter">External HSS Integration</a></li>
+      <li>Next: <a href="CDF_Integration.html" title="next chapter">CDF Integration</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/OpenIMSCore_HSS_Integration.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/OpenIMSCore_HSS_Integration.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Radius Authentication &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Application Server Guide" href="Application_Server_Guide.html" />
+    <link rel="prev" title="SNMP Alarms" href="SNMP_Alarms.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="radius-authentication">
+<h1>Radius Authentication<a class="headerlink" href="#radius-authentication" title="Permalink to this headline">¶</a></h1>
+<p>It is possible to authenticate users for SSH/SFTP access by using the
+RADIUS authentication protocol to contact a third party RADIUS
+authentication server. The following will explain how to install and
+configure this capability on a Clearwater node, and how to go about
+using it.</p>
+<div class="section" id="the-authentication-process">
+<h2>The authentication process<a class="headerlink" href="#the-authentication-process" title="Permalink to this headline">¶</a></h2>
+<p>On attempting to access a node via SSH or SFTP, a user is either
+expected to use a key, or to provide a password to verify their
+identity, and thus pass through authentication successfully. This
+process requires a locally provisioned set of authentication details for
+each user that the sshd process can compare to the provided credentials
+for verification. In the case of password authentication, by enabling
+RADIUS all user accounts can be configured centrally on a RADIUS server,
+or in a database said server can access, and each node can pass user
+credentials provided at log in across to this server to complete the
+authentication process.</p>
+<p>As the user attempting access may not exist locally on the node, which
+sshd requires, any unknown user is mapped to the default Ubuntu user to
+allow authentication to proceed correctly. As such, once authenticated,
+they will be acting as if they were the default user, but for auditing
+purposes it is the username provided at login that is recorded.</p>
+</div>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<p>The following conditions are assumed by this process:</p>
+<ul class="simple">
+<li>Your nodes are running on Ubuntu 14.04.</li>
+<li>Your nodes have access to both Clearwater and Ubuntu repositories.</li>
+<li>Your SSH configuration allows password authentication and PAM (the
+correct configuration will be detailed below).</li>
+<li>You have access to a third-party RADIUS server (such as freeRADIUS).</li>
+<li>Your firewall allows UDP traffic to the above server on port 1812.</li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="package-installation">
+<h3>Package installation<a class="headerlink" href="#package-installation" title="Permalink to this headline">¶</a></h3>
+<p>Install the Clearwater RADIUS authentication package:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo apt-get install clearwater-radius-auth
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<p>The details of your RADIUS server will need to be entered into
+<code class="docutils literal"><span class="pre">/etc/pam_radius_auth.conf</span></code>. This file provides an example of how
+entries should be structured: * Multiple entries are allowed, but each
+must be on a new line. * Each line consists of three fields: *
+<code class="docutils literal"><span class="pre">server[:port]</span></code> (The default is port 1812. All traffic will be UDP) *
+<code class="docutils literal"><span class="pre">secret</span></code> * <code class="docutils literal"><span class="pre">[timeout]</span></code> (Default timeout is 3 seconds) * The secret
+is shared between each client and the server to allow simple encryption
+of passwords. The secret must match the entry for the client in the
+RADIUS server configuration. * Both the port and timeout entries are
+optional.</p>
+<p>Your sshd configuration must allow password authentication, and use of
+PAM. If you are unsure, check that the <code class="docutils literal"><span class="pre">PasswordAuthentication</span></code> and
+<code class="docutils literal"><span class="pre">UsePAM</span></code> entries in <code class="docutils literal"><span class="pre">/etc/ssh/sshd_config</span></code> are set to <code class="docutils literal"><span class="pre">yes</span></code>. Any
+changes to ssh configuration will require the ssh process to be
+restarted before coming into effect.</p>
+<p>You must ensure that your firewall/security groups allow UDP traffic to
+the RADIUS server on port 1812.</p>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>Once the above is installed and configured, any user provisioned in the
+RADIUS server can attempt SSH or SFTP access to the configured node, and
+on providing their password they will be authenticated against the
+details held on the RADIUS server, and logged in, acting as the default
+Ubuntu user. Commands such as <code class="docutils literal"><span class="pre">who</span></code> or <code class="docutils literal"><span class="pre">last</span></code> will output the
+username supplied at login, and this will also be recorded in the auth
+log <code class="docutils literal"><span class="pre">/var/log/auth.log</span></code>.</p>
+<p>Any users provisioned locally on the node will see no change to their
+authentication experience. By default, RADIUS authentication is set to
+be a sufficient, but not required condition. As such, failing to
+authenticate against the server credentials will cause the
+authentication attempt to fall back to checking locally provisioned
+details. See below for further details on configuration options.</p>
+</div>
+<div class="section" id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>If you are not seeing any traffic reaching your RADIUS server, and
+entries in <code class="docutils literal"><span class="pre">/var/log/auth.log</span></code> state that no RADIUS server was
+reachable, re-check the RADIUS server entry in
+<code class="docutils literal"><span class="pre">/etc/pam_radius_auth.conf</span></code>, and ensure that your firewall is
+configured to allow UDP traffic to the RADIUS server on port 1812.</li>
+<li>If your RADIUS server is rejecting authentication requests, ensure
+that the server is configured correctly.</li>
+</ul>
+</div>
+<div class="section" id="removal">
+<h2>Removal<a class="headerlink" href="#removal" title="Permalink to this headline">¶</a></h2>
+<p>To properly remove clearwater-radius-auth, and the components it brings
+with it, run the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo apt-get purge clearwater-radius-auth
+sudo apt-get purge libpam-radius-auth
+sudo apt-get purge libnss-ato
+</pre></div>
+</div>
+<p>This will remove all configuration put in place by the installation.
+Should your configuration become corrupt, purging and re-installing the
+associated module will re-instate the correct configuration.</p>
+</div>
+<div class="section" id="further-configuration">
+<h2>Further configuration<a class="headerlink" href="#further-configuration" title="Permalink to this headline">¶</a></h2>
+<p>This section details the configuration put in place by the installation.
+It is highly recommended that these be left as their defaults. The
+following is for information purposes only.</p>
+<div class="section" id="libnss-ato-conf">
+<h3>libnss-ato.conf<a class="headerlink" href="#libnss-ato-conf" title="Permalink to this headline">¶</a></h3>
+<p>The libnss-ato configuration file is found at <code class="docutils literal"><span class="pre">/etc/libnss-ato.conf</span></code>,
+and will look like the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>ubuntu:x:1000:1000:Ubuntu:/home/ubuntu:/bin/bash
+</pre></div>
+</div>
+<p>It holds the information of the default user to which unknown users are
+mapped. By default this maps to the Ubuntu user.</p>
+<p>Only the first line of this file is parsed. The user entry is the same
+format as is found in <code class="docutils literal"><span class="pre">/etc/passwd</span></code>. Replacing this file with a
+different user entry will map unknown users to the entry provided.</p>
+</div>
+<div class="section" id="pam-d-sshd">
+<h3>pam.d/sshd<a class="headerlink" href="#pam-d-sshd" title="Permalink to this headline">¶</a></h3>
+<p>The PAM configuration file for the sshd process is found at
+<code class="docutils literal"><span class="pre">/etc/pam.d/sshd</span></code>. As part of the installation, the 3 lines around
+<code class="docutils literal"><span class="pre">auth</span> <span class="pre">sufficient</span> <span class="pre">pam_radius_auth.so</span></code> are added at the top of the file,
+configuring PAM to attempt RADIUS authentication before other methods.
+It will look like the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span># PAM configuration for the Secure Shell service
+# +clearwater-radius-auth
+auth sufficient pam_radius_auth.so
+# -clearwater-radius-auth
+# Standard Un*x authentication.
+</pre></div>
+</div>
+<p>It is strongly recommended that users do not modify this entry. Further
+information on this configuration can be found at
+<a class="reference external" href="http://freeradius.org/pam_radius_auth/">FreeRADIUS</a>.</p>
+</div>
+<div class="section" id="nsswitch-conf">
+<h3>nsswitch.conf<a class="headerlink" href="#nsswitch-conf" title="Permalink to this headline">¶</a></h3>
+<p>The NSS configuration file is found at <code class="docutils literal"><span class="pre">/etc/nsswitch.conf</span></code>. After
+installation, the top three entries in this file will look as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>passwd:   compat ato
+group:    compat
+shadow:   compat ato
+</pre></div>
+</div>
+<p>Modifications to the NSS configuration make it check the libnss-ato
+component for a user mapping if no local user is found. The addition of
+<code class="docutils literal"><span class="pre">ato</span></code> at the end of both the <code class="docutils literal"><span class="pre">passwd</span></code> and <code class="docutils literal"><span class="pre">shadow</span></code> entries
+provides this function. Removal of these addition will disable the user
+mapping, and break RADIUS authentication.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Radius Authentication</a><ul>
+<li><a class="reference internal" href="#the-authentication-process">The authentication process</a></li>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#package-installation">Package installation</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+<li><a class="reference internal" href="#removal">Removal</a></li>
+<li><a class="reference internal" href="#further-configuration">Further configuration</a><ul>
+<li><a class="reference internal" href="#libnss-ato-conf">libnss-ato.conf</a></li>
+<li><a class="reference internal" href="#pam-d-sshd">pam.d/sshd</a></li>
+<li><a class="reference internal" href="#nsswitch-conf">nsswitch.conf</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="SNMP_Alarms.html" title="previous chapter">SNMP Alarms</a></li>
+      <li>Next: <a href="Application_Server_Guide.html" title="next chapter">Application Server Guide</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Radius_Authentication.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Radius_Authentication.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

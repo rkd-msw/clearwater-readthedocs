@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Running the Clearwater Live Tests &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="prev" title="Using Cacti with Clearwater" href="Cacti.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="running-the-clearwater-live-tests">
+<h1>Running the Clearwater Live Tests<a class="headerlink" href="#running-the-clearwater-live-tests" title="Permalink to this headline">¶</a></h1>
+<p>The Clearwater team have put together a suite of live tests that can be
+run over a deployment to confirm that the high level function is
+working. These instructions will take you through installing the test
+suite and running the tests.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>You&#8217;ve <a class="reference external" href="Installation_Instructions.md">installed Clearwater</a></li>
+<li>You have an Ubuntu Linux machine available to drive the tests</li>
+<li>If you installed through the automated install process, the chef
+workstation is a perfectly good choice for this task</li>
+</ul>
+</div>
+<div class="section" id="installing-dependencies">
+<h2>Installing dependencies<a class="headerlink" href="#installing-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>On your test machine, run</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo apt-get install build-essential git --yes
+curl -L https://get.rvm.io | bash -s stable
+source ~/.rvm/scripts/rvm
+rvm autolibs enable
+rvm install 1.9.3
+rvm use 1.9.3
+</pre></div>
+</div>
+<p>This will install Ruby version 1.9.3 and its dependencies.</p>
+</div>
+<div class="section" id="fetching-the-code">
+<h2>Fetching the code<a class="headerlink" href="#fetching-the-code" title="Permalink to this headline">¶</a></h2>
+<p>Run the following to download and install the Clearwater test suite</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>git clone -b stable --recursive git@github.com:Metaswitch/clearwater-live-test.git
+cd clearwater-live-test
+bundle install
+</pre></div>
+</div>
+<p>Make sure that you have an SSH key - if not, see the <a class="reference external" href="https://help.github.com/articles/generating-ssh-keys">GitHub
+instructions</a>
+for how to create one.</p>
+</div>
+<div class="section" id="work-out-your-signup-code">
+<h2>Work out your signup code<a class="headerlink" href="#work-out-your-signup-code" title="Permalink to this headline">¶</a></h2>
+<p>The tests need your signup code to create a test user. You set this as
+<code class="docutils literal"><span class="pre">signup_key</span></code> during install: <a class="reference external" href="Manual_Install.md">manually in
+/etc/clearwater/shared_config</a> or <a class="reference external" href="Installing_a_Chef_workstation.md">automatically
+in knife.rb</a>. For the rest of these
+instructions, the signup code will be referred to as <code class="docutils literal"><span class="pre">&lt;code&gt;</span></code>.</p>
+</div>
+<div class="section" id="running-the-tests-against-an-all-in-one-node">
+<h2>Running the tests against an All-in-One node<a class="headerlink" href="#running-the-tests-against-an-all-in-one-node" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="work-out-your-all-in-one-node-s-identity">
+<h3>Work out your All-in-One node&#8217;s identity<a class="headerlink" href="#work-out-your-all-in-one-node-s-identity" title="Permalink to this headline">¶</a></h3>
+<p>This step is only required if you installed an All-in-One node, either
+from an AMI or an OVF. If you installed manually or using the automated
+install process, just move on to the next step.</p>
+<p>If you installed an All-in-One node from an Amazon AMI, you need the
+public DNS name that EC2 has assigned to your node. This will look
+something like <code class="docutils literal"><span class="pre">ec2-12-34-56-78.compute-1.amazonaws.com</span></code> and can be
+found on the EC2 Dashboard on the &#8220;instances&#8221; panel. If you installed an
+All-in-One node from an OVF image, you need the IP address that was
+assigned to the node via DHCP. You can find this out by logging into the
+node&#8217;s console and typing <code class="docutils literal"><span class="pre">hostname</span> <span class="pre">-I</span></code>.</p>
+<p>For the rest of these instructions, the All-in-One node&#8217;s identity will
+be referred to as <code class="docutils literal"><span class="pre">&lt;aio-identity&gt;</span></code>.</p>
+</div>
+<div class="section" id="run-the-tests">
+<h3>Run the tests<a class="headerlink" href="#run-the-tests" title="Permalink to this headline">¶</a></h3>
+<p>To run the subset of the tests that don&#8217;t require PSTN interconnect to
+be configured, simply run</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>rake test[example.com] SIGNUP_CODE=&lt;code&gt; PROXY=&lt;aio-identity&gt; ELLIS=&lt;aio-identity&gt;
+</pre></div>
+</div>
+<p>The suite of tests will be run and the results will be printed
+on-screen.</p>
+</div>
+</div>
+<div class="section" id="running-the-tests-against-a-full-deployment">
+<h2>Running the tests against a full deployment<a class="headerlink" href="#running-the-tests-against-a-full-deployment" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="work-out-your-base-domain">
+<h3>Work out your base domain<a class="headerlink" href="#work-out-your-base-domain" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>If you installed Clearwater manually, your base DNS name will simply
+be <code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code>.</li>
+<li>If you installed using the automated install process, your base DNS
+name will be <code class="docutils literal"><span class="pre">&lt;name&gt;.&lt;zone&gt;</span></code>.</li>
+</ul>
+<p>For the rest of these instructions, the base DNS name will be referred
+to as <code class="docutils literal"><span class="pre">&lt;domain&gt;</span></code>.</p>
+</div>
+<div class="section" id="running-the-tests">
+<h3>Running the tests<a class="headerlink" href="#running-the-tests" title="Permalink to this headline">¶</a></h3>
+<p>To run the subset of the tests that don&#8217;t require PSTN interconnect to
+be configured, simply run</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>rake test[&lt;domain&gt;] SIGNUP_CODE=&lt;code&gt;
+</pre></div>
+</div>
+<p>The suite of tests will be run and the results will be printed
+on-screen. If your deployment doesn&#8217;t have DNS entries for the Bono and
+Ellis domain, then these can be passed to rake by adding the <code class="docutils literal"><span class="pre">PROXY</span></code>
+and <code class="docutils literal"><span class="pre">ELLIS</span></code> parameters, e.g.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>rake test[&lt;domain&gt;] SIGNUP_CODE=&lt;code&gt; PROXY=&lt;Bono domain&gt; ELLIS=&lt;Ellis domain&gt;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="pstn-testing">
+<h2>PSTN testing<a class="headerlink" href="#pstn-testing" title="Permalink to this headline">¶</a></h2>
+<p>The live test framework also has the ability to test various aspects of
+PSTN interconnect. If you&#8217;ve configured your Clearwater deployment with
+an IBCF node that connects it to a PSTN trunk, you can test that
+functionality by picking a real phone (e.g. your mobile) and running</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>rake test[&lt;domain&gt;] PSTN=true LIVENUMBER=&lt;your phone #&gt; SIGNUP_CODE=&lt;code&gt;
+</pre></div>
+</div>
+<p>Which will test call services related to the PSTN and will ring your
+phone and play an audio clip to you (twice, to cover both TCP and UDP).</p>
+</div>
+<div class="section" id="where-next">
+<h2>Where next?<a class="headerlink" href="#where-next" title="Permalink to this headline">¶</a></h2>
+<p>Now that you&#8217;ve confirmed that your Clearwater system is operational,
+you might want to <a class="reference external" href="Making_your_first_call.md">make a real call</a> or
+<a class="reference external" href="Exploring_Clearwater.md">explore Clearwater</a> to see what else
+Clearwater offers.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Running the Clearwater Live Tests</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#installing-dependencies">Installing dependencies</a></li>
+<li><a class="reference internal" href="#fetching-the-code">Fetching the code</a></li>
+<li><a class="reference internal" href="#work-out-your-signup-code">Work out your signup code</a></li>
+<li><a class="reference internal" href="#running-the-tests-against-an-all-in-one-node">Running the tests against an All-in-One node</a><ul>
+<li><a class="reference internal" href="#work-out-your-all-in-one-node-s-identity">Work out your All-in-One node&#8217;s identity</a></li>
+<li><a class="reference internal" href="#run-the-tests">Run the tests</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#running-the-tests-against-a-full-deployment">Running the tests against a full deployment</a><ul>
+<li><a class="reference internal" href="#work-out-your-base-domain">Work out your base domain</a></li>
+<li><a class="reference internal" href="#running-the-tests">Running the tests</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pstn-testing">PSTN testing</a></li>
+<li><a class="reference internal" href="#where-next">Where next?</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Cacti.html" title="previous chapter">Using Cacti with Clearwater</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Running_the_live_tests.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Running_the_live_tests.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

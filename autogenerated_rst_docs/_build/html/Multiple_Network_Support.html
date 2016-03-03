@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Multiple Network Support &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Geographic redundancy" href="Geographic_redundancy.html" />
+    <link rel="prev" title="Multiple Domains" href="Multiple_Domains.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="multiple-network-support">
+<h1>Multiple Network Support<a class="headerlink" href="#multiple-network-support" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>As of the Ultima release, Project Clearwater can be configured to
+provide signaling service (SIP/HTTP/Diameter) on a separate physical (or
+virtual) network to management services (SNMP/SSH/Provisioning). This
+may be used to protect management devices (on a firewalled network) from
+attack from the outside world (on the signaling network).</p>
+</div>
+<div class="section" id="technical-details">
+<h2>Technical Details<a class="headerlink" href="#technical-details" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="network-independence">
+<h3>Network Independence<a class="headerlink" href="#network-independence" title="Permalink to this headline">¶</a></h3>
+<p>If traffic separation is configured, the management and signaling
+networks are accessed by the VM via completely separate (virtual)
+network interfaces.</p>
+<p>The management and signaling networks may be completely independent.</p>
+<ul class="simple">
+<li>There need not be any way to route between them.</li>
+<li>The IP addresses, subnets and default gateways used on the networks
+may be the same, may overlap or may be completely distinct.</li>
+</ul>
+</div>
+<div class="section" id="traffic-distinction">
+<h3>Traffic Distinction<a class="headerlink" href="#traffic-distinction" title="Permalink to this headline">¶</a></h3>
+<p>The following traffic is carried over the management interface:</p>
+<ul class="simple">
+<li>SSH</li>
+<li>DNS (for management traffic)</li>
+<li>SNMP statistics</li>
+<li>SAS</li>
+<li>NTP</li>
+<li>Homestead provisioning</li>
+<li>Homer provisioning</li>
+<li>Ellis provisioning API</li>
+<li>M/Monit</li>
+</ul>
+<p>The following traffic is carried over the signaling interface:</p>
+<ul class="simple">
+<li>DNS (for signaling traffic)</li>
+<li>ENUM</li>
+<li>SIP between the UE, Bono and Sprout</li>
+<li>Cx between Homestead and the HSS</li>
+<li>Rf between Ralf and the CDF</li>
+<li>Ut between Homer and the UE</li>
+<li>inter-tier HTTP</li>
+<li>intra-tier memcached, Cassandra and Chronos flows</li>
+</ul>
+<p>Both interfaces respond to ICMP pings which can be used by external
+systems to perform health-checking if desired.</p>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pre-requisites">
+<h3>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this headline">¶</a></h3>
+<p>The (possibly virtual) machines that are running your Project Clearwater
+services will need to be set up with a second network interface
+(referred to as <code class="docutils literal"><span class="pre">eth1</span></code> in the following).</p>
+<p>You will need to determine the IP configuration for your second network,
+including IP address, subnet, default gateway, DNS server. DHCP is
+supported on this interface if required but you should ensure that the
+DHCP lease time is sufficiently high to ensure that the local IP address
+does not change regularly.</p>
+</div>
+<div class="section" id="preparing-the-network">
+<h3>Preparing the network<a class="headerlink" href="#preparing-the-network" title="Permalink to this headline">¶</a></h3>
+<p>Due to the varied complexities of IP networking, it would be impractical
+to attempt to automate configuring the Linux-level view of the various
+networks. Network namespaces are created and managed using the
+<code class="docutils literal"><span class="pre">ip</span> <span class="pre">netns</span></code> tool, which is a standard part of Ubuntu 14.04.</p>
+<p>The following example commands (when run as root) create a network
+namespace, move <code class="docutils literal"><span class="pre">eth1</span></code> into it, configure a static IP address and
+configure routing.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>ip netns add signaling
+ip link set eth1 netns signaling
+ip netns exec signaling ifconfig lo up
+ip netns exec signaling ifconfig eth1 1.2.3.4/16 up
+ip netns exec signaling route add default gateway 1.2.0.1 dev eth1
+</pre></div>
+</div>
+<p>Obviously you should make any appropriate changes to the above to
+correctly configure your chosen signaling network. These changes are
+<strong>not</strong> persisted across reboots on Linux and you should ensure that
+these are run on boot before the <code class="docutils literal"><span class="pre">clearwater-infrastructure</span></code> service
+is run. A sensible place to configure this would be in
+<code class="docutils literal"><span class="pre">/etc/rc.local</span></code>.</p>
+<p>Finally, you should create <code class="docutils literal"><span class="pre">/etc/netns/signaling/resolv.conf</span></code>
+configuring the DNS server you&#8217;d like to use on the signaling network.
+The format of this file is documented at
+<a class="reference external" href="http://manpages.ubuntu.com/manpages/trusty/man5/resolv.conf.5.html">http://manpages.ubuntu.com/manpages/trusty/man5/resolv.conf.5.html</a> but a
+simple example file might just contain the following.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>nameserver &lt;DNS IP address&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="project-clearwater-configuration">
+<h3>Project Clearwater Configuration<a class="headerlink" href="#project-clearwater-configuration" title="Permalink to this headline">¶</a></h3>
+<p>Now that the signaling namespace is configured and has networking set
+up, it&#8217;s time to apply it to Project Clearwater. To do this, change the
+<code class="docutils literal"><span class="pre">local_ip</span></code>, <code class="docutils literal"><span class="pre">public_ip</span></code> and <code class="docutils literal"><span class="pre">public_hostname</span></code> lines in
+<code class="docutils literal"><span class="pre">/etc/clearwater/local_config</span></code> to refer to the node&#8217;s identities in
+the signaling network and add the following lines:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>signaling_namespace=&lt;namespace name&gt;
+signaling_dns_server=&lt;DNS IP address&gt;
+management_local_ip=&lt;Node&#39;s local IP address in the management
+</pre></div>
+</div>
+<p>If you&#8217;ve not yet installed the Project Clearwater services, do so now
+and the namespaces will be automatically used.</p>
+<p>If you&#8217;ve already installed the Project Clearwater services, run
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">clearwater-infrastructure</span> <span class="pre">restart</span></code> and restart all the
+Clearwater-related services running on each machine (you can see what
+these are with <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">monit</span> <span class="pre">summary</span></code>).</p>
+</div>
+</div>
+<div class="section" id="diagnostic-changes">
+<h2>Diagnostic Changes<a class="headerlink" href="#diagnostic-changes" title="Permalink to this headline">¶</a></h2>
+<p>All the built-in Clearwater diagnostics will automatically take note of
+network namespaces, but if you are running diagnostics yourself (e.g.
+following instructions from the <a class="reference external" href="http://clearwater.readthedocs.org/en/stable/Troubleshooting_and_Recovery">troubleshooting
+page</a>)
+you may need to prefix your commands with <code class="docutils literal"><span class="pre">ip</span> <span class="pre">netns</span> <span class="pre">exec</span> <span class="pre">&lt;namespace&gt;</span></code>
+to run them in the signaling namespace. The following tools will need
+this prefix:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">cqlsh</span></code> - For viewing Cassandra databases</li>
+<li><code class="docutils literal"><span class="pre">nodetool</span></code> - For viewing Cassandra status</li>
+<li><code class="docutils literal"><span class="pre">telnet</span></code> - For inspecting Memcached stores</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Multiple Network Support</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#technical-details">Technical Details</a><ul>
+<li><a class="reference internal" href="#network-independence">Network Independence</a></li>
+<li><a class="reference internal" href="#traffic-distinction">Traffic Distinction</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li><a class="reference internal" href="#pre-requisites">Pre-requisites</a></li>
+<li><a class="reference internal" href="#preparing-the-network">Preparing the network</a></li>
+<li><a class="reference internal" href="#project-clearwater-configuration">Project Clearwater Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#diagnostic-changes">Diagnostic Changes</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Multiple_Domains.html" title="previous chapter">Multiple Domains</a></li>
+      <li>Next: <a href="Geographic_redundancy.html" title="next chapter">Geographic redundancy</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Multiple_Network_Support.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Multiple_Network_Support.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

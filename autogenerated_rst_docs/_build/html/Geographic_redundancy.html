@@ -1,0 +1,278 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Geographic redundancy &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="IPv6" href="IPv6.html" />
+    <link rel="prev" title="Multiple Network Support" href="Multiple_Network_Support.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="geographic-redundancy">
+<h1>Geographic redundancy<a class="headerlink" href="#geographic-redundancy" title="Permalink to this headline">¶</a></h1>
+<p>This article describes</p>
+<ul class="simple">
+<li>the architecture of a geographically-redundant system</li>
+<li>the (current) limitations</li>
+<li>the probable impact on a subscriber of a failure</li>
+<li>how to set it up.</li>
+</ul>
+<div class="section" id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
+<p>The architecture of a geographically-redundant system is as follows.</p>
+<div class="figure" id="id1">
+<img alt="Diagram" src="_images/Geographic_redundancy_diagram.png" />
+<p class="caption"><span class="caption-text">Diagram</span></p>
+</div>
+<p>Sprout has one memcached cluster per geographic region. Although
+memcached itself does not support the concept of local and remote peers,
+Sprout builds this on top - writing to both local and remote clusters
+and reading from the local but falling back to the remote. Communication
+between the nodes should be secure - for example, if it is going over
+the public internet rather than a private connection between
+datacenters, it should be encrypted and authenticated with IPsec. Each
+Sprout uses Homers and Homesteads in the same region only. Sprout also
+has one Chronos cluster per geographic region; these clusters do not
+communicate.</p>
+<p>Separate instances of Bono in each geographic region front the Sprouts
+in that region. Clearwater uses a geo-routing DNS service such as
+Amazon&#8217;s Route&nbsp;53 to achieve this. A geo-routing DNS service responds to
+DNS queries based on latency, so if you&#8217;re nearer to geographic region
+B&#8217;s instances, you&#8217;ll be served by them.</p>
+<p>Homestead and Homer are each a single cluster split over the geographic
+regions. Since they are backed by Cassandra (which is aware of local and
+remote peers), they can be smarter about spatial locality. As with
+Sprout nodes, communication between the nodes should be secure.</p>
+<p>Ellis is not redundant, whether deployed in a single geographic region
+or more. It is deployed in one of the geographic regions and a failure
+of that region would deny all provisioning function.</p>
+<p>Ralf does not support geographic redundancy. Each geographic region has
+its own Ralf cluster; Sprout and Bono should only communicate with their
+local Ralfs.</p>
+<p>While it appears as a single node in our system, Route 53 DNS is
+actually a geographically-redundant service provided by Amazon. Route
+53&#8217;s DNS interface has had 100% uptime since it was first turned up in
+2010. (Its configuration interface has not, but that is less important.)</p>
+<p>The architecture above is for 2 geographic regions - we do not currently
+support more regions.</p>
+<p>Note that there are other servers involved in a deployment that are not
+described above. Specifically,</p>
+<ul class="simple">
+<li>communication back to the repository server is via HTTP. There is a
+single repository server. The repository server is not required in
+normal operation, only for upgrades.</li>
+</ul>
+</div>
+<div class="section" id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>The local IP addresses of all nodes in a deployment most be reachable
+from all other nodes - there must not be a NAT between the two GR
+sites. (This currently precludes having the GR sites in different EC2
+regions.)</li>
+</ul>
+</div>
+<div class="section" id="impact">
+<h2>Impact<a class="headerlink" href="#impact" title="Permalink to this headline">¶</a></h2>
+<p>This section considers the probable impact on a subscriber of a total
+outage of a region in a 2-region geographically-redundant deployment. It
+assumes that the deployments in both regions have sufficient capacity to
+cope with all subscribers (or the deployments scale elastically) - if
+this is not true, we will hit overload scenarios, which are much more
+complicated.</p>
+<p>The subscriber interacts with Clearwater through 3 interfaces, and these
+each have a different user experience.</p>
+<ul class="simple">
+<li>SIP to Bono for calls</li>
+<li>HTTP to Homer for direct call service configuration (not currently
+exposed)</li>
+<li>HTTP to Ellis for web-UI-based provisioning</li>
+</ul>
+<p>For the purposes of the following descriptions, we label the two regions
+A and B, and the deployment in region A has failed.</p>
+<div class="section" id="sip-to-bono">
+<h3>SIP to Bono<a class="headerlink" href="#sip-to-bono" title="Permalink to this headline">¶</a></h3>
+<p>If the subscriber was connected to a Bono node in region A, their TCP
+connection fails. They then attempt to re-register. If it has been more
+than the DNS TTL (proposed to be 30s) since they last connected, DNS
+will point to region B, they will re-register and their service will
+recover (both for incoming and outgoing calls). If it has been less than
+the DNS TTL since they last connected, they will probably wait 5 minutes
+before they try to re-register (using the correct DNS entry this time).</p>
+<p>If the subscriber was connected to a Bono node in region B, their TCP
+connection does not fail, they do not re-register and their service is
+unaffected.</p>
+<p>Overall, the subscriber&#8217;s expected incoming or outgoing call service
+outage would be as follows.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>  50% chance of being on a Bono node in region A *
+  30s/300s chance of having a stale DNS entry *
+  300s re-registration time
+= 5% chance of a 300s outage
+= 15s average outage
+</pre></div>
+</div>
+<p>Realistically, if 50% of subscribers all re-registered almost
+simultaneously (due to their TCP connection dropping and their DNS being
+timed out), it&#8217;s unlikely that Bono would be able to keep up.</p>
+<p>Also, depending on the failure mode of the nodes in region A, it&#8217;s
+possible that the TCP connection failure would be silent and the clients
+would not notice until they next re-REGISTERed. In this case, all
+clients connected to Bonos in region A would take an average of 150s to
+notice the failure. This equates to a 50% chance of a 150s outage, or an
+average outage of 75s.</p>
+</div>
+<div class="section" id="http-to-homer">
+<h3>HTTP to Homer<a class="headerlink" href="#http-to-homer" title="Permalink to this headline">¶</a></h3>
+<p>(This function is not currently exposed.)</p>
+<p>If the subscriber was using a Homer node in region A, their requests
+would fail until their DNS timed out. If the subscriber was using a
+Homer node in region B, they would see no failures.</p>
+<p>Given the proposed DNS TTL of 30s, 50% of subscribers (those in region
+A) would see an average of 15s of failures. On average, a subscriber
+would see 7.5s of failures.</p>
+</div>
+<div class="section" id="http-to-ellis">
+<h3>HTTP to Ellis<a class="headerlink" href="#http-to-ellis" title="Permalink to this headline">¶</a></h3>
+<p>Ellis is not geographically redundant. If Ellis was deployed in region
+A, all service would fail until region A was recovered. If Ellis was
+deployed in region B, there would be no outage.</p>
+</div>
+</div>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<p>The process for setting up a geographically-redundant deployment is as
+follows.</p>
+<ol class="arabic simple">
+<li>Create independent deployments for each of the regions, with separate
+DNS entries. See <a class="reference external" href="Manual_Install.md">the manual install
+instructions</a> for the required GR settings.</li>
+<li>Set up DNS (probably using SRV records) so that:<ul>
+<li>Bono nodes prefer the Sprout node local to them, but will fail
+over to the one in the other site.</li>
+<li>Sprout nodes only use the Homer, Homestead and Ralf nodes in their
+local site.</li>
+<li>The Ellis node ony uses the Homer and Homesteads in its local
+site.</li>
+</ul>
+</li>
+<li>Configure Route 53 to forward requests for Bono according to latency.
+To do this, for each region, create one record set, as follows.<ul>
+<li>Name: &lt;shared (non-geographically-redundant) DNS name&gt;</li>
+<li>Type: &#8220;A - IPv4 address&#8221; or &#8220;AAAA - IPv6 address&#8221;</li>
+<li>Alias: No</li>
+<li>TTL (Seconds): 30 (or as low as you can go - in a failure
+scenario, we need to go back to DNS ASAP)</li>
+<li>Value: &lt;list of IPv4 or IPv6 addresses for this region&gt;</li>
+<li>Routing Policy: <strong>Latency</strong></li>
+<li>Region: &lt;AWS region matching geographic region&gt;</li>
+<li>Set ID: &lt;make up a unique name, e.g. gr-bono-us-east-1&gt;</li>
+</ul>
+</li>
+</ol>
+<p>You can also use Chef to try GR function, by setting <code class="docutils literal"><span class="pre">&quot;gr&quot;</span> <span class="pre">=&gt;</span> <span class="pre">true</span></code> in
+the environment, as described in <a class="reference external" href="Automated_Install.md">the automated install
+docs</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Geographic redundancy</a><ul>
+<li><a class="reference internal" href="#architecture">Architecture</a></li>
+<li><a class="reference internal" href="#limitations">Limitations</a></li>
+<li><a class="reference internal" href="#impact">Impact</a><ul>
+<li><a class="reference internal" href="#sip-to-bono">SIP to Bono</a></li>
+<li><a class="reference internal" href="#http-to-homer">HTTP to Homer</a></li>
+<li><a class="reference internal" href="#http-to-ellis">HTTP to Ellis</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Multiple_Network_Support.html" title="previous chapter">Multiple Network Support</a></li>
+      <li>Next: <a href="IPv6.html" title="next chapter">IPv6</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Geographic_redundancy.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Geographic_redundancy.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

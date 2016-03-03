@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Voxbone &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="SNMP Statistics" href="Clearwater_SNMP_Statistics.html" />
+    <link rel="prev" title="ENUM Guide" href="ENUM.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="voxbone">
+<h1>Voxbone<a class="headerlink" href="#voxbone" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="http://www.voxbone.com/">Voxbone</a> provides local, geographical,
+mobile and toll free phone numbers and converts incoming calls and SMSs
+to SIP INVITE and MESSAGE flows.</p>
+<p>Clearwater supports these flows, and this document describes how to
+configure Voxbone and Clearwater to work together, and then how to test
+and troubleshoot.</p>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>There are 3 configuration steps.</p>
+<ol class="arabic simple">
+<li>Configure Clearwater&#8217;s IBCF to trust Voxbone&#8217;s servers.</li>
+<li>Create a subscriber on Clearwater.</li>
+<li>Associate the subscriber with a number on Voxbone.</li>
+</ol>
+<div class="section" id="configuring-ibcf">
+<h3>Configuring IBCF<a class="headerlink" href="#configuring-ibcf" title="Permalink to this headline">¶</a></h3>
+<p>An IBCF (Interconnection Border Control Function) interfaces between the
+core network and one or must trusted SIP trunks. We will configure
+Voxbone to send all its traffic to the IBCF, but we first need to
+configure the IBCF to accept traffic from Voxbone.</p>
+<p>Clearwater&#8217;s bono component acts as an IBCF. To make things simpler
+later on, you should configure <em>all</em> of your bono nodes to act as IBCFs.</p>
+<p>The IP addresses you need to specify as trusted peers are</p>
+<ul class="simple">
+<li>all the <a class="reference external" href="http://www.voxbone.com/network-ipaddressesranges.jsf">Voxbone signaling IP
+addresses</a> -
+as of writing, these are<ul>
+<li>81.201.82.45</li>
+<li>81.201.84.195</li>
+<li>81.201.83.45</li>
+<li>81.201.86.45</li>
+<li>81.201.85.45</li>
+</ul>
+</li>
+<li>the <a class="reference external" href="https://www.voxbone.com/members/faq-voxsms.jsf#faq-voxsms09">Voxbone SMS IP
+addresses</a>
+- as of writing, these are<ul>
+<li>81.201.82.10</li>
+<li>81.201.82.11</li>
+<li>81.201.82.12.</li>
+</ul>
+</li>
+</ul>
+<p>The process for configuring trusted peers is described as part of <a class="reference external" href="IBCF.md#install-and-configure-an-ibcf">the
+IBCF documentation</a>.</p>
+<p>If you don&#8217;t want to configure all your bono nodes as IBCF nodes, you
+can do so, but will need to take extra steps when configuring Voxbone to
+ensure that calls are routed to the correct node.</p>
+</div>
+<div class="section" id="creating-a-subscriber">
+<h3>Creating a subscriber<a class="headerlink" href="#creating-a-subscriber" title="Permalink to this headline">¶</a></h3>
+<p>Creating a subscriber for Voxbone use is done exactly <a class="reference external" href="Making_your_first_call.md#create-a-number-for-your-client">as you would
+normally do
+so</a>.</p>
+</div>
+<div class="section" id="associating-the-subscriber-on-voxbone">
+<h3>Associating the subscriber on Voxbone<a class="headerlink" href="#associating-the-subscriber-on-voxbone" title="Permalink to this headline">¶</a></h3>
+<p>For each telephone number you own, Voxbone allows you to configure a SIP
+URI to which incoming calls will be sent.</p>
+<ul class="simple">
+<li>If, as recommended earlier, all your bono nodes are configured as
+IBCFs, you can simply use the SIP URI of the subscriber you created
+above.</li>
+<li>If only one (or a subset) of your bono nodes are configured as IBCFs,
+you must ensure that calls are routed to this node by replacing the
+domain name of the SIP URI with the IP address or domain name of the
+IBCF node. For example, if your SIP URI was
+<code class="docutils literal"><span class="pre">1234567890&#64;example.com</span></code> but your IBCF node was <code class="docutils literal"><span class="pre">1.2.3.4</span></code>, you
+must use <code class="docutils literal"><span class="pre">1234567890&#64;1.2.3.4</span></code>.</li>
+</ul>
+<p>If you are also using the VoxSMS service for receiving SMSes, you
+additionally need to configure a VoxSMS SIP URI using the same SIP URI
+as above.</p>
+</div>
+</div>
+<div class="section" id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<p>The Voxbone web UI allows you to make a test call. Alternatively, you
+can make a normal call through the PSTN to your Voxbone number.</p>
+<p>The only way to test SMS function is to actually send an SMS to your
+Voxbone number.</p>
+</div>
+<div class="section" id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h2>
+<p>If your call or SMS doesn&#8217;t get through, there are three things to
+check.</p>
+<ul class="simple">
+<li>Does the SIP message actually reach the IBCF? You can check this
+using network capture (e.g. <code class="docutils literal"><span class="pre">tcpdump</span></code>) on the IBCF? If not, the
+problem is likely to either be that the SIP URI&#8217;s domain doesn&#8217;t
+resolve to your IBCF, or that security groups or firewall rules are
+blocking traffic to it.</li>
+<li>Is the SIP message trusted? You can again check this with network
+capture - if you see a <code class="docutils literal"><span class="pre">403</span> <span class="pre">Forbidden</span></code> response, this indicates
+that the IBCF does not trust the sender of the message. Check the
+<code class="docutils literal"><span class="pre">trusted_peers</span></code> entry in your <code class="docutils literal"><span class="pre">/etc/clearwater/user_settings</span></code>
+file and that you have restarted bono since updating it.</li>
+<li>Would the call go through if it were sent on-net? Try making a call
+to the subscriber from another subscriber on Clearwater and check
+that it goes through (or follow the <a class="reference external" href="Troubleshooting_and_Recovery.md">standard troubleshooting
+process</a>).</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Voxbone</a><ul>
+<li><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li><a class="reference internal" href="#configuring-ibcf">Configuring IBCF</a></li>
+<li><a class="reference internal" href="#creating-a-subscriber">Creating a subscriber</a></li>
+<li><a class="reference internal" href="#associating-the-subscriber-on-voxbone">Associating the subscriber on Voxbone</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#testing">Testing</a></li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="ENUM.html" title="previous chapter">ENUM Guide</a></li>
+      <li>Next: <a href="Clearwater_SNMP_Statistics.html" title="next chapter">SNMP Statistics</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Voxbone.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Voxbone.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

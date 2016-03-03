@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Call Diversion &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Elastic Scaling" href="Clearwater_Elastic_Scaling.html" />
+    <link rel="prev" title="Call Barring" href="Clearwater_Call_Barring_Support.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="call-diversion">
+<h1>Call Diversion<a class="headerlink" href="#call-diversion" title="Permalink to this headline">¶</a></h1>
+<p>Clearwater allows users to define rules for handling of incoming calls,
+by implementing a superset of the IR.92 version of call diversion (which
+is itself a cut-down version of the MMTEL call diversion service).</p>
+<p>The relevant specifications are</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.etsi.org/deliver/etsi_ts/124600_124699/124604/11.04.00_60/ts_124604v110400p.pdf">3GPP TS
+24.604</a><ul>
+<li>the full specification</li>
+</ul>
+</li>
+<li><a class="reference external" href="http://www.gsma.com/newsroom/wp-content/uploads/2013/04/IR.92-v7.0.pdf">GSMA PRD
+IR.92</a>,
+section 2.3.8<ul>
+<li>the required subset.</li>
+</ul>
+</li>
+</ul>
+<p>We have implemented all of IR.92 section 2.3.8. We have implemented all
+of 3GPP TS 24.604 with the following exceptions.</p>
+<ul class="simple">
+<li>CDIV Notification (notifying the diverting party when a call has been
+diverted) is not supported</li>
+<li>We only support the default subscription options from table 4.3.1.1
+(most notably, no privacy options).</li>
+<li>We only support hard-coded values for network provider options from
+table 4.3.1.2, as follows.<ul>
+<li>We stop ringing the diverting party before/simultaneously with
+trying the diverted-to target (rather than waiting for them to
+start ringing).<ul>
+<li>Served user communication retention on invocation of diversion
+(forwarding or deflection) = Clear communication to the served
+user on invocation of call diversion</li>
+<li>Served user communication retention when diverting is rejected
+at diverted-to user = No action at the diverting user</li>
+</ul>
+</li>
+<li>We don&#8217;t support CDIV Notification (as above).<ul>
+<li>Subscription option is provided for &#8220;served user received
+reminder indication on outgoing communication that CDIV is
+currently activated&#8221; = No</li>
+<li>CDIV Indication Timer = irrelevant</li>
+<li>CDIVN Buffer Timer = irrelevant</li>
+</ul>
+</li>
+<li>We support up to 5 diversions and then reject the call.<ul>
+<li>Total number of call diversions for each communication = 5</li>
+<li>AS behavior when the maximum number of diversions for a
+communication is reached = Reject the communication</li>
+</ul>
+</li>
+<li>The default no-reply timer before Communication Forwarding on no
+Reply occurs is hard-coded to 20s. This is still overridable on a
+per-subscriber basis.<ul>
+<li>Communication forwarding on no reply timer = 36s</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Obviously, the interactions with services that we haven&#8217;t implemented
+yet have not been implemented! In particular, we haven&#8217;t implemented
+any interactions with terminating privacy.</li>
+<li>We&#8217;ve ignored the comment in section 4.2.1.1 which says &#8220;It should be
+possible that a user has the option to restrict receiving
+communications that are forwarded&#8221; but doesn&#8217;t provide any function
+for this.</li>
+</ul>
+<p>Note that we <em>have</em> implemented support for Communication Deflection (in
+which the callee sends a 302 response and this triggers forwarding)
+despite it not being required by IR.92.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Clearwater_Call_Barring_Support.html" title="previous chapter">Call Barring</a></li>
+      <li>Next: <a href="Clearwater_Elastic_Scaling.html" title="next chapter">Elastic Scaling</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_Call_Diversion_Support.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_Call_Diversion_Support.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

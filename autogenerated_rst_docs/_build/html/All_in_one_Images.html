@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>All-in-one Images &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Automated Install Instructions" href="Automated_Install.html" />
+    <link rel="prev" title="Installation Instructions" href="Installation_Instructions.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="all-in-one-images">
+<h1>All-in-one Images<a class="headerlink" href="#all-in-one-images" title="Permalink to this headline">¶</a></h1>
+<p>While Clearwater is designed to be massively horizontally scalable, it
+is also possible to install all Clearwater components on a single node.
+This makes installation much simpler, and is useful for familiarizing
+yourself with Clearwater before moving up to a larger-scale deployment
+using one of the <a class="reference external" href="Installation_Instructions.md">other installation
+methods</a>.</p>
+<p>This page describes the all-in-one images, their capabilities and
+restrictions and the installation options available.</p>
+<div class="section" id="images">
+<h2>Images<a class="headerlink" href="#images" title="Permalink to this headline">¶</a></h2>
+<p>All-in-one images consist of</p>
+<ul class="simple">
+<li>Ubuntu 14.04, configured to use DHCP</li>
+<li>bono, sprout, homestead, homer and ellis</li>
+<li>Clearwater auto-configuration scripts.</li>
+</ul>
+<p>On boot, the image retrieves its IP configuration over DHCP and the
+auto-configuration scripts then configure the bono, sprout, homestead,
+homer and ellis software to match.</p>
+<p>The image is designed to run on a virtual machine with a single core,
+2GB RAM and 8GB of disk space. On EC2, this is an t2.small.</p>
+</div>
+<div class="section" id="capabilities-and-restrictions">
+<h2>Capabilities and Restrictions<a class="headerlink" href="#capabilities-and-restrictions" title="Permalink to this headline">¶</a></h2>
+<p>Since the all-in-one images include all of bono, sprout, homestead,
+homer and ellis, they are capable of almost anything a full deployment
+is capable of.</p>
+<p>The key restrictions of all-in-one images are</p>
+<ul class="simple">
+<li>hard-coded realm - the all-in-one image uses a hard-coded realm of
+<code class="docutils literal"><span class="pre">example.com</span></code> so your SIP URI might be
+<code class="docutils literal"><span class="pre">sip:6505551234&#64;example.com</span></code> - by default, SIP uses this realm for
+routing but <code class="docutils literal"><span class="pre">example.com</span></code> won&#8217;t resolve to your host so you need to
+configure an outbound proxy on all your SIP clients (more details
+later)</li>
+<li>performance - since all software runs on a single virtual machine,
+performance is significantly lower than even the smallest scale
+deployment</li>
+<li>scalability - there is no option to scale up and add more virtual
+machines to boost capacity - for this, you must create a normal
+deployment</li>
+<li>fault-tolerance - since everything runs on a single virtual machine,
+if that virtual machine fails, the service as a whole fails.</li>
+</ul>
+</div>
+<div class="section" id="installation-options">
+<h2>Installation Options<a class="headerlink" href="#installation-options" title="Permalink to this headline">¶</a></h2>
+<p>All-in-one images can be installed on EC2 or on your own virtualization
+platform, as long as it supports <a class="reference external" href="http://dmtf.org/standards/ovf">OVF (Open Virtualization
+Format)</a>.</p>
+<ul class="simple">
+<li>To install on EC2, follow the <a class="reference external" href="All_in_one_EC2_AMI_Installation.md">all-in-one EC2 AMI installation
+instructions</a>.</li>
+<li>To install on your own virtualization platform, follow the
+<a class="reference external" href="All_in_one_OVF_Installation.md">all-in-one OVF installation
+instructions</a>.</li>
+</ul>
+</div>
+<div class="section" id="manual-build">
+<h2>Manual Build<a class="headerlink" href="#manual-build" title="Permalink to this headline">¶</a></h2>
+<p>If your virtualization platform is not EC2 and doesn&#8217;t support OVF, you
+may still be able to manually build an all-in-one node. To do so,</p>
+<ol class="arabic">
+<li><p class="first">install <a class="reference external" href="http://releases.ubuntu.com/trusty/">Ubuntu 14.04 - 64bit server
+edition</a></p>
+</li>
+<li><p class="first">find the <code class="docutils literal"><span class="pre">preseed/late_command</span></code> entry in the <a class="reference external" href="https://github.com/Metaswitch/clearwater-vm-images/blob/master/ubuntu-ovf/ubuntu-server.seed">all-in-one image&#8217;s
+install
+script</a>
+- as of writing this is as follows, but please check the linked file
+for the latest version</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>d-i preseed/late_command string in-target bash -c &#39;{ echo &quot;#!/bin/bash&quot; ; \
+                                            echo &quot;set -e&quot; ; \
+                                            echo &quot;repo=... # filled in by make_ovf.sh&quot; ; \
+                                            echo &quot;curl -L https://raw.githubusercontent.com/Metaswitch/clearwater-infrastructure/master/scripts/clearwater-aio-install.sh | sudo bash -s clearwater-auto-config-generic $repo&quot; ; \
+                                            echo &quot;python create_numbers.py --start 6505550000 --count 1000&quot; ; \
+                                            echo &quot;rm /etc/rc2.d/S99zclearwater-aio-first-boot&quot; ; \
+                                            echo &quot;poweroff&quot; ; } &gt; /etc/rc2.d/S99zclearwater-aio-first-boot ; \
+                                          chmod a+x /etc/rc2.d/S99zclearwater-aio-first-boot&#39;
+</pre></div>
+</div>
+</li>
+<li><p class="first">run the command (stripping the
+<code class="docutils literal"><span class="pre">d-i</span> <span class="pre">preseed/late_command</span> <span class="pre">string</span> <span class="pre">in-target</span></code> prefix, filling in the
+repo variable - the default is <code class="docutils literal"><span class="pre">http://repo.cw-ngv.com/stable</span></code>, and
+stripping the <code class="docutils literal"><span class="pre">\</span></code>) - this will create an
+<code class="docutils literal"><span class="pre">/etc/rc2.d/S99zclearwater-aio-first-boot</span></code> script</p>
+</li>
+<li><p class="first">run the <code class="docutils literal"><span class="pre">/etc/rc2.d/S99zclearwater-aio-first-boot</span></code> script - this
+will install the all-in-one software and then shutdown (ready for an
+image to be taken)</p>
+</li>
+<li><p class="first">restart the node.</p>
+</li>
+</ol>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">All-in-one Images</a><ul>
+<li><a class="reference internal" href="#images">Images</a></li>
+<li><a class="reference internal" href="#capabilities-and-restrictions">Capabilities and Restrictions</a></li>
+<li><a class="reference internal" href="#installation-options">Installation Options</a></li>
+<li><a class="reference internal" href="#manual-build">Manual Build</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Installation_Instructions.html" title="previous chapter">Installation Instructions</a></li>
+      <li>Next: <a href="Automated_Install.html" title="next chapter">Automated Install Instructions</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/All_in_one_Images.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/All_in_one_Images.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WebRTC support in Clearwater &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="IR.92 Supplementary Services" href="IR.92_Supplementary_Services.html" />
+    <link rel="prev" title="Application Server Guide" href="Application_Server_Guide.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="webrtc-support-in-clearwater">
+<h1>WebRTC support in Clearwater<a class="headerlink" href="#webrtc-support-in-clearwater" title="Permalink to this headline">¶</a></h1>
+<p>Clearwater supports WebRTC clients. This article explains how to do
+this, using a common WebRTC client as an example.</p>
+<p><strong>This has been tested using Chrome 26 and some previous versions. It
+has not been tested on other browsers. WebRTC is under active
+development, so as a result of browser updates clients may not work.</strong></p>
+<p><a href="#id1"><span class="problematic" id="id2">**</span></a>Be aware that the sipML5 client can&#8217;t be logged in to multiple numbers
+simultaneously in the same browser. **</p>
+<div class="section" id="instructions">
+<h2>Instructions<a class="headerlink" href="#instructions" title="Permalink to this headline">¶</a></h2>
+<p>In the instructions below, &lt;domain&gt; is your Clearwater domain.</p>
+<ul class="simple">
+<li>Configure a line in ellis.</li>
+<li>Check the camera is not in use: check the camera light is off. If it
+is on, close the app that is using it (e.g., Skype, or a phone
+client).</li>
+<li>Visit <a class="reference external" href="http://sipml5.org/">http://sipml5.org/</a> and click on the button to start the live
+demo. If the website is down, you can also use
+<a class="reference external" href="http://doubango.org/sipml5/">http://doubango.org/sipml5/</a>.</li>
+<li>By default sipML5 uses a SIP&lt;-&gt;WebRTC gateway run by sipml5.org.
+Clearwater supports WebRTC directly. To tell sipML5 to speak WebRTC
+directly to Clearwater:<ul>
+<li>Click on the &#8220;expert mode&#8221; button to open the &#8220;expert mode&#8221; tab,
+and fill in the following field:<ul>
+<li>WebSocket Server URL: ws://&lt;domain&gt;:5062</li>
+</ul>
+</li>
+<li>Click Save.</li>
+<li>Go back to the calls tab.</li>
+</ul>
+</li>
+<li>Fill in the fields as follows:<ul>
+<li>Display name: &lt;whatever you like, e.g., your name&gt;</li>
+<li>Private identity: &lt;phone number&gt;&#64;&lt;domain&gt;</li>
+<li>Public identity: sip:&lt;phone number&gt;&#64;&lt;domain&gt;</li>
+<li>Password: &lt;password as displayed in ellis&gt;</li>
+<li>Realm: &lt;domain&gt;</li>
+</ul>
+</li>
+<li>Now click Log In. This sometimes takes a few seconds. If it fails
+(e.g., due to firewall behaviour), click Log Out then Log In again.</li>
+</ul>
+<p>Some firewalls or proxies may not support WebSockets (the technology
+underlying WebRTC). If this is the case, logging in will not work
+(probably it will time out). Clearwater uses port 5062 for WebSockets.</p>
+<p>Once you have this set up on two tabs, or two browsers, you can make
+calls between them as follows:</p>
+<ul class="simple">
+<li>Entering the phone number</li>
+<li>Press the Call button.</li>
+<li>Accept the local request to use the camera/mic.</li>
+<li>Remote browser rings.</li>
+<li>Accept the remote request to use the camera/mic.</li>
+<li>Click Answer.</li>
+<li>Talk.</li>
+<li>Click Hang up on either end.</li>
+</ul>
+<p>Video can be disabled on the &#8216;expert mode&#8217; tab.</p>
+<p><strong>Note:</strong> Clearwater does not transcode media between WebRTC and
+non-WebRTC clients, so such calls are not possible. Transcoding will be
+supported in future.</p>
+</div>
+<div class="section" id="known-sipml5-bugs">
+<h2>Known sipML5 bugs<a class="headerlink" href="#known-sipml5-bugs" title="Permalink to this headline">¶</a></h2>
+<p>At the time of writing, the following sipML5 bugs are known:</p>
+<ul class="simple">
+<li>Calls where one or both ends do not have a webcam do not always
+complete correctly. It is best to ensure both ends have a webcam,
+even if audio-only calls are being made.</li>
+<li>Hang up doesn&#8217;t work - you have to hang up on both ends.</li>
+</ul>
+</div>
+<div class="section" id="using-stun-and-turn">
+<h2>Using STUN and TURN<a class="headerlink" href="#using-stun-and-turn" title="Permalink to this headline">¶</a></h2>
+<p><strong>Note:</strong> The above uses a default (non-Clearwater) STUN server, and no
+TURN server. Clearwater has its own STUN and TURN servers which can be
+used to support clients behind NATs and firewalls, but at the time of
+writing (April 2013) there are some difficulties with the WebRTC spec
+that make the Clearwater TURN server inaccessible to compliant browsers.
+These are being tracked.</p>
+<p>If one or both clients are behind a symmetric firewall, you must use
+TURN. Configure this as follows:</p>
+<ul class="simple">
+<li>On the &#8216;expert mode&#8217; tab, fill in the following field with your SIP
+username and the TURN workaround password set by your administrator
+(<code class="docutils literal"><span class="pre">turn_workaround</span></code> in <a class="reference external" href="Installing_a_Chef_workstation.md">Installing a Chef
+workstation</a>). This is a
+workaround for Chrome WebRTC <a class="reference external" href="https://code.google.com/p/webrtc/issues/detail?id=1508">issue
+1508</a>
+which will be fixed in Chrome 28 (not yet released).<ul>
+<li>ICE Servers: [{url:&#8221;turn:&lt;phone
+number&gt;%40&lt;domain&gt;&#64;&lt;domain&gt;&#8221;,credential:&#8221;&lt;password&gt;&#8221;}]</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="testing-turn">
+<h2>Testing TURN<a class="headerlink" href="#testing-turn" title="Permalink to this headline">¶</a></h2>
+<p>To test TURN when one or both of the clients are running under Windows
+7, find the IP of the remote client, and block direct communication
+between them as follows:</p>
+<ul class="simple">
+<li>Control Panel &gt; Windows Firewall &gt; Advanced Settings &gt; Inbound Rules
+&gt; New Rule &gt; Custom &gt; All Programs &gt; Any Protocol &gt; specify remote IP
+address &gt; Block the connection &gt; (give it a name).</li>
+<li>Do the same for outbound.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">WebRTC support in Clearwater</a><ul>
+<li><a class="reference internal" href="#instructions">Instructions</a></li>
+<li><a class="reference internal" href="#known-sipml5-bugs">Known sipML5 bugs</a></li>
+<li><a class="reference internal" href="#using-stun-and-turn">Using STUN and TURN</a></li>
+<li><a class="reference internal" href="#testing-turn">Testing TURN</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Application_Server_Guide.html" title="previous chapter">Application Server Guide</a></li>
+      <li>Next: <a href="IR.92_Supplementary_Services.html" title="next chapter">IR.92 Supplementary Services</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/WebRTC_support_in_Clearwater.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/WebRTC_support_in_Clearwater.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

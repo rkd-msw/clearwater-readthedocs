@@ -1,0 +1,310 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Elastic Scaling &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Privacy" href="Clearwater_Privacy_Feature.html" />
+    <link rel="prev" title="Call Diversion" href="Clearwater_Call_Diversion_Support.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="elastic-scaling">
+<h1>Elastic Scaling<a class="headerlink" href="#elastic-scaling" title="Permalink to this headline">¶</a></h1>
+<p>The core Clearwater nodes have the ability to elastically scale; in
+other words, you can grow and shrink your deployment on demand, without
+disrupting calls or losing data.</p>
+<p>This page explains how to use this elastic scaling function when using a
+deployment created through the <a class="reference external" href="Automated_Install.md">automated</a> or
+<a class="reference external" href="Manual_Install.md">manual</a> install processes. Note that, although
+the instructions differ between the automated and manual processes, the
+underlying operations that will be performed on your deployment are the
+same - the automated process simply uses chef to drive this rather than
+issuing the commands manually.</p>
+<div class="section" id="before-scaling-your-deployment">
+<h2>Before scaling your deployment<a class="headerlink" href="#before-scaling-your-deployment" title="Permalink to this headline">¶</a></h2>
+<p>Before scaling up or down, you should decide how many each of Bono,
+Sprout, Homestead, Homer and Ralf nodes you need (i.e. your target
+size). This should be based on your call load profile and measurements
+of current systems, though based on experience we recommend scaling up a
+tier of a given type (sprout, bono, etc.) when the average CPU
+utilization within that tier reaches ~60%. The <a class="reference external" href="http://www.projectclearwater.org/technical/clearwater-performance/">Deployment Sizing
+Spreadsheet</a>
+may also provide useful input.</p>
+</div>
+<div class="section" id="performing-the-resize">
+<h2>Performing the resize<a class="headerlink" href="#performing-the-resize" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="if-you-did-an-automated-install">
+<h3>If you did an Automated Install<a class="headerlink" href="#if-you-did-an-automated-install" title="Permalink to this headline">¶</a></h3>
+<p>To resize your automated deployment, run:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>knife deployment resize -E &lt;env&gt; --sprout-count &lt;n&gt; --bono-count &lt;n&gt; --homer-count &lt;n&gt; --homestead-count &lt;n&gt; --ralf-count &lt;n&gt;
+</pre></div>
+</div>
+<p>Where the <code class="docutils literal"><span class="pre">&lt;n&gt;</span></code> values are how many nodes of each type you need. Once
+this command has completed, the resize operation has completed and any
+nodes that are no longer needed will have been terminated.</p>
+<p>More detailed documentation on the available Chef commands is available
+<a class="reference external" href="https://github.com/Metaswitch/chef/blob/master/docs/knife_commands.mdhttps://github.com/Metaswitch/chef/blob/master/docs/knife_commands.md">here</a>.</p>
+</div>
+<div class="section" id="if-you-did-a-manual-install">
+<h3>If you did a Manual Install<a class="headerlink" href="#if-you-did-a-manual-install" title="Permalink to this headline">¶</a></h3>
+<p>Follow these instructions if you manually installed your deployment and
+are using Clearwater&#8217;s <a class="reference external" href="Automatic_Clustering_Config_Sharing">automatic clustering and configuration
+sharing</a> functionality.</p>
+<p>If you&#8217;re scaling up your deployment, follow the following process:</p>
+<ol class="arabic simple">
+<li>Spin up new nodes, following the <a class="reference external" href="Manual_Install">standard install
+process</a>, but with the following modifications:<ul>
+<li>Set the <code class="docutils literal"><span class="pre">etcd_cluster</span></code> so that it only includes the nodes that
+are already in the deployment (so it does not include the nodes
+being added).</li>
+<li>Stop when you get to the &#8220;Provide Shared Configuration&#8221; step. The
+nodes will learn their configuration from the existing nodes.</li>
+</ul>
+</li>
+<li>Wait until the new nodes have fully joined the existing deployment.
+To check if a node has joined the deployment:<ul>
+<li>Run
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/clearwater-cluster-manager/scripts/check_cluster_state</span></code>.
+This should report that the local node is in all of its clusters
+and that the cluster is stable.</li>
+<li>Run
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/check_config_sync</span></code>.
+This reports when the node has learned its configuration.</li>
+</ul>
+</li>
+<li>Update DNS to contain the new nodes.</li>
+</ol>
+<p>If you&#8217;re scaling down your deployment, follow the following process:</p>
+<ol class="arabic simple">
+<li>Update DNS to contain the nodes that will remain after the
+scale-down.</li>
+<li>On each node that is about to be turned down:<ul>
+<li>Run <code class="docutils literal"><span class="pre">monit</span> <span class="pre">unmonitor</span> <span class="pre">-g</span> <span class="pre">&lt;node-type&gt;</span></code>. For example for a sprout
+node: <code class="docutils literal"><span class="pre">monit</span> <span class="pre">unmonitor</span> <span class="pre">-g</span> <span class="pre">sprout</span></code>. On a homestead node also run
+<code class="docutils literal"><span class="pre">monit</span> <span class="pre">unmonitor</span> <span class="pre">-g</span> <span class="pre">homestead-prov</span></code>.</li>
+<li>Start the main process quiescing.<ul>
+<li>Sprout - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">sprout</span> <span class="pre">quiesce</span></code></li>
+<li>Bono - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">bono</span> <span class="pre">quiesce</span></code></li>
+<li>Homestead -
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homestead</span> <span class="pre">stop</span> <span class="pre">&amp;&amp;</span> <span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homestead-prov</span> <span class="pre">stop</span></code></li>
+<li>Homer - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homer</span> <span class="pre">stop</span></code></li>
+<li>Ralf -<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ralf</span> <span class="pre">stop</span></code></li>
+<li>Ellis - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ellis</span> <span class="pre">stop</span></code></li>
+<li>Memento - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">memento</span> <span class="pre">stop</span></code></li>
+</ul>
+</li>
+<li>Unmonitor the clearwater management processes:<ul>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">monit</span> <span class="pre">unmonitor</span> <span class="pre">clearwater_cluster_manager</span></code></li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">monit</span> <span class="pre">unmonitor</span> <span class="pre">clearwater_config_manager</span></code></li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">monit</span> <span class="pre">unmonitor</span> <span class="pre">-g</span> <span class="pre">etcd</span></code></li>
+</ul>
+</li>
+<li>Run <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">clearwater-etcd</span> <span class="pre">decommission</span></code>. This will cause
+the nodes to leave their existing clusters.</li>
+</ul>
+</li>
+<li>Once the above steps have completed, turn down the nodes.</li>
+</ol>
+</div>
+<div class="section" id="if-you-did-a-manual-install-without-automatic-clustering">
+<h3>If you did a Manual Install without Automatic Clustering<a class="headerlink" href="#if-you-did-a-manual-install-without-automatic-clustering" title="Permalink to this headline">¶</a></h3>
+<p>Follow these instructions if you manually installed your deployment but
+are <em>not</em> using Clearwater&#8217;s <a class="reference external" href="Automatic_Clustering_Config_Sharing">automatic clustering and configuration
+sharing</a> functionality.</p>
+<p>If you&#8217;re scaling up your deployment, follow the following process.</p>
+<ol class="arabic simple">
+<li>Spin up new nodes, following the <a class="reference external" href="Manual_Install.md">standard install
+process</a>.</li>
+<li>On Sprout and Ralf nodes, update
+<code class="docutils literal"><span class="pre">/etc/clearwater/cluster_settings</span></code> to contain both a list of the
+old nodes (<code class="docutils literal"><span class="pre">servers=...</span></code>) and a (longer) list of the new nodes
+(<code class="docutils literal"><span class="pre">new_servers=...</span></code>) and then run <code class="docutils literal"><span class="pre">service</span> <span class="pre">&lt;process&gt;</span> <span class="pre">reload</span></code> to
+re-read this file. Do the same on Memento nodes, but use
+<code class="docutils literal"><span class="pre">/etc/clearwater/memento_cluster_settings</span></code> as the file.</li>
+<li>On new Memento, Homestead and Homer nodes, follow the <a class="reference external" href="http://www.datastax.com/documentation/cassandra/1.2/cassandra/operations/ops_add_node_to_cluster_t.html">instructions
+on the Cassandra
+website</a>
+to join the new nodes to the existing cluster.</li>
+<li>On Sprout and Ralf nodes, update
+<code class="docutils literal"><span class="pre">/etc/chronos/chronos_cluster.conf</span></code> to contain a list of all the
+nodes (see
+<a class="reference external" href="https://github.com/Metaswitch/chronos/blob/dev/doc/clustering.md">here</a>
+for details of how to do this) and then run
+<code class="docutils literal"><span class="pre">service</span> <span class="pre">chronos</span> <span class="pre">reload</span></code> to re-read this file.</li>
+<li>On Sprout, Memento and Ralf nodes, run <code class="docutils literal"><span class="pre">service</span> <span class="pre">astaire</span> <span class="pre">reload</span></code> to
+start resynchronization.</li>
+<li>On Sprout and Ralf nodes, run <code class="docutils literal"><span class="pre">service</span> <span class="pre">chronos</span> <span class="pre">resync</span></code> to start
+resynchronization of Chronos timers.</li>
+<li>Update DNS to contain the new nodes.</li>
+<li>On Sprout, Memento and Ralf nodes, wait until Astaire has
+resynchronized, either by running <code class="docutils literal"><span class="pre">service</span> <span class="pre">astaire</span> <span class="pre">wait-sync</span></code> or
+by polling over <a class="reference external" href="Clearwater_SNMP_Statistics.md">SNMP</a>.</li>
+<li>On Sprout and Ralf nodes, wait until Chronos has resynchronized,
+either by running <code class="docutils literal"><span class="pre">service</span> <span class="pre">chronos</span> <span class="pre">wait-sync</span></code> or by polling over
+<a class="reference external" href="Clearwater_SNMP_Statistics.md">SNMP</a>.</li>
+<li>On all nodes, update /etc/clearwater/cluster_settings and
+/etc/clearwater/memento_cluster_settings to just contain the new
+list of nodes (<code class="docutils literal"><span class="pre">servers=...</span></code>) and then run
+<code class="docutils literal"><span class="pre">service</span> <span class="pre">&lt;process&gt;</span> <span class="pre">reload</span></code> to re-read this file.</li>
+</ol>
+<p>If you&#8217;re scaling down your deployment, follow the following process.</p>
+<ol class="arabic simple">
+<li>Update DNS to contain the nodes that will remain after the
+scale-down.</li>
+<li>On Sprout and Ralf nodes, update
+<code class="docutils literal"><span class="pre">/etc/clearwater/cluster_settings</span></code> to contain both a list of the
+old nodes (<code class="docutils literal"><span class="pre">servers=...</span></code>) and a (shorter) list of the new nodes
+(<code class="docutils literal"><span class="pre">new_servers=...</span></code>) and then run <code class="docutils literal"><span class="pre">service</span> <span class="pre">&lt;process&gt;</span> <span class="pre">reload</span></code> to
+re-read this file. Do the same on Memento nodes, but use
+<code class="docutils literal"><span class="pre">/etc/clearwater/memento_clus</span> <span class="pre">ter_settings</span></code> as the file.</li>
+<li>On leaving Memento, Homestead and Homer nodes, follow the
+<a class="reference external" href="http://www.datastax.com/documentation/cassandra/1.2/cassandra/operations/ops_remove_node_t.html">instructions on the Cassandra
+website</a>
+to remove the leaving nodes from the cluster.</li>
+<li>On Sprout and Ralf nodes, update
+<code class="docutils literal"><span class="pre">/etc/chronos/chronos_cluster.conf</span></code> to mark the nodes that are
+being scaled down as leaving (see
+<a class="reference external" href="https://github.com/Metaswitch/chronos/blob/dev/doc/clustering.md">here</a>
+for details of how to do this) and then run
+<code class="docutils literal"><span class="pre">service</span> <span class="pre">chronos</span> <span class="pre">reload</span></code> to re-read this file.</li>
+<li>On Sprout, Memento and Ralf nodes, run <code class="docutils literal"><span class="pre">service</span> <span class="pre">astaire</span> <span class="pre">reload</span></code> to
+start resynchronization.</li>
+<li>On the Sprout and Ralf nodes that are staying in the Chronos
+cluster, run <code class="docutils literal"><span class="pre">service</span> <span class="pre">chronos</span> <span class="pre">resync</span></code> to start resynchronization
+of Chronos timers.</li>
+<li>On Sprout, Memento and Ralf nodes, wait until Astaire has
+resynchronized, either by running <code class="docutils literal"><span class="pre">service</span> <span class="pre">astaire</span> <span class="pre">wait-sync</span></code> or
+by polling over <a class="reference external" href="Clearwater_SNMP_Statistics.md">SNMP</a>.</li>
+<li>On Sprout and Ralf nodes, wait until Chronos has resynchronized,
+either by running <code class="docutils literal"><span class="pre">service</span> <span class="pre">chronos</span> <span class="pre">wait-sync</span></code> or by polling over
+<a class="reference external" href="Clearwater_SNMP_Statistics.md">SNMP</a>.</li>
+<li>On Sprout, Memento and Ralf nodes, update
+/etc/clearwater/cluster_settings and
+/etc/clearwater/memento_cluster_settings to just contain the new
+list of nodes (<code class="docutils literal"><span class="pre">servers=...</span></code>) and then run
+<code class="docutils literal"><span class="pre">service</span> <span class="pre">&lt;process&gt;</span> <span class="pre">reload</span></code> to re-read this file.</li>
+<li>On the Sprout and Ralf nodes that are staying in the cluster, update
+<code class="docutils literal"><span class="pre">/etc/chronos/chronos_cluster.conf</span></code> so that it only contains
+entries for the staying nodes in the cluster and then run
+<code class="docutils literal"><span class="pre">service</span> <span class="pre">chronos</span> <span class="pre">reload</span></code> to re-read this file.</li>
+<li>On each node that is about to be turned down:<ul>
+<li>Run <code class="docutils literal"><span class="pre">monit</span> <span class="pre">unmonitor</span> <span class="pre">-g</span> <span class="pre">&lt;node-type&gt;</span></code>. For example for a sprout
+node: <code class="docutils literal"><span class="pre">monit</span> <span class="pre">unmonitor</span> <span class="pre">-g</span> <span class="pre">sprout</span></code>. On a homestead node also run
+<code class="docutils literal"><span class="pre">monit</span> <span class="pre">unmonitor</span> <span class="pre">-g</span> <span class="pre">homestead-prov</span></code>.</li>
+<li>Start the main process quiescing.<ul>
+<li>Sprout - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">sprout</span> <span class="pre">quiesce</span></code></li>
+<li>Bono - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">bono</span> <span class="pre">quiesce</span></code></li>
+<li>Homestead - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homestead</span> <span class="pre">stop</span></code></li>
+<li>Homer - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">homer</span> <span class="pre">stop</span></code></li>
+<li>Ralf -<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ralf</span> <span class="pre">stop</span></code></li>
+<li>Ellis - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">ellis</span> <span class="pre">stop</span></code></li>
+<li>Memento - <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">memento</span> <span class="pre">stop</span></code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Turn down each of these nodes once the process has terminated.</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Elastic Scaling</a><ul>
+<li><a class="reference internal" href="#before-scaling-your-deployment">Before scaling your deployment</a></li>
+<li><a class="reference internal" href="#performing-the-resize">Performing the resize</a><ul>
+<li><a class="reference internal" href="#if-you-did-an-automated-install">If you did an Automated Install</a></li>
+<li><a class="reference internal" href="#if-you-did-a-manual-install">If you did a Manual Install</a></li>
+<li><a class="reference internal" href="#if-you-did-a-manual-install-without-automatic-clustering">If you did a Manual Install without Automatic Clustering</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Clearwater_Call_Diversion_Support.html" title="previous chapter">Call Diversion</a></li>
+      <li>Next: <a href="Clearwater_Privacy_Feature.html" title="next chapter">Privacy</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_Elastic_Scaling.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_Elastic_Scaling.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

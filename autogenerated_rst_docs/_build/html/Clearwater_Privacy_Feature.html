@@ -1,0 +1,269 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Privacy &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Off-net Calling with BGCF and IBCF" href="IBCF.html" />
+    <link rel="prev" title="Elastic Scaling" href="Clearwater_Elastic_Scaling.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="privacy">
+<h1>Privacy<a class="headerlink" href="#privacy" title="Permalink to this headline">¶</a></h1>
+<p>The Clearwater privacy feature splits into two sections, configuration
+and application. For configuration, we&#8217;ve been working from a
+combination of <a class="reference external" href="http://www.arib.or.jp/IMT-2000/V730Jul09/5_Appendix/Rel8/24/24623-810.pdf">3GPP TS
+24.623</a>
+and <a class="reference external" href="http://www.etsi.org/deliver/etsi_ts/129300_129399/129364/08.00.00_60/ts_129364v080000p.pdf">ETSI TS
+129.364</a>,
+which define the XDM documents that store the MMTel services
+configuration (currently only OIR,
+originating-identity-presentation-restriction, is supported). For
+application, we&#8217;ve used 3GPP TS
+24.607` &lt;<a class="reference external" href="http://www.quintillion.co.jp/3GPP/Specs/24607-910.pdf">http://www.quintillion.co.jp/3GPP/Specs/24607-910.pdf</a>&gt;`__
+which defines the roles of the originating UE, originating AS,
+terminating AS and terminating UE. This document is supplemented by
+<a class="reference external" href="http://www.ietf.org/rfc/rfc3323.txt">RFC3323</a> and
+<a class="reference external" href="http://www.ietf.org/rfc/rfc3325.txt">RFC3325</a>.</p>
+<p>For configuration, there&#8217;s also a communication with Homestead to
+determine whether MMTel services should be applied for a call. This uses
+a proprietary (JSON) interface based on the inbound filter criteria
+definitions.</p>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>User-specified configuration is held and validated by the XDM. When a
+subscriber is provisioned, Ellis injects a default document into the XDM
+for that user, this document turns off OIR by default. After this, if
+the user wishes to change their call services configuration, they use
+the XCAP interface (Ut) to change their document.</p>
+<p>If the user has turned on Privacy by default, then all calls originating
+from the user will have identifying headers (e.g. <code class="docutils literal"><span class="pre">User-Agent</span></code>,
+<code class="docutils literal"><span class="pre">Organization</span></code>, <code class="docutils literal"><span class="pre">Server</span></code>...) stripped out from the originating
+request and will have the <code class="docutils literal"><span class="pre">From:</span></code> header re-written as
+<code class="docutils literal"><span class="pre">&quot;Anonymous&quot;</span> <span class="pre">&lt;sip:anonymous&#64;anonymous.invalid\&gt;;tag=xxxxxxx</span></code>,
+preventing the callee from working out who the caller is. With the
+current implementation, there are some headers that are left in the
+message that could be used to determine some information about the
+caller, see below.</p>
+</div>
+<div class="section" id="application">
+<h2>Application<a class="headerlink" href="#application" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="originating-ue">
+<h3>Originating UE<a class="headerlink" href="#originating-ue" title="Permalink to this headline">¶</a></h3>
+<p>The originating UE is responsible for adding any per-call Privacy
+headers (overriding the stored privacy configuration) if required and
+hiding some identifying information (e.g. <code class="docutils literal"><span class="pre">From:</span></code> header).</p>
+</div>
+<div class="section" id="application-server">
+<h3>Application Server<a class="headerlink" href="#application-server" title="Permalink to this headline">¶</a></h3>
+<p>When receiving a dialog-creating request from an endpoint, Sprout will
+ask Homestead which application servers should be used and will parse
+the returned iFC configuration. If the configuration indicates that
+MMTEL services should be applied, Sprout will continue to act as an
+originating and terminating application server on the call as it passes
+through.</p>
+<p>Once Homestead has indicated that MMTel services should be applied for
+the call, Sprout will query the XDM to determine the user&#8217;s specific
+configuration.</p>
+</div>
+<div class="section" id="originating-application-server">
+<h3>Originating Application Server<a class="headerlink" href="#originating-application-server" title="Permalink to this headline">¶</a></h3>
+<p>When acting as an originating AS, the above 3GPP spec states that we
+should do the following:</p>
+<p><em>For an originating user that subscribes to the OIR service in
+&#8220;temporary mode&#8221; with default &#8220;restricted&#8221;, if the request does not
+include a Privacy header field, or the request includes a Privacy header
+field that is not set to &#8220;none&#8221;, the AS shall insert a Privacy header
+field set to &#8220;id&#8221; or &#8220;header&#8221; based on the subscription option.
+Additionally based on operator policy, the AS shall either modify the
+From header field to remove the identification information, or add a
+Privacy header field set to &#8220;user&#8221;.</em></p>
+<p><em>For an originating user that subscribes to the OIR service in
+&#8220;temporary mode&#8221; with default &#8220;not restricted&#8221;, if the request includes
+a Privacy header field is set to &#8220;id&#8221; or &#8220;header&#8221;, based on operator
+policy, the AS shall either, may modify the From header field to remove
+the identification information or add a Privacy header field set to
+&#8220;user&#8221;.</em></p>
+<p>Our implementation of Sprout satisfies the above by injecting the
+applicable Privacy headers (i.e. it never actually applies privacy at
+this point, only indicates that privacy should be applied later).</p>
+</div>
+<div class="section" id="terminating-application-server">
+<h3>Terminating Application Server<a class="headerlink" href="#terminating-application-server" title="Permalink to this headline">¶</a></h3>
+<p>When acting as a terminating AS, the 3GPP spec states that we should do
+the following:</p>
+<p><em>If the request includes the Privacy header field set to &#8220;header&#8221; the AS
+shall:</em></p>
+<p><em>a) anonymize the contents of all headers containing private information
+in accordance with IETF RFC 3323 [6] and IETF RFC 3325 [7]; and</em></p>
+<p><em>b) add a Privacy header field with the priv-value set to &#8220;id&#8221; if not
+already present in the request.</em></p>
+<p><em>If the request includes the Privacy header field set to &#8220;user&#8221; the AS
+shall remove or anonymize the contents of all &#8220;user configurable&#8221;
+headers in accordance with IETF RFC 3323 [6] and IETF RFC 3325 [7]. In
+the latter case, the AS may need to act as transparent back-to-back user
+agent as described in IETF RFC 3323 [6].</em></p>
+<p>Our implementation of Sprout satisfies these requirements but does it by
+not fully satisfying the SHOULD clauses of the linked RFCs. In
+particular:</p>
+<ul class="simple">
+<li>&#8216;header&#8217; privacy<ul>
+<li>We do not perform &#8220;Via-Stripping&#8221; since we use the Via headers for
+subsequent call routing and don&#8217;t want to have to hold a
+via-header mapping in state.</li>
+<li>Similarly we don&#8217;t perform &#8220;Record-Route stripping&#8221; or
+&#8220;Contact-stripping&#8221;.</li>
+</ul>
+</li>
+<li>&#8216;session&#8217; privacy<ul>
+<li>This is not supported so if the privacy is marked as critical, we
+will reject the call.</li>
+</ul>
+</li>
+<li>&#8216;user&#8217; privacy<ul>
+<li>We modify the To: header inline here (and do not cache the
+original value) we&#8217;re assuming that the endpoints are robust
+enough to continue correlating the call based on the tags</li>
+<li>We do not anonymize the call-id (for the same reason as the
+Via-stripping above).</li>
+</ul>
+</li>
+<li>&#8216;id&#8217; privacy<ul>
+<li>This is fully supported.</li>
+</ul>
+</li>
+<li>&#8216;none&#8217; privacy<ul>
+<li>This is fully supported.</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="terminating-ue">
+<h3>Terminating UE<a class="headerlink" href="#terminating-ue" title="Permalink to this headline">¶</a></h3>
+<p>The terminating UE may use the presence of Privacy headers to determine
+if privacy has been applied by OIR or by the originating endpoint
+(though this doesn&#8217;t seem to be very useful information...). It may also
+look at the P-Asserted-Identity header to determine the true identity of
+the caller (rather than some local ID).</p>
+</div>
+</div>
+<div class="section" id="dialog-wide-issues">
+<h2>Dialog-Wide Issues<a class="headerlink" href="#dialog-wide-issues" title="Permalink to this headline">¶</a></h2>
+<p>There are a few issues with our stateless model and privacy that are
+worth drawing out here, pending a fuller discussion.</p>
+<ul class="simple">
+<li>We only apply OIR processing and privacy obfuscation to originating
+requests (i.e. not on in-dialog requests or responses)</li>
+<li>We cannot apply Contact/Via/RR-stripping since to do so would require
+us to restore the headers on not just the response but also on all
+callee in-dialog requests.</li>
+<li>Similarly for Call-Id obfuscation.</li>
+<li>Stripping Contact/Via/RR would prevent features such as callee call
+push from working (since they require the callee to send a REFER that
+identifies the caller).</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Privacy</a><ul>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#application">Application</a><ul>
+<li><a class="reference internal" href="#originating-ue">Originating UE</a></li>
+<li><a class="reference internal" href="#application-server">Application Server</a></li>
+<li><a class="reference internal" href="#originating-application-server">Originating Application Server</a></li>
+<li><a class="reference internal" href="#terminating-application-server">Terminating Application Server</a></li>
+<li><a class="reference internal" href="#terminating-ue">Terminating UE</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dialog-wide-issues">Dialog-Wide Issues</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Clearwater_Elastic_Scaling.html" title="previous chapter">Elastic Scaling</a></li>
+      <li>Next: <a href="IBCF.html" title="next chapter">Off-net Calling with BGCF and IBCF</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_Privacy_Feature.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_Privacy_Feature.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

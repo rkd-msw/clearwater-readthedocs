@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Call Barring &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Call Diversion" href="Clearwater_Call_Diversion_Support.html" />
+    <link rel="prev" title="Backups" href="Backups.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="call-barring">
+<h1>Call Barring<a class="headerlink" href="#call-barring" title="Permalink to this headline">¶</a></h1>
+<p>Clearwater allows users to configure rules for blocking of incoming or
+outgoing calls, by implementing the IR.92 version of call barring (which
+is itself a cut-down version of the MMTEL call barring service).</p>
+<p>The relevant specifications are:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24611.htm">3GPP TS 24.611
+v11.2.0</a><ul>
+<li>The full specification</li>
+</ul>
+</li>
+<li><a class="reference external" href="http://www.gsma.com/newsroom/wp-content/uploads/2012/06/IR9230.pdf">GSMA PRD IR.92, Section
+2.3.9</a><ul>
+<li>The required IR.92 subset</li>
+</ul>
+</li>
+</ul>
+<p>Some of the entries in the IR.92 list are not currently applicable for
+Clearwater, since Clearwater does not have support for/the concept of
+roaming calls. Because of this, the customer may only specify that they
+wish to block one of:</p>
+<ul class="simple">
+<li>No outgoing calls</li>
+<li>All outgoing calls</li>
+<li>Outgoing calls to international numbers (but see below)</li>
+</ul>
+<p>And one of:</p>
+<ul class="simple">
+<li>No incoming calls</li>
+<li>All incoming calls</li>
+</ul>
+<div class="section" id="international-call-detection">
+<h2>International Call detection<a class="headerlink" href="#international-call-detection" title="Permalink to this headline">¶</a></h2>
+<p>The 3GPP specification states that to detect an international number, a
+SIP router should discount SIP/SIPS URIs that do not have a
+<code class="docutils literal"><span class="pre">user=phone</span></code> parameter set on them (this parameter is intended to
+distinguish between dialed digits and call-by-name with numeric names)
+but X-Lite and other SIP clients never set this parameter. Because of
+this behavior, the Clearwater implementation considers all SIP URIs for
+international call categorization.</p>
+</div>
+<div class="section" id="national-dialing-prefix">
+<h2>National dialing prefix<a class="headerlink" href="#national-dialing-prefix" title="Permalink to this headline">¶</a></h2>
+<p>Another limitation is that the international call detection algorithm
+only checks against a global &#8216;national&#8217; dialing prefix (which is fine
+unless subscribers are expected to be multi-national within one
+Clearwater deployment). There does not appear to be a mechanism in IMS
+networks to store a subscriber-specific locale (e.g. in the HSS) so this
+would require some smarts to solve. These issues may be addressed in
+subsequent development.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Call Barring</a><ul>
+<li><a class="reference internal" href="#international-call-detection">International Call detection</a></li>
+<li><a class="reference internal" href="#national-dialing-prefix">National dialing prefix</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Backups.html" title="previous chapter">Backups</a></li>
+      <li>Next: <a href="Clearwater_Call_Diversion_Support.html" title="next chapter">Call Diversion</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_Call_Barring_Support.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_Call_Barring_Support.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

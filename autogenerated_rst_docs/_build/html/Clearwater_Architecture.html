@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Clearwater Architecture &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Clearwater Tour" href="Clearwater_Tour.html" />
+    <link rel="prev" title="Welcome to Clearwater" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="clearwater-architecture">
+<h1>Clearwater Architecture<a class="headerlink" href="#clearwater-architecture" title="Permalink to this headline">¶</a></h1>
+<p>Clearwater was designed from the ground up to be optimized for
+deployment in virtualized and cloud environments. It leans heavily on
+established design patterns for building and deploying massively
+scalable web applications, adapting these design patterns to fit the
+constraints of SIP and IMS. The Clearwater architecture therefore has
+some similarities to the traditional IMS architecture but is not
+identical.</p>
+<p>In particular ...</p>
+<ul class="simple">
+<li>All components are horizontally scalable using simple, stateless
+load-balancing.</li>
+<li>Minimal long-lived state is stored on cluster nodes, avoiding the
+need for complex data replication schemes. Most long-lived state is
+stored in back-end service nodes using cloud-optimized storage
+technologies such as Cassandra.</li>
+<li>Interfaces between the front-end SIP components and the back-end
+services use RESTful web services interfaces.</li>
+<li>Interfaces between the various components use connection pooling with
+statistical recycling of connections to ensure load is spread evenly
+as nodes are added and removed from each layer.</li>
+</ul>
+<p>The following diagram shows a Clearwater deployment.</p>
+<div class="figure" id="id1">
+<img alt="Architecture" src="_images/Clearwater_Architecture.png" />
+<p class="caption"><span class="caption-text">Architecture</span></p>
+</div>
+<div class="section" id="bono-edge-proxy">
+<h2>Bono (Edge Proxy)<a class="headerlink" href="#bono-edge-proxy" title="Permalink to this headline">¶</a></h2>
+<p>The Bono nodes form a horizontally scalable SIP edge proxy providing
+both a SIP IMS Gm compliant interface and a WebRTC interface to clients.
+Client connections are load balanced across the nodes. The Bono node
+provides the anchor point for the client&#8217;s connection to the Clearwater
+system, including support for various NAT traversal mechanisms. A client
+is therefore anchored to a particular Bono node for the duration of its
+registration, but can move to another Bono node if the connection or
+client fails.</p>
+</div>
+<div class="section" id="sprout-sip-router">
+<h2>Sprout (SIP Router)<a class="headerlink" href="#sprout-sip-router" title="Permalink to this headline">¶</a></h2>
+<p>The Sprout nodes act as a horizontally scalable, combined SIP registrar
+and authoritative routing proxy, and handle client authentication and
+the ISC interface to application servers. The Sprout nodes also contain
+the in-built MMTEL application server. The Sprout cluster includes a
+memcached cluster storing client registration data. SIP transactions are
+load balanced across the Sprout cluster, so there is no long-lived
+association between a client and a particular Sprout node. Sprout uses
+web services interfaces provided by Homestead and Homer to retrieve HSS
+configuration such as authentication data/user profiles and MMTEL
+service settings.</p>
+</div>
+<div class="section" id="homestead-hss-cache">
+<h2>Homestead (HSS Cache)<a class="headerlink" href="#homestead-hss-cache" title="Permalink to this headline">¶</a></h2>
+<p>Homestead provides a web services interface to Sprout for retrieving
+authentication credentials and user profile information. It can either
+master the data (in which case it exposes a web services provisioning
+interface) or can pull the data from an IMS compliant HSS over the Cx
+interface. The Homestead nodes run as a cluster using Cassandra as the
+store for mastered/cached data.</p>
+</div>
+<div class="section" id="homer-xdms">
+<h2>Homer (XDMS)<a class="headerlink" href="#homer-xdms" title="Permalink to this headline">¶</a></h2>
+<p>Homer is a standard XDMS used to store MMTEL service settings documents
+for each user of the system. Documents are be created, read, updated and
+deleted using a standard XCAP interface. As with Homestead, the Homer
+nodes runs as a cluster using Cassandra as the data store.</p>
+</div>
+<div class="section" id="ralf-ctf">
+<h2>Ralf (CTF)<a class="headerlink" href="#ralf-ctf" title="Permalink to this headline">¶</a></h2>
+<p>Ralf provides an HTTP API that both Bono and Sprout can use to report
+billable events that should be passed to the CDF (Charging Data
+Function) over the Rf billing interface. Ralf uses a cluster of
+Memcached instances and a cluster of Chronos instances to store and
+manage session state, allowing it to conform to the Rf protocol.</p>
+</div>
+<div class="section" id="ellis">
+<h2>Ellis<a class="headerlink" href="#ellis" title="Permalink to this headline">¶</a></h2>
+<p>Ellis is a sample provisioning portal providing self sign-up, password
+management, line management and control of MMTEL service settings. It is
+not intended to be a part of production Clearwater deployments (it is
+not easy to horizontally scale because of the MySQL underpinnings for
+one thing) but to make the system easy to use out of the box.</p>
+</div>
+<div class="section" id="load-balancing">
+<h2>Load Balancing<a class="headerlink" href="#load-balancing" title="Permalink to this headline">¶</a></h2>
+<p>In a cloud scalable system like Clearwater load balancing is an
+important part of making the system horizontally scale in a robust way.
+Clearwater uses a variation on DNS load balancing to ensure even loading
+when clusters are being elastically resized to adapt to changes in total
+load.</p>
+<p>As an example, a single domain name is configured for all the Sprout
+nodes. Each Bono node maintains a pool of SIP connections to the Sprout
+nodes, with the target node for each connection selected at random from
+the list of addresses returned by DNS. Bono selects a connection at
+random for each SIP transaction forwarded to Sprout. The connections in
+the pool are recycled on failure and periodically, selecting a different
+address from the list returned by the DNS server each time.</p>
+<p>A similar technique is used for the HTTP connections between Sprout and
+Homer/Homestead - each Sprout maintains a pool of connections load
+balanced across the Homer/Homestead clusters and periodically forces
+these connections to be recycled.</p>
+</div>
+<div class="section" id="reliability-and-redundancy">
+<h2>Reliability and Redundancy<a class="headerlink" href="#reliability-and-redundancy" title="Permalink to this headline">¶</a></h2>
+<p>Traditional telco products achieve reliability using low-level data
+replication, often in a one-to-one design. This is both complex and
+costly - and does not adapt well to a virtualized/cloud environment.</p>
+<p>The Clearwater approach to reliability is to follow common design
+patterns for scalable web services - keeping most components largely
+stateless and storing long-lived state in specially design reliable,
+scalable clustered data stores.</p>
+<p>Both Bono and Sprout operate as transaction-stateful rather than
+dialog-stateful proxies - transaction state is typically short-lived
+compared to dialog state. As the anchor point for client connections for
+NAT traversal, the Bono node used remains on the signaling path for the
+duration of a SIP dialog. Any individual Sprout node is only in the
+signaling path for the initial transaction, and subsequent requests are
+routed through the entire Sprout cluster, so failure of a Sprout node
+does not cause established SIP dialogs to fail. Long-lived SIP state
+such as registration data and event subscription state is stored in a
+clustered, redundant shared data store (memcached) so is not tied to any
+individual Sprout node.</p>
+<p>Homer and Homestead similar only retain local state for pending requests
+- all long lived state is stored redundantly in the associated Cassandra
+cluster.</p>
+</div>
+<div class="section" id="cloud-security">
+<h2>Cloud Security<a class="headerlink" href="#cloud-security" title="Permalink to this headline">¶</a></h2>
+<p>SIP communications are divided into a trusted zone (for flows between
+Sprout nodes, Bono nodes and trusted application servers) and an
+untrusted zone (for message flows between Bono nodes and external
+clients or other systems). These zones use different ports allowing the
+trusted zone to be isolated using security groups and/or firewall rules,
+while standard SIP authentication mechanisms are used to protect the
+untrusted ports.</p>
+<p>Other interfaces such as the XCAP and Homestead interfaces use a
+combination of locked down ports, standard authentication schemes and
+shared secret API keys for security.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Clearwater Architecture</a><ul>
+<li><a class="reference internal" href="#bono-edge-proxy">Bono (Edge Proxy)</a></li>
+<li><a class="reference internal" href="#sprout-sip-router">Sprout (SIP Router)</a></li>
+<li><a class="reference internal" href="#homestead-hss-cache">Homestead (HSS Cache)</a></li>
+<li><a class="reference internal" href="#homer-xdms">Homer (XDMS)</a></li>
+<li><a class="reference internal" href="#ralf-ctf">Ralf (CTF)</a></li>
+<li><a class="reference internal" href="#ellis">Ellis</a></li>
+<li><a class="reference internal" href="#load-balancing">Load Balancing</a></li>
+<li><a class="reference internal" href="#reliability-and-redundancy">Reliability and Redundancy</a></li>
+<li><a class="reference internal" href="#cloud-security">Cloud Security</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to Clearwater</a></li>
+      <li>Next: <a href="Clearwater_Tour.html" title="next chapter">Clearwater Tour</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_Architecture.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_Architecture.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

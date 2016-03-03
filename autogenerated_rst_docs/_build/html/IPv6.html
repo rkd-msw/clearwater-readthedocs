@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>IPv6 &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="SIP Interface Specifications" href="SIP_Interface_Specifications.html" />
+    <link rel="prev" title="Geographic redundancy" href="Geographic_redundancy.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ipv6">
+<h1>IPv6<a class="headerlink" href="#ipv6" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="http://en.wikipedia.org/wiki/IPv6">IPv6</a> is the new version of IP.
+The most obvious difference from IPv4 is the addresses.</p>
+<ul class="simple">
+<li>IPv4 addresses are 4 bytes, represented in decimal, separated by
+dots, e.g. <code class="docutils literal"><span class="pre">166.78.3.224</span></code></li>
+<li>IPv6 addresses are 16 bytes, represented in hexadecimal, with each
+pair of bytes separated by colons, e.g
+<code class="docutils literal"><span class="pre">2001:0db8:85a3:0000:0000:8a2e:0370:7334</span></code>.</li>
+</ul>
+<p>Clearwater can operate over either IPv4 or IPv6, but not both
+simultaneously (known as &#8220;dual-stack&#8221;).</p>
+<p>This document describes</p>
+<ul class="simple">
+<li>how to configure Clearwater to use IPv6</li>
+<li>function currently missing on IPv6.</li>
+</ul>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>As discussed in the Clearwater <a class="reference external" href="Installation_Instructions.md">installation
+instructions</a>, there are several ways
+to install Clearwater, and which way you choose affects how you must
+configure IPv6.</p>
+<div class="section" id="manual-install">
+<h3>Manual Install<a class="headerlink" href="#manual-install" title="Permalink to this headline">¶</a></h3>
+<p>The process to configure Clearwater for IPv6 is very similar to IPv4.
+The key difference is to use IPv6 addresses in the
+<code class="docutils literal"><span class="pre">/etc/clearwater/local_config</span></code> file rather than IPv4 addresses when
+following the <a class="reference external" href="Manual_Install">manual install instructions</a>.</p>
+<p>Note also that you must configure your DNS server to return IPv6
+addresses (AAAA records) rather than (or as well as) IPv4 addresses (A
+records). For more information on this, see the <a class="reference external" href="Clearwater_DNS_Usage.md">Clearwater DNS usage
+documentation</a>.</p>
+</div>
+<div class="section" id="automated-install">
+<h3>Automated Install<a class="headerlink" href="#automated-install" title="Permalink to this headline">¶</a></h3>
+<p>Configuring Clearwater for IPv6 via the <a class="reference external" href="Automated_Install.md">automated install
+process</a> is not yet supported (and Amazon EC2
+does not yet support IPv6).</p>
+</div>
+<div class="section" id="all-in-one-images">
+<h3>All-in-one Images<a class="headerlink" href="#all-in-one-images" title="Permalink to this headline">¶</a></h3>
+<p>Clearwater <a class="reference external" href="All_in_one_Images.md">all-in-one images</a> support IPv6.</p>
+<p>Since all-in-one images get their IP configuration via DHCP, the DHCP
+server must be capable of returning IPv6 addresses. Not all
+virtualization platforms support this, but we have successfully tested
+on OpenStack.</p>
+<p>Once the all-in-one image determines it has an IPv6 address, it
+automatically configures itself to use it. Note that since Clearwater
+does not support dual-stack, all-in-one images default to using their
+IPv4 address in preference to their IPv6 address if they have both. To
+force IPv6, create an empty <code class="docutils literal"><span class="pre">/etc/clearwater/force_ipv6</span></code> file and
+reboot.</p>
+</div>
+</div>
+<div class="section" id="missing-function">
+<h2>Missing Function<a class="headerlink" href="#missing-function" title="Permalink to this headline">¶</a></h2>
+<p>The following function is not yet supported on IPv6.</p>
+<ul class="simple">
+<li>Automated install</li>
+<li>SIP/WebSockets (WebRTC)</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">IPv6</a><ul>
+<li><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li><a class="reference internal" href="#manual-install">Manual Install</a></li>
+<li><a class="reference internal" href="#automated-install">Automated Install</a></li>
+<li><a class="reference internal" href="#all-in-one-images">All-in-one Images</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#missing-function">Missing Function</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Geographic_redundancy.html" title="previous chapter">Geographic redundancy</a></li>
+      <li>Next: <a href="SIP_Interface_Specifications.html" title="next chapter">SIP Interface Specifications</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/IPv6.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/IPv6.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

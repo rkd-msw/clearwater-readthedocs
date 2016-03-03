@@ -1,0 +1,314 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Application Server Guide &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="WebRTC support in Clearwater" href="WebRTC_support_in_Clearwater.html" />
+    <link rel="prev" title="Radius Authentication" href="Radius_Authentication.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="application-server-guide">
+<h1>Application Server Guide<a class="headerlink" href="#application-server-guide" title="Permalink to this headline">¶</a></h1>
+<p>You can add new call features or functionality to calls by adding an
+application server. Clearwater supports application servers through the
+standard IMS interface ISC. This article explains the features and
+limitations of this support. See <a class="reference external" href="Configuring_an_Application_Server.md">Configuring an Application
+Server</a> for details of how to
+configure Clearwater to use this function.</p>
+</div>
+<div class="section" id="what-is-an-application-server">
+<h1>What is an application server?<a class="headerlink" href="#what-is-an-application-server" title="Permalink to this headline">¶</a></h1>
+<p>An application server (AS) is a server which is brought into or notified
+of a call by the network in order to provide call features or other
+behaviour.</p>
+<p>In IMS, an application server is a SIP entity which is invoked by the
+S-CSCF for each dialog, both originating and terminating, as configured
+by the initial filter criteria (iFCs) of the relevant subscribers. The
+application server may reject or accept the call itself, redirect it,
+pass it back to the S-CSCF as a proxy, originate new calls, or perform
+more complex actions (such as forking) as a B2BUA. It may choose to
+remain in the signaling path, or drop out.</p>
+<p>The application server communicates with the IMS core via the ISC
+interface. This is a SIP interface. The details are given in <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24229.htm">3GPP TS
+24.229</a>,
+especially s5.4 (the S-CSCF side) and s5.7 (the AS side). Further useful
+information can be found in <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/23228.htm">3GPP TS
+23.228</a>. Section
+references below are to 3GPP TS 24.229 unless otherwise specified.</p>
+<p>For a more detailed look at the ISC interface, and how it is implemented
+in Clearwater, see the <a class="reference external" href="https://github.com/Metaswitch/sprout/blob/dev/docs/IscInterface.md">ISC interface
+guide</a>
+in the Sprout developer documentation.</p>
+</div>
+<div class="section" id="clearwater-interfaces">
+<h1>Clearwater interfaces<a class="headerlink" href="#clearwater-interfaces" title="Permalink to this headline">¶</a></h1>
+<p>In Clearwater most S-CSCF function, including the ISC interface, is
+implemented in Sprout. Sprout invokes application servers over the ISC
+interface, as specified in the iFCs.</p>
+<ul class="simple">
+<li>Per the IMS specs, this invocation occurs on dialog-initiating
+requests such as INVITE, SUBSCRIBE, MESSAGE, etc, and according to
+the triggers within the iFCs (s5.4.3.2, s5.4.3.3):<ul>
+<li>When specified, Sprout will route the message to the AS; the AS
+can either route it onward, act as a B2BUA for e.g. call
+diversion, or give a final response.</li>
+<li>Clearwater has full support for chained iFCs. The original dialog
+is tracked by Sprout using an ODI token in the Route header. This
+support includes support for forking ASs at any point in the
+chain.</li>
+<li>Service trigger points (i.e., conditions) are implemented,
+including SIP method, SIP headers, SDP lines, registration
+parameters, and request URIs.</li>
+<li>Service trigger points can have session case configuration,
+allowing the AS to only be invoked on originating calls or on
+terminating calls.</li>
+</ul>
+</li>
+<li>No per-AS configuration is required; ASs are invoked simply by their
+URI appearing in the iFCs.</li>
+<li>AS invocation also occurs on REGISTER - this is called third-party
+registration (3GPP TS 24.229 s5.4.1.7 and 7A):<ul>
+<li>When a UE registers with Sprout, if the iFCs require it, it passes
+a third-party registration onto an AS.</li>
+<li>Message body handling for third-party registration, per 3GPP TS
+24.229 s5.4.1.7A: including optionally service info, a copy of the
+registration, and a copy of the response.</li>
+<li>Network-initiated deregister. If the third-party registration
+fails and the iFC requests it, we must deregister the UE.</li>
+</ul>
+</li>
+</ul>
+<div class="section" id="supported-sip-headers">
+<h2>Supported SIP headers<a class="headerlink" href="#supported-sip-headers" title="Permalink to this headline">¶</a></h2>
+<p>The following SIP headers are supported on the ISC interface:</p>
+<ul class="simple">
+<li>All standard RFC3261 headers and relevant flows, including <code class="docutils literal"><span class="pre">To</span></code>,
+<code class="docutils literal"><span class="pre">From</span></code>, <code class="docutils literal"><span class="pre">Route</span></code>, <code class="docutils literal"><span class="pre">Contact</span></code>, etc. Also <code class="docutils literal"><span class="pre">Privacy</span></code> (per RFC3323)
+and <code class="docutils literal"><span class="pre">Path</span></code> (per RFC3327).</li>
+<li><code class="docutils literal"><span class="pre">P-Asserted-Identity</span></code> - bare minimal support only: we set it to the
+same value as <code class="docutils literal"><span class="pre">From:</span></code> on the outbound ISC interface, and never
+strip it. Full support will be added in future phases. This header is
+needed by originating ASs, particularly in cases where privacy is
+requested (see RFC3325). Full support would involve setting it in
+P-CSCF (bono), and ensuring it is set/stripped in the right places.
+The proposed minimal support has the limitation that ASs which don&#8217;t
+understand <code class="docutils literal"><span class="pre">P-Served-User</span></code> won&#8217;t work correctly when privacy is
+invoked. See 3GPP TS 24.229 s5.7.1.3A.</li>
+<li><code class="docutils literal"><span class="pre">P-Served-User</span></code>. This is needed for proper support of AS chains, to
+avoid service-interaction tangles. It is set by Sprout and
+set/stripped in the appropriate places.</li>
+</ul>
+</div>
+<div class="section" id="points-of-note">
+<h2>Points of Note<a class="headerlink" href="#points-of-note" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Trust:<ul>
+<li>Some ISC signaling is trust-dependent. For Clearwater, all ASs are
+trusted - we think support for untrusted ASs is unlikely to be
+required.</li>
+</ul>
+</li>
+<li>IP Connectivity<ul>
+<li>We assume that there is no NAT (static or otherwise) between the
+AS and the Clearwater core.</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="current-spec-deltas">
+<h2>Current Spec Deltas<a class="headerlink" href="#current-spec-deltas" title="Permalink to this headline">¶</a></h2>
+<p><strong>As of June 2015, Clearwater has the following limitations on the ISC
+interface:</strong></p>
+<ul class="simple">
+<li>Change of request URI:<ul>
+<li>3GPP TS 24.229 s5.4.3.3 step 3 allows a terminating AS to change
+the request URI to another URI that matches it (i.e., is
+canonically equal or an alias) without interrupting the
+interpretation of the iFCs.</li>
+<li>Clearwater only supports this for URIs which are canonically
+equal; it does not support changing to an alias URI (i.e., a
+different public identity belonging to the same alias group of the
+same private identity, per 3GPP TS 24.229 s3.1, 3GPP TS 29.228
+sB.2.1).</li>
+</ul>
+</li>
+<li><code class="docutils literal"><span class="pre">Request-Disposition:</span> <span class="pre">no-fork</span></code> (3GPP TS 24.229 s5.4.3.3 step 10,
+s5.7.3, RFC 3841)<ul>
+<li>Clearwater ignores this directive - it always INVITEs all
+registered endpoints.</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="future-phases">
+<h2>Future phases<a class="headerlink" href="#future-phases" title="Permalink to this headline">¶</a></h2>
+<p>The following features may be implemented by Clearwater in future
+phases:</p>
+<ul class="simple">
+<li>Billing: both billing headers within ISC, and AS communicating with
+the billing system via Rf/Ro.</li>
+<li><code class="docutils literal"><span class="pre">P-Access-Network-Info</span></code>: should be passed (from the UE) and
+stripped in the appropriate places, and possibly set by bono.</li>
+<li><code class="docutils literal"><span class="pre">History-Info</span></code> draft-ietf-sipcore-rfc4244bis (not RFC4244, which is
+inaccurate wrt real implementations).</li>
+<li><code class="docutils literal"><span class="pre">user=dialstring</span></code> handling (RFC4967). The specs (3GPP TS 24.229
+s5.4.3.2, esp step 10) are quite clear that this is handed off to an
+AS or handled in a deployment-specific way, as for various other URI
+formats, so there is nothing to do here.</li>
+<li><code class="docutils literal"><span class="pre">P-Asserted-Service</span></code> / <code class="docutils literal"><span class="pre">P-Preferred-Service</span></code> (RFC6050, TS 23.228
+s4.13), i.e., IMS Communication Services and ICSIs.</li>
+<li>IMS debug package, IMS logging.</li>
+<li>Support for untrusted ASs.</li>
+<li>Support for terminating ASs changing to an alias URI.</li>
+<li>Support for <code class="docutils literal"><span class="pre">Request-Disposition:</span> <span class="pre">no-fork</span></code>, which should pick a
+single endpoint to INVITE.</li>
+</ul>
+</div>
+<div class="section" id="exclusions">
+<h2>Exclusions<a class="headerlink" href="#exclusions" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater implements the ISC interface only. An AS may also expect to
+communicate over several other interfaces:</p>
+<ul class="simple">
+<li>AS interrogates HSS over Sh. If the AS requires this it should access
+the HSS directly, bypassing Clearwater&#8217;s Homestead cache. It is not
+supported in deployments without an HSS.</li>
+<li>AS interrogates SRF over Dh. Typical Clearwater deployments do not
+include an SRF.</li>
+<li>UE retrieves and edits AS configuration via Ut. An AS is free to
+provide this or any other configuration interface it chooses. Homer
+does not provide a generic Ut interface for ASs to store
+configuration information.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="the-built-in-mmtel-application-server">
+<h1>The built-in MMTEL application server<a class="headerlink" href="#the-built-in-mmtel-application-server" title="Permalink to this headline">¶</a></h1>
+<p>Clearwater has a built-in application server,
+<code class="docutils literal"><span class="pre">mmtel.&lt;deployment-domain&gt;</span></code>, which implements a subset of the MMTEL
+services defined in <a class="reference external" href="http://www.gsma.com/newsroom/wp-content/uploads//IR.92-v9.0.pdf">GSMA PRD
+IR.92</a>,
+<a class="reference external" href="http://webapp.etsi.org/workprogram/Report_WorkItem.asp?WKI_ID=42062">ETSI TS
+129.364</a>
+and <a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/24623.htm">3GPP TS
+24.623</a>:</p>
+<ul class="simple">
+<li>Originating Identification Presentation (OIP)</li>
+<li>Originating Identification Restriction (OIR)</li>
+<li>Communication Diversion (CDIV)</li>
+<li>Communication Barring (CB)</li>
+</ul>
+<p>Note that Clearwater is also able to support a number of other IR.92
+services, either through inherent support (by transparently passing
+messages between UEs) or through integration with external application
+servers. See the <a class="reference external" href="IR.92_Supplementary_Services">IR.92 Supplementary Services
+document</a> for more information.</p>
+<p>The built-in MMTEL application server is invoked only for calls
+configured to use it. To use it, simply configure a subscriber&#8217;s iFCs to
+indicate the use of <code class="docutils literal"><span class="pre">mmtel.&lt;deployment-domain&gt;</span></code> as an application
+server. The MMTEL application server can be used on its own, or as one
+of a chain of application servers handling a call. The default iFCs
+configured by Ellis specify that the built-in MMTEL application server
+should be used for all originating and terminating calls.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Application Server Guide</a></li>
+<li><a class="reference internal" href="#what-is-an-application-server">What is an application server?</a></li>
+<li><a class="reference internal" href="#clearwater-interfaces">Clearwater interfaces</a><ul>
+<li><a class="reference internal" href="#supported-sip-headers">Supported SIP headers</a></li>
+<li><a class="reference internal" href="#points-of-note">Points of Note</a></li>
+<li><a class="reference internal" href="#current-spec-deltas">Current Spec Deltas</a></li>
+<li><a class="reference internal" href="#future-phases">Future phases</a></li>
+<li><a class="reference internal" href="#exclusions">Exclusions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-built-in-mmtel-application-server">The built-in MMTEL application server</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Radius_Authentication.html" title="previous chapter">Radius Authentication</a></li>
+      <li>Next: <a href="WebRTC_support_in_Clearwater.html" title="next chapter">WebRTC support in Clearwater</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Application_Server_Guide.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Application_Server_Guide.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

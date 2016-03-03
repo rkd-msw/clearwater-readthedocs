@@ -1,0 +1,547 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ENUM Guide &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Voxbone" href="Voxbone.html" />
+    <link rel="prev" title="Clearwater DNS Usage" href="Clearwater_DNS_Usage.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="enum-guide">
+<h1>ENUM Guide<a class="headerlink" href="#enum-guide" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="http://tools.ietf.org/rfc/rfc6116.txt">ENUM</a> is a system for mapping
+PSTN numbers to SIP URIs using DNS
+<a class="reference external" href="http://en.wikipedia.org/wiki/NAPTR_record">NAPTR</a> records, and which
+sprout supports. This article describes</p>
+<ul class="simple">
+<li>briefly, what ENUM is</li>
+<li>what we support</li>
+<li>how to configure a server to respond to ENUM queries.</li>
+</ul>
+<div class="section" id="enum-overview">
+<h2>ENUM overview<a class="headerlink" href="#enum-overview" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="http://en.wikipedia.org/wiki/NAPTR_record#Example">NAPTR article on
+Wikipedia</a> gives a
+pretty good overview of how ENUM works. Essentially, you</p>
+<ul class="simple">
+<li>convert your PSTN number into a domain name by stripping all
+punctuation, reversing the order of the digits, separating them with
+dots and suffixing with &#8220;e164.arpa&#8221; (e.g. 12012031234 becomes
+4.3.2.1.3.0.2.1.0.2.1.e164.arpa)</li>
+<li>issue a DNS NAPTR query for this domain and receive the response
+(which is for the best prefix match to your number)</li>
+<li>parse the response, which contains a series of regular expressions
+and replacements</li>
+<li>find the best match for your number (after stripping all punctuation
+except any leading +) and apply the replacement</li>
+<li>if the NAPTR response indicated this match was &#8220;terminal&#8221;, then use
+the resulting SIP URI - if not, use the output of this pass as input
+for another ENUM query.</li>
+</ul>
+<p>The RFCs to refer to for a definitive position are <a class="reference external" href="http://www.ietf.org/rfc/rfc3401">RFC
+3401</a> (which covers Dynamic
+Delegation Discovery System (DDDS), on which ENUM is built) and <a class="reference external" href="http://www.ietf.org/rfc/rfc3761">RFC
+3761</a> (which covers ENUM itself).
+Also relevant is <a class="reference external" href="http://www.ietf.org/rfc/rfc4769">RFC 4769</a> (which
+specifies ENUM service types).</p>
+</div>
+<div class="section" id="clearwater-enum-support">
+<h2>Clearwater ENUM Support<a class="headerlink" href="#clearwater-enum-support" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater supports ENUM as set out in RFC 3761 and RFC 4769, with the
+following points/omissions.</p>
+<ul class="simple">
+<li>ENUM processing should only be applied to TEL URIs and SIP URIs that
+specify that this was dialed by the user. Since no SIP UAs that we&#8217;re
+aware of indicate that the SIP URI was dialed by a user, we assume
+that any all-numeric (including +) URIs should have ENUM processing
+applied.</li>
+<li>RFC 3761 section 2.4 says that the ENUM replacement string is
+UTF-8-encoded. We do not support this - all characters must be ASCII
+(i.e. a subset of UTF-8). It is not particularly meaningful to use
+UTF-8 replacements for SIP URIs as SIP URIs themselves must be ASCII.</li>
+<li>RFC 3761 section 6.1 says that a deployed ENUM service SHOULD include
+mechanisms to ameliorate security threats and mentions using DNSSEC.
+We don&#8217;t support DNSSEC, so other security approaches (such as
+private ENUM servers) must be used.</li>
+<li>RFC 4769 describes ENUM rules that output TEL URIs. Since we have no
+way (apart from ENUM itself) of routing to TEL URIs, we ignore such
+rules.</li>
+<li>RFC 3761 section 2.1 describes the construction of the Application
+Unique String from the E.164 number. We have no way of converting a
+user-dialed number into an E.164 number, so we assume that the number
+provided by the user is E.164.</li>
+</ul>
+</div>
+<div class="section" id="deciding-on-enum-rules">
+<h2>Deciding on ENUM rules<a class="headerlink" href="#deciding-on-enum-rules" title="Permalink to this headline">¶</a></h2>
+<p>ENUM rules will vary with your deployment, but the (JSON-ized) rules
+from an example deployment might form a reasonable basis:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;number_blocks&quot;</span> <span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>   <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;Demo system number 2125550270&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prefix&quot;</span> <span class="p">:</span> <span class="s2">&quot;2125550270&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;regex&quot;</span> <span class="p">:</span> <span class="s2">&quot;!(^.*$)!sip:</span><span class="se">\\</span><span class="s2">1@10.147.226.2!&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;Clearwater external numbers 2125550271-9&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prefix&quot;</span> <span class="p">:</span> <span class="s2">&quot;212555027&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;regex&quot;</span> <span class="p">:</span> <span class="s2">&quot;!(^.*$)!sip:+1</span><span class="se">\\</span><span class="s2">1@ngv.example.com!&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;Clearwater external numbers +12125550271-9&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prefix&quot;</span> <span class="p">:</span> <span class="s2">&quot;+1212555027&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;regex&quot;</span> <span class="p">:</span> <span class="s2">&quot;!(^.*$)!sip:</span><span class="se">\\</span><span class="s2">1@ngv.example.com!&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;Clearwater external number 2125550280&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prefix&quot;</span> <span class="p">:</span> <span class="s2">&quot;2125550280&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;regex&quot;</span> <span class="p">:</span> <span class="s2">&quot;!(^.*$)!sip:+1</span><span class="se">\\</span><span class="s2">1@ngv.example.com!&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;Clearwater external number +12125550280&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prefix&quot;</span> <span class="p">:</span> <span class="s2">&quot;+12125550280&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;regex&quot;</span> <span class="p">:</span> <span class="s2">&quot;!(^.*$)!sip:</span><span class="se">\\</span><span class="s2">1@ngv.example.com!&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>   <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;Clearwater internal numbers&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prefix&quot;</span> <span class="p">:</span> <span class="s2">&quot;650555&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;regex&quot;</span> <span class="p">:</span> <span class="s2">&quot;!(^.*$)!sip:</span><span class="se">\\</span><span class="s2">1@ngv.example.com!&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>   <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;Clearwater internal numbers dialled with +1 prefix&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prefix&quot;</span> <span class="p">:</span> <span class="s2">&quot;+1650555&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;regex&quot;</span> <span class="p">:</span> <span class="s2">&quot;!+1(^.*$)!sip:</span><span class="se">\\</span><span class="s2">1@ngv.example.com!&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>   <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;NANP =&gt; SIP trunk&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prefix&quot;</span> <span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;regex&quot;</span> <span class="p">:</span> <span class="s2">&quot;!(^.*$)!sip:</span><span class="se">\\</span><span class="s2">1@10.147.226.2!&quot;</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuring-enum-rules">
+<h2>Configuring ENUM rules<a class="headerlink" href="#configuring-enum-rules" title="Permalink to this headline">¶</a></h2>
+<p>Normally, the ENUM server would be an existing part of the customer&#8217;s
+network (not part of Clearwater itself) but, for testing and
+demonstration, it is useful to be able to configure our own.</p>
+<p>Unfortunately, AWS Route 53 does not support the required NAPTR records,
+so we can&#8217;t use this. Fortunately, BIND (easy to install) does, and
+dnsmasq (our standard DNS forwarder on Clearwater nodes) does to a
+limited extent. This section describes how to configure BIND or dnsmasq
+to respond to ENUM queries.</p>
+<p>You can set up ENUM rules on either BIND or dnsmasq. BIND is the better
+choice, but requires installing an additional package and a few
+additional file tweaks. dnsmasq is the weaker choice - it does not
+support wildcard domains properly, so rules for each directory number
+must be added separately.</p>
+<div class="section" id="bind">
+<h3>BIND<a class="headerlink" href="#bind" title="Permalink to this headline">¶</a></h3>
+<p>Create a new node to run BIND, and open port 53 on it to the world
+(<code class="docutils literal"><span class="pre">0.0.0.0/0</span></code>).</p>
+<p>If you are using chef, you can do this by adding a new &#8216;enum&#8217; node.</p>
+<p>On the new node,</p>
+<ol class="arabic">
+<li><p class="first">install bind by typing &#8220;sudo apt-get install bind9&#8221;</p>
+</li>
+<li><p class="first">modify /etc/bind/named.conf to add a line &#8216;include
+&#8220;/etc/bind/named.conf.e164.arpa&#8221;;&#8217; - we&#8217;ll create that file next</p>
+</li>
+<li><p class="first">create /etc/bind/named.conf.e164.arpa, with the following contents -
+we&#8217;ll create the /etc/bind/e164.arpa.db file next</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>zone &quot;e164.arpa&quot; {
+        type master;
+        file &quot;/etc/bind/e164.arpa.db&quot;;
+};
+</pre></div>
+</div>
+</li>
+<li><p class="first">create /etc/bind/e164.arpa.db, with the following header</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>$TTL 1h
+@ IN SOA e164.arpa ngv-admin@example.com (
+                                                        2009010910 ;serial
+                                                        3600 ;refresh
+                                                        3600 ;retry
+                                                        3600 ;expire
+                                                        3600 ;minimum TTL
+)
+@ IN NS e164.arpa.
+@ IN A &lt;this server&#39;s IP address&gt;
+</pre></div>
+</div>
+</li>
+<li><p class="first">add additional rules of the form &#8216;&lt;enum domain name&gt; &lt;order&gt;
+&lt;preference&gt; &#8220;&lt;flags&gt;&#8221; &#8220;&lt;service&gt;&#8221; &#8220;&lt;regexp&gt;&#8221; .&#8217; to this file (being
+careful to maintain double-quotes and full-stops)</p>
+<ul class="simple">
+<li>enum domain name is the domain name for which you want to return
+this regular expression - for example, if you want to use a
+regular expression for number &#8220;1201&#8221;, this would be
+&#8220;1.0.2.1.e164.arpa&#8221; - if you want to specify a wildcard domain
+(i.e. a prefix match), use *.1.0.2.1.e164.arpa - note, however,
+that non-wildcard children of a wildcard domain are not themselves
+wildcarded, e.g. if you have a domain *.1.e164.arpa and a domain
+2.1.e164.arpa, a query for 3.2.1.e164.arpa would not resolve (even
+though it matches *.1.e164.arpa)</li>
+<li>order specifies the order in which this rule is applied compared
+to others - rules of order 1 and processed before those of order 2
+(and rules of order 2 are not processed if one of the matching
+rules of of order 1 are non-terminal)</li>
+<li>preference specifies how preferable one rule is compared to
+another - if both rules match, the one with the higher preference
+is used</li>
+<li>flags specifies how a match should be processed - it can either be
+blank (meaning apply the regular expression and then continue) or
+&#8220;U&#8221; (meaning the rule is terminal and, after applying the regular
+expression, no further rules should be processed)</li>
+<li>service must be &#8220;E2U+SIP&#8221;, indicating ENUM rather than other
+services</li>
+<li>regexp must be a regular expression to apply and is of the form
+!&lt;pattern&gt;!&lt;replacement&gt;! - note that the &#8221;!&#8221; delimiter is only by
+convention and can be replaced with other symbols (such as &#8220;/&#8221;) if
+&#8221;!&#8221; occurs within the pattern or replacement.</li>
+</ul>
+</li>
+<li><p class="first">restart bind by typing &#8220;sudo service bind9 restart&#8221;</p>
+</li>
+<li><p class="first">check /var/log/syslog for errors reported by bind on start-up</p>
+</li>
+<li><p class="first">test your configuration by typing &#8220;dig -t NAPTR &lt;enum domain name&gt;&#8221;
+and checking you get back the responses you just added.</p>
+</li>
+</ol>
+<p>As an example, the JSON-ized ENUM rules for an example system (above),
+translate to the following entries in /etc/bind/e164.arpa.db.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>; Demo system number 2125550270
+0.7.2.0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+
+; Demo system number +12125550270
+0.7.2.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+
+; Clearwater external numbers 2125550271-9
+*.7.2.0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:+1\\1@ngv.example.com!&quot; .
+
+; Clearwater external numbers +12125550271-9
+; Note that we can&#39;t define a domain name containing + so we must define a
+; domain without it and then match a telephone number starting with a + (if
+; present) or (if not) use the default route via the SIP trunk.
+*.7.2.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(\+^.*$)!sip:\\1@ngv.example.com!&quot; .
+*.7.2.0.5.5.5.2.1.2.1 IN NAPTR 2 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+
+; Clearwater external number 2125550280
+0.8.2.0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:+1\\1@ngv.example.com!&quot; .
+
+; Clearwater external number +12125550280
+; Note that we can&#39;t define a domain name containing + so we must define a
+; domain without it and then match a telephone number starting with a + (if
+; present) or (if not) use the default route via the SIP trunk.
+0.8.2.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(\+^.*$)!sip:\\1@ngv.example.com!&quot; .
+0.8.2.0.5.5.5.2.1.2.1 IN NAPTR 2 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+
+; Clearwater internal numbers
+*.5.5.5.0.5.6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@ngv.example.com!&quot; .
+
+; Clearwater internal numbers dialled with +1 prefix
+; Note that we can&#39;t define a domain name containing + so we must define a
+; domain without it and then match a telephone number starting with a + (if
+; present) or (if not) use the default route via the SIP trunk.
+*.5.5.5.0.5.6.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!\+1(^.*$)!sip:\\1@ngv.example.com!&quot; .
+*.5.5.5.0.5.6.1 IN NAPTR 2 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+
+; NANP =&gt; SIP trunk.
+* IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+2.0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.2.0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+7.2.0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+2.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.2.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+7.2.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+8.2.0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.8.2.0.5.5.5.2.1.2 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+8.2.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.8.2.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.0.8.2.0.5.5.5.2.1.2.1 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.5.6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.0.5.6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.5.0.5.6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.5.0.5.6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+*.5.5.0.5.6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+5.5.5.0.5.6 IN NAPTR 1 1 &quot;u&quot; &quot;E2U+sip&quot; &quot;!(^.*$)!sip:\\1@10.147.226.2!&quot; .
+</pre></div>
+</div>
+</div>
+<div class="section" id="dnsmasq">
+<h3>dnsmasq<a class="headerlink" href="#dnsmasq" title="Permalink to this headline">¶</a></h3>
+<p>Before configuring dnsmasq, you need to find a suitable host.</p>
+<ul class="simple">
+<li>For a deployment with only one sprout node you should just be able to
+use the sprout node itself.</li>
+<li>For deployments with more than one sprout node, you&#8217;ll need to either
+create a new node or pick one of your sprout nodes (bearing in mind
+that it will become a single point-of-failure) and then configure
+dnsmasq on all sprouts to query this server for enum lookups by
+creating an &#8220;/etc/dnsmasq.d/enum-forwarding&#8221; file containing a single
+line of the form &#8220;server=/e164.arpa/&lt;DNS IP address/&#8221; and then
+restarting dnsmasq with &#8220;sudo service dnsmasq restart&#8221;. Note that
+you&#8217;ll also need to open UDP port 53 (DNS) to this server in the
+security group.</li>
+</ul>
+<p>On the host you&#8217;ve chosen,</p>
+<ol class="arabic simple">
+<li>ensure dnsmasq is installed (it is standard on all Clearwater nodes)
+by typing &#8220;sudo apt-get install dnsmasq&#8221;</li>
+<li>create an &#8220;/etc/dnsmasq.d/enum&#8221; file containing lines of the form
+&#8220;naptr-record=&lt;enum domain
+name&gt;,&lt;order&gt;,&lt;preference&gt;,&lt;flags&gt;,&lt;service&gt;,&lt;regexp&gt;&#8221; where<ul>
+<li>enum domain name is the domain name for which you want to return
+this regular expression - for example, if you want to use a
+regular expression for number &#8220;1201&#8221;, this would be
+&#8220;1.0.2.1.e164.arpa&#8221;</li>
+<li>order specifies the order in which this rule is applied compared
+to others - rules of order 1 and processed before those of order 2
+(and rules of order 2 are not processed if one of the matching
+rules of of order 1 are non-terminal)</li>
+<li>preference specifies how preferable one rule is compared to
+another - if both rules match, the one with the higher preference
+is used</li>
+<li>flags specifies how a match should be processed - it can either be
+blank (meaning apply the regular expression and then continue) or
+&#8220;U&#8221; (meaning the rule is terminal and, after applying the regular
+expression, no further rules should be processed)</li>
+<li>service must be &#8220;E2U+SIP&#8221;, indicating ENUM rather than other
+services</li>
+<li>regexp must be a regular expression to apply and is of the form
+!&lt;pattern&gt;!&lt;replacement&gt;! - note that the &#8221;!&#8221; delimeter is only by
+convention and can be replaced with other symbols (such as &#8220;/&#8221;) if
+&#8221;!&#8221; occurs within the pattern or replacement.</li>
+</ul>
+</li>
+<li>restart dnsmasq by typing &#8220;sudo service dnsmasq restart&#8221;</li>
+<li>test your configuration by typing &#8220;dig -t NAPTR &lt;enum domain name&gt;&#8221;
+and checking you get back the responses you just added.</li>
+</ol>
+<p>As an example, the JSON-ized ENUM rules for an example system (above),
+translate to the following entries in /etc/dnsmasq.d/enum.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span># Demo system number 2125550270
+naptr-record=0.7.2.0.5.5.5.2.1.2.e164.arpa,1,1,U,E2U+SIP,!(^.*$)!sip:\\1@10.147.226.2!
+
+# Clearwater external numbers 2125550271-9
+naptr-record=7.2.0.5.5.5.2.1.2.e164.arpa,1,1,U,E2U+SIP,!(^.*$)!sip:+1\\1@ngv.example.com!
+
+# Clearwater external numbers +12125550271-9
+# Note that we can&#39;t define a domain name containing + so we must define a # domain without it and then match a telephone number starting with a + (if
+# present) or (if not) use the default route via the SIP trunk.
+naptr-record=7.2.0.5.5.5.2.1.2.1.e164.arpa,1,1,U,E2U+SIP,!(\+^.*$)!sip:\\1@ngv.example.com!
+naptr-record=7.2.0.5.5.5.2.1.2.1.e164.arpa,2,1,U,E2U+SIP,!(^.*$)!sip:\\1@10.147.226.2!
+
+# Clearwater external number 2125550280
+naptr-record=0.8.2.0.5.5.5.2.1.2.e164.arpa,1,1,U,E2U+SIP,!(^.*$)!sip:+1\\1@ngv.example.com!
+
+# Clearwater external number +12125550280
+# Note that we can&#39;t define a domain name containing + so we must define a
+# domain without it and then match a telephone number starting with a + (if
+# present) or (if not) use the default route via the SIP trunk.
+naptr-record=0.8.2.0.5.5.5.2.1.2.1.e164.arpa,1,1,U,E2U+SIP,!(\+^.*$)!sip:\\1@ngv.example.com!
+naptr-record=0.8.2.0.5.5.5.2.1.2.1.e164.arpa,2,1,U,E2U+SIP,!(^.*$)!sip:\\1@10.147.226.2!
+
+# Clearwater internal numbers
+naptr-record=5.5.5.0.5.6.e164.arpa,1,1,U,E2U+SIP,!(^.*$)!sip:\\1@ngv.example.com!
+
+# Clearwater internal numbers dialled with +1 prefix
+# Note that we can&#39;t define a domain name containing + so we must define a
+# domain without it and then match a telephone number starting with a + (if
+# present) or (if not) use the default route via the SIP trunk.
+naptr-record=5.5.5.0.5.6.1.e164.arpa,1,1,U,E2U+SIP,!\+1(^.*$)!sip:\\1@ngv.example.com!
+naptr-record=5.5.5.0.5.6.1.e164.arpa,2,1,U,E2U+SIP,!(^.*$)!sip:\\1@10.147.226.2!
+
+# NANP =&gt; SIP trunk
+naptr-record=e164.arpa,1,1,U,E2U+SIP,!(^.*$)!sip:\\1@10.147.226.2!
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="enum-domain-suffix">
+<h2>ENUM Domain Suffix<a class="headerlink" href="#enum-domain-suffix" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.ietf.org/rfc/rfc3761.txt">RFC 3761</a> mandates that domain
+names used during ENUM processing are suffixed with .e164.arpa.
+Obviously, this means that there can only be one such public domain. If
+you need your domain to be public (rather than private as set up above),
+you can instead change the suffix, e.g. to .e164.arpa.ngv.example.com,
+by</p>
+<ul class="simple">
+<li>configuring sprout to use this suffix via the &#8211;enum-suffix parameter</li>
+<li>configuring your DNS server to respond to this domain rather than
+.e164.arpa (by search-replacing in the config files described above)</li>
+<li>configuring Route 53 to forward DNS requests for
+e164.arpa.ngv.example.com to your DNS server by creating an NS (Name
+Server) record with name &#8220;e164.arpa.ngv.example.com&#8221; and value set to
+the name/IP address of your DNS server.</li>
+</ul>
+</div>
+<div class="section" id="enum-and-sprout">
+<h2>ENUM and Sprout<a class="headerlink" href="#enum-and-sprout" title="Permalink to this headline">¶</a></h2>
+<p>To enable ENUM lookups on Sprout, edit <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code>
+and add the following configuration to use either an ENUM server
+(recommended) or an ENUM file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>enum_server=&lt;IP addresses of enum servers&gt;
+enum_file=&lt;location of enum file&gt;
+</pre></div>
+</div>
+<p>If you use the ENUM file, enter the ENUM rules in the JSON format (shown
+above). If you are using the enhanced node management framework provided
+by <code class="docutils literal"><span class="pre">clearwater-etcd</span></code>, and you use <code class="docutils literal"><span class="pre">/etc/clearwater/enum.json</span></code> as
+your ENUM filename, you can automatically synchronize changes across
+your deployment by running
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/upload_enum_json</span></code>
+after creating or updating the file. In this case, other Sprout nodes
+will automatically download and use the uploaded ENUM rules.</p>
+<p>It&#8217;s possible to configure Sprout with secondary and tertiary ENUM
+servers, by providing a comma-separated list (e.g.
+<code class="docutils literal"><span class="pre">enum_server=1.2.3.4,10.0.0.1,192.168.1.1</span></code>). If this is done:</p>
+<ul class="simple">
+<li>Sprout will always query the first server in the list first</li>
+<li>If this returns SERVFAIL or times out (which happens after a
+randomised 500ms-1000ms period), Sprout will resend the query to the
+second server</li>
+<li>If this returns SERVFAIL or times out, Sprout will resend the query
+to the third server</li>
+<li>If all servers return SERVFAIL or time out, the ENUM query will fail</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">ENUM Guide</a><ul>
+<li><a class="reference internal" href="#enum-overview">ENUM overview</a></li>
+<li><a class="reference internal" href="#clearwater-enum-support">Clearwater ENUM Support</a></li>
+<li><a class="reference internal" href="#deciding-on-enum-rules">Deciding on ENUM rules</a></li>
+<li><a class="reference internal" href="#configuring-enum-rules">Configuring ENUM rules</a><ul>
+<li><a class="reference internal" href="#bind">BIND</a></li>
+<li><a class="reference internal" href="#dnsmasq">dnsmasq</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#enum-domain-suffix">ENUM Domain Suffix</a></li>
+<li><a class="reference internal" href="#enum-and-sprout">ENUM and Sprout</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Clearwater_DNS_Usage.html" title="previous chapter">Clearwater DNS Usage</a></li>
+      <li>Next: <a href="Voxbone.html" title="next chapter">Voxbone</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/ENUM.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/ENUM.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

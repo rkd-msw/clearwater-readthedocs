@@ -1,0 +1,250 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Provisioning Subscribers &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Dealing with Failed Nodes" href="Handling_Failed_Nodes.html" />
+    <link rel="prev" title="Clearwater Automatic Clustering and Configuration Sharing" href="Automatic_Clustering_Config_Sharing.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="provisioning-subscribers">
+<h1>Provisioning Subscribers<a class="headerlink" href="#provisioning-subscribers" title="Permalink to this headline">¶</a></h1>
+<p>Clearwater provides the Ellis web UI for easy provisioning of
+subscribers. However, sometimes a more programmatic interface is
+desirable.</p>
+<p>Homestead provides a <a class="reference external" href="https://github.com/Metaswitch/crest/blob/dev/docs/homestead_prov_api.md">provisioning
+API</a>
+but, for convenience, Clearwater also provides some command-line
+provisioning tools.</p>
+<p>By default, the tools are installed on the Homestead servers only (as
+part of the clearwater-prov-tools package), in the
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/bin</span></code> directory.</p>
+<p>There are 5 tools.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">create_user</span></code> - for creating users</li>
+<li><code class="docutils literal"><span class="pre">update_user</span></code> - for updating users&#8217; passwords</li>
+<li><code class="docutils literal"><span class="pre">delete_user</span></code> - for deleting users</li>
+<li><code class="docutils literal"><span class="pre">display_user</span></code> - for displaying users&#8217; details</li>
+<li><code class="docutils literal"><span class="pre">list_users</span></code> - for listing users</li>
+</ul>
+<div class="section" id="creating-users">
+<h2>Creating users<a class="headerlink" href="#creating-users" title="Permalink to this headline">¶</a></h2>
+<p>New users can be created with the <code class="docutils literal"><span class="pre">create_user</span></code> tool. As well as
+creating single users, it&#8217;s also possible to create multiple users with
+a single command. Note that this is not recommended for provisioning
+large numbers of users - for that, <a class="reference external" href="https://github.com/Metaswitch/crest/blob/dev/docs/Bulk-Provisioning%20Numbers.md">bulk
+provisioning</a>
+is much quicker.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>usage: create_user.py [-h] [-k] [-q] [--hsprov IP:PORT] [--plaintext]
+                      [--ifc iFC-FILE] [--prefix TWIN_PREFIX]
+                      &lt;directory-number&gt;[..&lt;directory-number&gt;] &lt;domain&gt;
+                      &lt;password&gt;
+
+Create user
+
+positional arguments:
+  &lt;directory-number&gt;[..&lt;directory-number&gt;]
+  &lt;domain&gt;
+  &lt;password&gt;
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -k, --keep-going      keep going on errors
+  -q, --quiet           don&#39;t display the user
+  --hsprov IP:PORT      IP address and port of homestead-prov
+  --plaintext           store password in plaintext
+  --ifc iFC-FILE        XML file containing the iFC
+  --prefix TWIN_PREFIX  twin-prefix (default: 123)
+</pre></div>
+</div>
+</div>
+<div class="section" id="update-users">
+<h2>Update users<a class="headerlink" href="#update-users" title="Permalink to this headline">¶</a></h2>
+<p>Existing users&#8217; passwords can be updated with the <code class="docutils literal"><span class="pre">update_user</span></code> tool.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>usage: update_user.py [-h] [-k] [-q] [--hsprov IP:PORT] [--plaintext]
+                      &lt;directory-number&gt;[..&lt;directory-number&gt;] &lt;domain&gt;
+                      &lt;password&gt;
+
+Update user
+
+positional arguments:
+  &lt;directory-number&gt;[..&lt;directory-number&gt;]
+  &lt;domain&gt;
+  &lt;password&gt;
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -k, --keep-going      keep going on errors
+  -q, --quiet           don&#39;t display the user
+  --hsprov IP:PORT      IP address and port of homestead-prov
+  --plaintext           store password in plaintext
+</pre></div>
+</div>
+</div>
+<div class="section" id="delete-users">
+<h2>Delete users<a class="headerlink" href="#delete-users" title="Permalink to this headline">¶</a></h2>
+<p>Users can be deleted with the <code class="docutils literal"><span class="pre">delete_user</span></code> tool.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>usage: delete_user.py [-h] [-f] [-q] [--hsprov IP:PORT]
+                      &lt;directory-number&gt;[..&lt;directory-number&gt;] &lt;domain&gt;
+
+Delete user
+
+positional arguments:
+  &lt;directory-number&gt;[..&lt;directory-number&gt;]
+  &lt;domain&gt;
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f, --force           proceed with delete in the face of errors
+  -q, --quiet           silence &#39;forced&#39; error messages
+  --hsprov IP:PORT      IP address and port of homestead-prov
+</pre></div>
+</div>
+</div>
+<div class="section" id="display-users">
+<h2>Display users<a class="headerlink" href="#display-users" title="Permalink to this headline">¶</a></h2>
+<p>Users&#8217; details can be displayed with the <code class="docutils literal"><span class="pre">display_user</span></code> tool.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>usage: display_user.py [-h] [-k] [-q] [-s] [--hsprov IP:PORT]
+                       &lt;directory-number&gt;[..&lt;directory-number&gt;] &lt;domain&gt;
+
+Display user
+
+positional arguments:
+  &lt;directory-number&gt;[..&lt;directory-number&gt;]
+  &lt;domain&gt;
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -k, --keep-going      keep going on errors
+  -q, --quiet           suppress errors when ignoring them
+  -s, --short           less verbose display
+  --hsprov IP:PORT      IP address and port of homestead-prov
+</pre></div>
+</div>
+</div>
+<div class="section" id="list-users">
+<h2>List users<a class="headerlink" href="#list-users" title="Permalink to this headline">¶</a></h2>
+<p>All the users provisioned on the system can be listed with the
+<code class="docutils literal"><span class="pre">list_users</span></code> tool.</p>
+<p>Note that the <code class="docutils literal"><span class="pre">--full</span></code> parameter defaults to off because it greatly
+decreases the performance of the tool (by more than an order of
+magnitude).</p>
+<p>The <code class="docutils literal"><span class="pre">--pace</span></code> parameter&#8217;s default values should ensure that this does
+not use more than 10% of the homestead cluster&#8217;s CPU - that is 5 users
+per second if <code class="docutils literal"><span class="pre">--force</span></code> is set and 500 if not. If you set the &#8220;&#8211;pace&#8221;
+parameter to more than the default, you&#8217;ll be prompted to confirm (or
+specify the <code class="docutils literal"><span class="pre">--force</span></code> parameter).</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>usage: list_users.py [-h] [-k] [--hsprov IP:PORT] [--full] [--pace PACE] [-f]
+
+List users
+
+optional arguments:
+  -h, --help        show this help message and exit
+  -k, --keep-going  keep going on errors
+  --hsprov IP:PORT  IP address and port of homestead-prov
+  --full            displays full information for each user
+  --pace PACE       sets the target number of users to list per second
+  -f, --force       forces specified pace
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Provisioning Subscribers</a><ul>
+<li><a class="reference internal" href="#creating-users">Creating users</a></li>
+<li><a class="reference internal" href="#update-users">Update users</a></li>
+<li><a class="reference internal" href="#delete-users">Delete users</a></li>
+<li><a class="reference internal" href="#display-users">Display users</a></li>
+<li><a class="reference internal" href="#list-users">List users</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Automatic_Clustering_Config_Sharing.html" title="previous chapter">Clearwater Automatic Clustering and Configuration Sharing</a></li>
+      <li>Next: <a href="Handling_Failed_Nodes.html" title="next chapter">Dealing with Failed Nodes</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Provisioning_Subscribers.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Provisioning_Subscribers.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

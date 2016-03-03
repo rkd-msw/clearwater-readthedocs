@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Pull Request Process &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Stress Testing" href="Clearwater_stress_testing.html" />
+    <link rel="prev" title="Debugging Clearwater with GDB and Valgrind" href="Debugging_Bono_Sprout_and_Homestead_with_GDB_and_Valgrind.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pull-request-process">
+<h1>Pull Request Process<a class="headerlink" href="#pull-request-process" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="dev-and-master-branches">
+<h2>Dev and master branches<a class="headerlink" href="#dev-and-master-branches" title="Permalink to this headline">¶</a></h2>
+<p>Each component/repository (with a few exceptions) has 2 main branches,
+<code class="docutils literal"><span class="pre">dev</span></code> and <code class="docutils literal"><span class="pre">master</span></code>. Whenever a commit is pushed to the <code class="docutils literal"><span class="pre">dev</span></code>
+branch, Jenkins will automatically run the unit tests for the repository
+and if they pass, merge into master`.</p>
+</div>
+<div class="section" id="development-process">
+<h2>Development process<a class="headerlink" href="#development-process" title="Permalink to this headline">¶</a></h2>
+<p>Features or any changes to the codebase should be done as follows:</p>
+<ol class="arabic simple">
+<li>Pull the latest code in the <code class="docutils literal"><span class="pre">dev</span></code> branch and create a feature
+branch off this.<ul>
+<li>Alternatively, if you want to be sure of working from a good build
+and don&#8217;t mind the risk of a harder merge, branch off <code class="docutils literal"><span class="pre">master</span></code>.</li>
+<li>If the codebase doesn&#8217;t have a dev branch, branch off <code class="docutils literal"><span class="pre">master</span></code>.</li>
+</ul>
+</li>
+<li>Implement your feature (including any necessary UTs etc). Commits are
+cheap in git, try to split up your code into many, it makes reviewing
+easier as well as for saner merging.<ul>
+<li>If your commit fixes an existing issue #123, include the text
+&#8220;fixes #123&#8221; in at least one of your commit messages. This ensures
+the pull request is <a href="#id1"><span class="problematic" id="id2">`attached to the existing
+issue &lt;http://stackoverflow.com/questions/4528869/how-do-you-attach-a-new-pull-request-to-an-existing-issue-on-github&lt;/a&gt;&gt;`__</span></a>.</li>
+</ul>
+</li>
+<li>Once complete, ensure the following check pass (where relevant):<ul>
+<li>All UTs (including coverage and valgrind) pass.</li>
+<li>Your code builds cleanly into a Debian package on the repo server.</li>
+<li>The resulting package installs cleanly using the
+clearwater-infrastructure script.</li>
+<li>The live tests pass.</li>
+</ul>
+</li>
+<li>Push your feature branch to GitHub.</li>
+<li>Create a pull request using GitHub, from your branch to <code class="docutils literal"><span class="pre">dev</span></code>
+(never <code class="docutils literal"><span class="pre">master</span></code>, unless the codebase has no dev branch).</li>
+<li>Await review.<ul>
+<li>Address code review issues on your feature branch.</li>
+<li>Push your changes to the feature branch on GitHub. This
+automatically updates the pull request.</li>
+<li>If necessary, make a top-level comment along the lines &#8220;Please
+re-review&#8221;, assign back to the reviewer, and repeat the above.</li>
+<li>If no further review is necessary and you have the necessary
+privileges, merge the pull request and close the branch.
+Otherwise, make a top-level comment and assign back to the
+reviewer as above.</li>
+</ul>
+</li>
+</ol>
+</div>
+<div class="section" id="reviewer-process">
+<h2>Reviewer process:<a class="headerlink" href="#reviewer-process" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Receive notice of review by GitHub email, GitHub notification, or by
+checking <a class="reference external" href="https://github.com/organizations/Metaswitch/dashboard/issues/assigned?direction=desc&amp;state=open">all your Metaswitch GitHub
+issues</a>.</li>
+<li>Make comments on the pull request (either line comments or top-level
+comments).</li>
+<li>Make a top-level comment saying something along the lines of &#8220;Fine;
+some minor comments&#8221; or &#8220;Some issues to address before merging&#8221;.</li>
+<li>If there are no issues, merge the pull request and close the branch.
+Otherwise, assign the pull request to the developer and leave this to
+them.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Pull Request Process</a><ul>
+<li><a class="reference internal" href="#dev-and-master-branches">Dev and master branches</a></li>
+<li><a class="reference internal" href="#development-process">Development process</a></li>
+<li><a class="reference internal" href="#reviewer-process">Reviewer process:</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Debugging_Bono_Sprout_and_Homestead_with_GDB_and_Valgrind.html" title="previous chapter">Debugging Clearwater with GDB and Valgrind</a></li>
+      <li>Next: <a href="Clearwater_stress_testing.html" title="next chapter">Stress Testing</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Pull_request_process.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Pull_request_process.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

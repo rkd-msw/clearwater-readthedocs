@@ -1,0 +1,302 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Migrating to Automatic Clustering and Configuration Sharing &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Configuring an Application Server" href="Configuring_an_Application_Server.html" />
+    <link rel="prev" title="Clearwater Configuration Options Reference" href="Clearwater_Configuration_Options_Reference.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="migrating-to-automatic-clustering-and-configuration-sharing">
+<h1>Migrating to Automatic Clustering and Configuration Sharing<a class="headerlink" href="#migrating-to-automatic-clustering-and-configuration-sharing" title="Permalink to this headline">¶</a></h1>
+<p>Clearwater now supports an <a class="reference external" href="Automatic_Clustering_Config_Sharing">automatic clustering and configuration
+sharing</a> feature. This makes
+Clearwater deployments much easier to manage. However deployments
+created before the &#8216;For Whom The Bell Tolls&#8217; release do not use this
+feature. This article explains how to migrate a deployment to take
+advantage of the new feature.</p>
+<div class="section" id="upgrade-the-deployment">
+<h2>Upgrade the Deployment<a class="headerlink" href="#upgrade-the-deployment" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="Upgrading_a_Clearwater_deployment">Upgrade</a> to the latest stable
+Clearwater release. You will also need to update your firewall settings
+to support the new clearwater management packages; open port 2380 and
+4000 between every node (see
+<a class="reference external" href="http://clearwater.readthedocs.org/en/stable/Clearwater_IP_Port_Usage/index.html">here</a>
+for the complete list).</p>
+</div>
+<div class="section" id="verify-configuration-files">
+<h2>Verify Configuration Files<a class="headerlink" href="#verify-configuration-files" title="Permalink to this headline">¶</a></h2>
+<p>Do the following on each node in turn:</p>
+<ol class="arabic simple">
+<li>Run
+<code class="docutils literal"><span class="pre">/usr/share/clearwater/infrastructure/migration-utils/configlint.py</span></code>.
+This examines the existing <code class="docutils literal"><span class="pre">/etc/clearwater/config</span></code> file and checks
+that the migration scripts can handle all the settings defined in it.</li>
+<li>If <code class="docutils literal"><span class="pre">configlint.py</span></code> produces a warning about a config option, this
+can mean one of two things:<ul>
+<li>The config option is invalid (for example, because there is a
+typo, or this option has been retired). Check the <a class="reference external" href="Clearwater_Configuration_Options_Reference.md">configuration
+options
+reference</a> for a
+list of valid options.</li>
+<li>The config option is valid, but the migration script doesn&#8217;t
+recognise the option and won&#8217;t automatically migrate it. In this
+case, you will need to make a note of this config option now, and
+add it back in after the rest of the migration has run. (A later
+step in this process covers that.)</li>
+</ul>
+</li>
+</ol>
+<p>Once you have checked your configuration file and taken a note of any
+unrecognised settings, continue with the next step.</p>
+</div>
+<div class="section" id="prepare-local-configuration-files">
+<h2>Prepare Local Configuration Files<a class="headerlink" href="#prepare-local-configuration-files" title="Permalink to this headline">¶</a></h2>
+<p>Do the following on each node in turn:</p>
+<ol class="arabic simple">
+<li>Run
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/infrastructure/migration-utils/migrate_local_config</span> <span class="pre">/etc/clearwater/config</span></code>.
+This examines the existing <code class="docutils literal"><span class="pre">/etc/clearwater/config</span></code> file and
+produces a new <code class="docutils literal"><span class="pre">/etc/clearwater/local_config</span></code> which contains the
+settings only relevant to this node. Check that this file looks
+sensible.</li>
+<li>Edit <code class="docutils literal"><span class="pre">/etc/clearwater/local_config</span></code> to add a line
+<code class="docutils literal"><span class="pre">etcd_cluster=&quot;&lt;NodeIPs&gt;&quot;</span></code> where <code class="docutils literal"><span class="pre">NodeIPs</span></code> is a comma separated
+list of the private IP addresses of nodes in the deployment. For
+example if your deployment contained nodes with IP addresses of
+10.0.0.1 to 10.0.0.6, <code class="docutils literal"><span class="pre">NodeIPs</span></code> would be
+<code class="docutils literal"><span class="pre">10.0.0.1,10.0.0.2,10.0.0.3,10.0.0.4,10.0.0.5,10.0.0.6</span></code>. If your
+deployment was GR, this should include the IP addresses of nodes in
+both sites.</li>
+<li>If your deployment was geographically redundant, you should choose
+arbitrary names for each site (e.g. &#8216;site1&#8217; and &#8216;site2&#8217;), and set the
+<code class="docutils literal"><span class="pre">local_site_name</span></code> and <code class="docutils literal"><span class="pre">remote_site_name</span></code> settings in
+<code class="docutils literal"><span class="pre">/etc/clearwater/local_config</span></code> accordingly. For example, if the
+node is in &#8216;site1&#8217;, you should have <code class="docutils literal"><span class="pre">local_site_name=site1</span></code> and
+<code class="docutils literal"><span class="pre">remote_site_name=site2</span></code>.</li>
+<li>If the node is a Sprout or Ralf node, run
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/bin/chronos_configuration_split.py</span></code>.
+This examines the existing <code class="docutils literal"><span class="pre">/etc/chronos/chronos.conf</span></code> file and
+extracts the clustering settings into a new file called
+<code class="docutils literal"><span class="pre">/etc/chronos/chronos_cluster.conf</span></code>. Check each of these files by
+hand to make sure they look sensible. If the <code class="docutils literal"><span class="pre">chronos_cluster.conf</span></code>
+file already exists, then the script will exit with a warning. In
+this case, please check the configuration files by hand, and either
+delete the <code class="docutils literal"><span class="pre">chronos_cluster.conf</span></code> file and re-run the script, or
+manually split the configuration yourself. Details of the expected
+configuration are
+<a class="reference external" href="https://github.com/Metaswitch/chronos/blob/dev/doc/configuration.md">here</a>.</li>
+<li>Run <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">touch</span> <span class="pre">/etc/clearwater/no_cluster_manager</span></code> on all nodes.
+This temporarily disables the cluster manager (which is installed in
+the next step) so that you can program it with the current deployment
+topology.</li>
+</ol>
+</div>
+<div class="section" id="prepare-shared-configuration-files">
+<h2>Prepare Shared Configuration Files<a class="headerlink" href="#prepare-shared-configuration-files" title="Permalink to this headline">¶</a></h2>
+<p>This step merges the config from all the nodes in your deployment into a
+single config file that will be managed by etcd.</p>
+<ol class="arabic simple">
+<li>Log onto to one of the nodes in the deployment and create a temporary
+directory (e.g. <code class="docutils literal"><span class="pre">~/config-migration</span></code>). Copy the
+<code class="docutils literal"><span class="pre">/etc/clearwater/config</span></code> file from each node in the deployment to
+this directory. Give each of these a name of the form
+<code class="docutils literal"><span class="pre">&lt;node&gt;_orig_config</span></code>, e.g. <code class="docutils literal"><span class="pre">sprout-1_orig_config</span></code>.</li>
+<li>Run
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/infrastructure/migration-utils/migrate_shared_config</span></code>,
+passing it all the config files in the temporary directory<ul>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/infrastructure/migration-utils/migrate_shared_config</span> <span class="pre">*_orig_config</span></code></li>
+</ul>
+</li>
+<li>This will produce the file <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code>. Check
+the contents of this file looks sensible. If running
+<code class="docutils literal"><span class="pre">configlint.py</span></code> indicated that any configuration would not be
+automatically migrated, add that configuration to
+<code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> now.</li>
+<li>Copy this file to <code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> on each node in
+the deployment.</li>
+<li>On each node in turn:<ul>
+<li>Run
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/infrastructure/migration-utils/switch_to_migrated_config</span></code></li>
+<li>Run <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">clearwater-infrastructure</span> <span class="pre">restart</span></code> to
+regenerate any dependant configuration files</li>
+<li>Restart the Clearwater services on the node.</li>
+</ul>
+</li>
+</ol>
+</div>
+<div class="section" id="install-clustering-and-configuration-management-services">
+<h2>Install Clustering and Configuration Management Services<a class="headerlink" href="#install-clustering-and-configuration-management-services" title="Permalink to this headline">¶</a></h2>
+<p>On each node run <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">clearwater-management</span></code>.</p>
+</div>
+<div class="section" id="upload-the-current-cluster-settings">
+<h2>Upload the Current Cluster Settings<a class="headerlink" href="#upload-the-current-cluster-settings" title="Permalink to this headline">¶</a></h2>
+<p>Now you need to tell the cluster manager about the current topology of
+the various database clusters that exist in a Clearwater deployment. For
+each of the nodes types listed below, log onto <em>one</em> of the nodes of
+that type and run the specified commands.</p>
+<div class="section" id="sprout">
+<h3>Sprout<a class="headerlink" href="#sprout" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span></span>/usr/share/clearwater/clearwater-cluster-manager/scripts/load_from_memcached_cluster sprout
+/usr/share/clearwater/clearwater-cluster-manager/scripts/load_from_chronos_cluster sprout
+</pre></div>
+</div>
+</div>
+<div class="section" id="ralf">
+<h3>Ralf<a class="headerlink" href="#ralf" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span></span>/usr/share/clearwater/clearwater-cluster-manager/scripts/load_from_memcached_cluster ralf
+/usr/share/clearwater/clearwater-cluster-manager/scripts/load_from_chronos_cluster ralf
+</pre></div>
+</div>
+</div>
+<div class="section" id="homestead">
+<h3>Homestead<a class="headerlink" href="#homestead" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span></span>/usr/share/clearwater/clearwater-cluster-manager/scripts/load_from_cassandra_cluster homestead
+</pre></div>
+</div>
+</div>
+<div class="section" id="homer">
+<h3>Homer<a class="headerlink" href="#homer" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span></span>/usr/share/clearwater/clearwater-cluster-manager/scripts/load_from_cassandra_cluster homer
+</pre></div>
+</div>
+</div>
+<div class="section" id="memento">
+<h3>Memento<a class="headerlink" href="#memento" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span></span>/usr/share/clearwater/clearwater-cluster-manager/scripts/load_from_memcached_cluster memento
+/usr/share/clearwater/clearwater-cluster-manager/scripts/load_from_cassandra_cluster memento
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="upload-the-shared-configuration">
+<h2>Upload the Shared Configuration<a class="headerlink" href="#upload-the-shared-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Run the following commands on <em>one</em> of your Sprout nodes. This will
+upload the configuration that is shared across the deployment to etcd.
+If you add any new nodes to the deployment they will automatically learn
+this configuration from etcd.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config</span></code></li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/upload_scscf_json</span></code></li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/upload_bgcf_json</span></code></li>
+<li><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">/usr/share/clearwater/clearwater-config-manager/scripts/upload_enum_json</span></code></li>
+</ul>
+</div>
+<div class="section" id="tidy-up">
+<h2>Tidy Up<a class="headerlink" href="#tidy-up" title="Permalink to this headline">¶</a></h2>
+<p>The final step is to re-enable the cluster manager by running the
+following commands:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo rm /etc/clearwater/no_cluster_manager
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Migrating to Automatic Clustering and Configuration Sharing</a><ul>
+<li><a class="reference internal" href="#upgrade-the-deployment">Upgrade the Deployment</a></li>
+<li><a class="reference internal" href="#verify-configuration-files">Verify Configuration Files</a></li>
+<li><a class="reference internal" href="#prepare-local-configuration-files">Prepare Local Configuration Files</a></li>
+<li><a class="reference internal" href="#prepare-shared-configuration-files">Prepare Shared Configuration Files</a></li>
+<li><a class="reference internal" href="#install-clustering-and-configuration-management-services">Install Clustering and Configuration Management Services</a></li>
+<li><a class="reference internal" href="#upload-the-current-cluster-settings">Upload the Current Cluster Settings</a><ul>
+<li><a class="reference internal" href="#sprout">Sprout</a></li>
+<li><a class="reference internal" href="#ralf">Ralf</a></li>
+<li><a class="reference internal" href="#homestead">Homestead</a></li>
+<li><a class="reference internal" href="#homer">Homer</a></li>
+<li><a class="reference internal" href="#memento">Memento</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#upload-the-shared-configuration">Upload the Shared Configuration</a></li>
+<li><a class="reference internal" href="#tidy-up">Tidy Up</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Clearwater_Configuration_Options_Reference.html" title="previous chapter">Clearwater Configuration Options Reference</a></li>
+      <li>Next: <a href="Configuring_an_Application_Server.html" title="next chapter">Configuring an Application Server</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Migrating_To_etcd.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Migrating_To_etcd.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

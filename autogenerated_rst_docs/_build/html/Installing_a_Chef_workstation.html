@@ -1,0 +1,357 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installing a Chef Client &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Creating a Chef deployment environment" href="Creating_a_deployment_environment.html" />
+    <link rel="prev" title="Installing a Chef server" href="Installing_a_Chef_server.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installing-a-chef-client">
+<h1>Installing a Chef Client<a class="headerlink" href="#installing-a-chef-client" title="Permalink to this headline">¶</a></h1>
+<p>These instructions cover commissioning a Chef client node on an EC2
+server as part of the <a class="reference external" href="Automated_Install.md">automated install
+process</a> for Clearwater.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>An Amazon EC2 account.</li>
+<li>A DNS root domain configured with Route53 (Amazon&#8217;s built-in DNS
+service, accessible from the EC2 console. This domain will be
+referred to as <code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> in this document.</li>
+<li>You must have <a class="reference external" href="Installing_a_Chef_server.md">installed a Chef
+server</a> and thus know the
+<code class="docutils literal"><span class="pre">&lt;chef-user-name&gt;</span></code> and <code class="docutils literal"><span class="pre">&lt;chef-user-password&gt;</span></code> for your server.</li>
+<li>A web-browser with which you can visit the Chef server Web UI.</li>
+</ul>
+</div>
+<div class="section" id="create-the-instance">
+<h2>Create the instance<a class="headerlink" href="#create-the-instance" title="Permalink to this headline">¶</a></h2>
+<p>Create a <code class="docutils literal"><span class="pre">t2.micro</span></code> AWS EC2 instance running
+<code class="docutils literal"><span class="pre">Ubuntu</span> <span class="pre">Server</span> <span class="pre">14.04.2</span> <span class="pre">LTS</span></code> using the AWS web interface. Configure its
+security group to allow access on port 22 (for SSH). The SSH keypair you
+provide here is referred to below as <code class="docutils literal"><span class="pre">&lt;amazon_ssh_key&gt;</span></code>. It is easiest
+if you use the same SSH keypair for all of your instances.</p>
+<p>Configure a DNS entry for this machine, <code class="docutils literal"><span class="pre">chef</span> <span class="pre">workstation.&lt;zone&gt;</span></code>.
+(The precise name isn&#8217;t important, but we use this consistently in the
+documentation that follows.) It should have a non-aliased A record
+pointing at the public IP address of the instance as displayed in the
+EC2 console.</p>
+<p>Once the instance is up and running and you can connect to it over SSH,
+you may continue to the next steps.</p>
+<p>If you make a mistake, simply delete the instance permanently by
+selecting &#8220;Terminate&#8221; in the EC2 console, and start again. The
+terminated instance may take a few minutes to disappear from the
+console.</p>
+</div>
+<div class="section" id="install-ruby-1-9-3">
+<h2>Install Ruby 1.9.3<a class="headerlink" href="#install-ruby-1-9-3" title="Permalink to this headline">¶</a></h2>
+<p>The Clearwater chef plugins use features from Ruby 1.9.3. To start run
+the following command.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>curl -L https://get.rvm.io | bash -s stable
+</pre></div>
+</div>
+<p>This may fail due to missing GPG signatures. If this happens it will
+suggest a command to run to resolve the problem (e.g. gpg &#8211;keyserver
+hkp://keys.gnupg.net &#8211;recv-keys
+409B6B1796C275462A1703113804BB82D39DC0E3`). Run the command suggested,
+then run the above command again, which should now succeed).</p>
+<p>Next install the required ruby version.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>source ~/.rvm/scripts/rvm
+rvm autolibs enable
+rvm install 1.9.3
+rvm use 1.9.3
+</pre></div>
+</div>
+<p>At this point, <code class="docutils literal"><span class="pre">ruby</span> <span class="pre">--version</span></code> should indicate that 1.9.3 is in use.</p>
+</div>
+<div class="section" id="installing-the-clearwater-chef-extensions">
+<h2>Installing the Clearwater Chef extensions<a class="headerlink" href="#installing-the-clearwater-chef-extensions" title="Permalink to this headline">¶</a></h2>
+<p>On the chef workstation machine, install git and dependent libraries.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo apt-get install git libxml2-dev libxslt1-dev
+</pre></div>
+</div>
+<p>Clone the Clearwater Chef repository.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>git clone -b stable --recursive git://github.com/Metaswitch/chef.git ~/chef
+</pre></div>
+</div>
+<p>This will have created a <code class="docutils literal"><span class="pre">chef</span></code> folder in your home directory,
+navigate there now.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>cd ~/chef
+</pre></div>
+</div>
+<p>Finally install the Ruby libraries that are needed by our scripts.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>bundle install
+</pre></div>
+</div>
+</div>
+<div class="section" id="creating-a-chef-user">
+<h2>Creating a Chef user<a class="headerlink" href="#creating-a-chef-user" title="Permalink to this headline">¶</a></h2>
+<p>You will need to configure yourself as a user on the chef server in
+order to use chef.</p>
+<ul>
+<li><p class="first">If you are the person who created the chef server you wil already
+have added yourself as a user, and will know your username,
+organization name, and you will have a private key
+(<code class="docutils literal"><span class="pre">&lt;chef-user-name&gt;</span></code>, <code class="docutils literal"><span class="pre">&lt;org-name&gt;</span></code>, <code class="docutils literal"><span class="pre">&lt;chef-user-name&gt;.pem</span></code>
+respectively). These will be needed later.</p>
+</li>
+<li><p class="first">If you did not create the chef server, you will need to add an
+account for yourself. Log SSH on to the chef server and run the
+following commands, substituting in appropriate values for
+<code class="docutils literal"><span class="pre">USER_NAME</span></code>, <code class="docutils literal"><span class="pre">FIRST_NAME</span></code>, <code class="docutils literal"><span class="pre">LAST_NAME</span></code>, <code class="docutils literal"><span class="pre">PASSWORD</span></code> and
+<code class="docutils literal"><span class="pre">ORG_NAME</span></code>. We&#8217;ll refer to the username as <code class="docutils literal"><span class="pre">&lt;chef-user-name&gt;</span></code> and
+the organization as <code class="docutils literal"><span class="pre">&lt;org-name&gt;</span></code>. This will create a
+<code class="docutils literal"><span class="pre">&lt;chef-user-name&gt;.pem</span></code> file in the current directory - save it for
+later.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>sudo chef-server-ctl user-create USER_NAME FIRST_NAME LAST_NAME EMAIL PASSWORD --filename USER_NAME.pem
+sudo chef-server-ctl org-user-add ORG_NAME USER_NAME --admin
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="configure-the-chef-workstation-machine">
+<h2>Configure the chef workstation machine<a class="headerlink" href="#configure-the-chef-workstation-machine" title="Permalink to this headline">¶</a></h2>
+<p>Back on the chef workstation machine, create a <code class="docutils literal"><span class="pre">.chef</span></code> folder in your
+home directory.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>mkdir ~/.chef
+</pre></div>
+</div>
+<p>Copy the <code class="docutils literal"><span class="pre">&lt;chef-user-name&gt;.pem</span></code> file you saved off earlier to
+<code class="docutils literal"><span class="pre">~/.chef/&lt;chef-user-name.pem&gt;</span></code></p>
+<p>Copy the validator key from the chef server to your client. You will
+need to either copy the Amazon SSH key to the client and use it, or copy
+the validator</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>scp -i &lt;amazon_ssh_key&gt;.pem ubuntu@chef-server.&lt;zone&gt;:&lt;org-name&gt;-validator.pem ~/.chef/
+</pre></div>
+</div>
+<p>or (on an intermediate box with the SSH key available)</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>scp -i &lt;amazon_ssh_key&gt;.pem ubuntu@chef-server.&lt;zone&gt;:&lt;org-name&gt;-validator.pem .
+scp -i &lt;amazon_ssh_key&gt;.pem &lt;org-name&gt;-validator.pem ubuntu@chef workstation.&lt;zone&gt;:~/.chef/
+</pre></div>
+</div>
+<p>Configure knife using the built in auto-configuration tool.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>knife configure
+</pre></div>
+</div>
+<ul class="simple">
+<li>Use the default value for the config location.</li>
+<li>The Chef server URL should be
+<code class="docutils literal"><span class="pre">https://chef-server.&lt;zone&gt;/organizations/&lt;org-name&gt;</span></code></li>
+<li>The Chef client name should be <code class="docutils literal"><span class="pre">&lt;chef-user-name&gt;</span></code></li>
+<li>The validation client name should be <code class="docutils literal"><span class="pre">&lt;org-name&gt;-validator</span></code></li>
+<li>The validation key location should be
+<code class="docutils literal"><span class="pre">~/.chef/&lt;org-name&gt;-validator.pem</span></code>.</li>
+<li>The chef repository path should be <code class="docutils literal"><span class="pre">~/chef/</span></code></li>
+</ul>
+</div>
+<div class="section" id="obtain-aws-access-keys">
+<h2>Obtain AWS access keys<a class="headerlink" href="#obtain-aws-access-keys" title="Permalink to this headline">¶</a></h2>
+<p>To allow the Clearwater extensions to create AWS instances or configure
+Route53 DNS entries, you will need to supply your AWS access key and
+secret access key. To find your AWS keys, you must be logged in as the
+main AWS user, not an IAM user. Go to <a class="reference external" href="http://aws.amazon.com">http://aws.amazon.com</a> and click on
+<code class="docutils literal"><span class="pre">My</span> <span class="pre">Account/Console</span></code> then <code class="docutils literal"><span class="pre">Security</span> <span class="pre">Credentials</span></code>. From there, under
+the <code class="docutils literal"><span class="pre">Access</span> <span class="pre">Credentials</span></code> section of the page, click on the
+<code class="docutils literal"><span class="pre">Access</span> <span class="pre">Keys</span></code> tab to view your access key. The access key is referred
+to as <code class="docutils literal"><span class="pre">&lt;accessKey&gt;</span></code> below. To see your secret access key, just click
+on the <code class="docutils literal"><span class="pre">Show</span></code> link under <code class="docutils literal"><span class="pre">Secret</span> <span class="pre">Access</span> <span class="pre">Key</span></code>. The secret access key
+will be referred to as <code class="docutils literal"><span class="pre">&lt;secretKey&gt;</span></code> below.</p>
+</div>
+<div class="section" id="add-deployment-specific-configuration">
+<h2>Add deployment-specific configuration<a class="headerlink" href="#add-deployment-specific-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Now add the following lines to the bottom of your <code class="docutils literal"><span class="pre">~/.chef/knife.rb</span></code>
+file.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># AWS deployment keys.</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">aws_access_key_id</span><span class="p">]</span>     <span class="o">=</span> <span class="s2">&quot;&lt;accessKey&gt;&quot;</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">aws_secret_access_key</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;secretKey&gt;&quot;</span>
+
+<span class="c1"># Signup key. Anyone with this key can create accounts</span>
+<span class="c1"># on the deployment. Set to a secure value.</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">signup_key</span><span class="p">]</span>        <span class="o">=</span> <span class="s2">&quot;secret&quot;</span>
+
+<span class="c1"># TURN workaround password, used by faulty WebRTC clients.</span>
+<span class="c1"># Anyone with this password can use the deployment to send</span>
+<span class="c1"># arbitrary amounts of data. Set to a secure value.</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">turn_workaround</span><span class="p">]</span>   <span class="o">=</span> <span class="s2">&quot;password&quot;</span>
+
+<span class="c1"># Ellis API key. Used by internal scripts to</span>
+<span class="c1"># provision, update and delete user accounts without a password.</span>
+<span class="c1"># Set to a secure value.</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">ellis_api_key</span><span class="p">]</span>     <span class="o">=</span> <span class="s2">&quot;secret&quot;</span>
+
+<span class="c1"># Ellis cookie key. Used to prevent spoofing of Ellis cookies. Set</span>
+<span class="c1"># to a secure value.</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">ellis_cookie_key</span><span class="p">]</span>  <span class="o">=</span> <span class="s2">&quot;secret&quot;</span>
+
+<span class="c1"># SMTP credentials as supplied by your email provider.</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">smtp_server</span><span class="p">]</span>       <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">smtp_username</span><span class="p">]</span>     <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">smtp_password</span><span class="p">]</span>     <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+<span class="c1"># Sender to use for password recovery emails. For some</span>
+<span class="c1"># SMTP servers (e.g., Amazon SES) this email address</span>
+<span class="c1"># must be validated or email sending will fail.</span>
+<span class="n">knife</span><span class="p">[:</span><span class="n">email_sender</span><span class="p">]</span>      <span class="o">=</span> <span class="s2">&quot;clearwater@example.com&quot;</span>
+</pre></div>
+</div>
+<p>Fill in the values appropriate to your deployment using a text editor as
+directed.</p>
+<ul>
+<li><p class="first">The AWS deployment keys are the ones you obtained above.</p>
+</li>
+<li><p class="first">The keys and passwords marked &#8220;Set to a secure value&#8221; above should be
+set to secure random values, to protect your deployment from
+unauthorised access. An easy way to generate a secure random key on a
+Linux system is as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">head</span> <span class="o">-</span><span class="n">c6</span> <span class="o">/</span><span class="n">dev</span><span class="o">/</span><span class="n">random</span> <span class="o">|</span> <span class="n">base64</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>The <code class="docutils literal"><span class="pre">signup_key</span></code> must be supplied by new users when they create an
+account on the system.</p>
+<p>The <code class="docutils literal"><span class="pre">turn_workaround</span></code> must be supplied by certain WebRTC clients when
+using TURN. It controls access to media relay function.</p>
+<p>The <code class="docutils literal"><span class="pre">ellis_api_key</span></code> and <code class="docutils literal"><span class="pre">ellis_cookie_key</span></code> are used internally.</p>
+<ul class="simple">
+<li>The SMTP credentials are required only for password recovery. If you
+leave them unchanged, this function will not work.</li>
+</ul>
+</div>
+<div class="section" id="test-your-settings">
+<h2>Test your settings<a class="headerlink" href="#test-your-settings" title="Permalink to this headline">¶</a></h2>
+<p>Test that knife is configured correctly</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>knife client list
+</pre></div>
+</div>
+<p>This should return a list of clients and not raise any errors.</p>
+</div>
+<div class="section" id="upload-clearwater-definitions-to-chef-server">
+<h2>Upload Clearwater definitions to Chef server<a class="headerlink" href="#upload-clearwater-definitions-to-chef-server" title="Permalink to this headline">¶</a></h2>
+<p>The Chef server needs to be told the definitions for the various
+Clearwater node types. To do this, run</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>cd ~/chef
+knife cookbook upload apt
+knife cookbook upload chef-solo-search
+knife cookbook upload clearwater
+find roles/*.rb -exec knife role from file {} \;
+</pre></div>
+</div>
+<p>You will need to re-do this step if make any changes to your
+<code class="docutils literal"><span class="pre">knife.rb</span></code> settings.</p>
+</div>
+<div class="section" id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this headline">¶</a></h2>
+<p>At this point, the Chef server is up and running and ready to manage
+installs and the chef client is ready to create deployments. The next
+step is to <a class="reference external" href="Creating_a_deployment_environment.md">create a deployment
+environment</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installing a Chef Client</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#create-the-instance">Create the instance</a></li>
+<li><a class="reference internal" href="#install-ruby-1-9-3">Install Ruby 1.9.3</a></li>
+<li><a class="reference internal" href="#installing-the-clearwater-chef-extensions">Installing the Clearwater Chef extensions</a></li>
+<li><a class="reference internal" href="#creating-a-chef-user">Creating a Chef user</a></li>
+<li><a class="reference internal" href="#configure-the-chef-workstation-machine">Configure the chef workstation machine</a></li>
+<li><a class="reference internal" href="#obtain-aws-access-keys">Obtain AWS access keys</a></li>
+<li><a class="reference internal" href="#add-deployment-specific-configuration">Add deployment-specific configuration</a></li>
+<li><a class="reference internal" href="#test-your-settings">Test your settings</a></li>
+<li><a class="reference internal" href="#upload-clearwater-definitions-to-chef-server">Upload Clearwater definitions to Chef server</a></li>
+<li><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Installing_a_Chef_server.html" title="previous chapter">Installing a Chef server</a></li>
+      <li>Next: <a href="Creating_a_deployment_environment.html" title="next chapter">Creating a Chef deployment environment</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Installing_a_Chef_workstation.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Installing_a_Chef_workstation.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

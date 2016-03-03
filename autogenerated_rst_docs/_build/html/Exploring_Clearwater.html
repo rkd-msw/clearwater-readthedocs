@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Exploring Clearwater &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Support" href="Support.html" />
+    <link rel="prev" title="Clearwater Tour" href="Clearwater_Tour.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="exploring-clearwater">
+<h1>Exploring Clearwater<a class="headerlink" href="#exploring-clearwater" title="Permalink to this headline">¶</a></h1>
+<p>After following the <a class="reference external" href="Installation_Instructions.md">Install
+Instructions</a> you will have a
+Clearwater deployment which is capable of handling on-net calls and has
+a number of MMTel services available through the built-in TAS.</p>
+<p>Clearwater supports many optional extra features that you may chose to
+add to your deployment. Descriptions of each feature along with the
+process to enable it on your system can be found here.</p>
+<div class="section" id="integrating-clearwater-with-existing-services">
+<h2>Integrating Clearwater with existing services<a class="headerlink" href="#integrating-clearwater-with-existing-services" title="Permalink to this headline">¶</a></h2>
+<p>An install of Clearwater will, by default, run with no external
+requirements and allow simple on-net calls between lines provisioned in
+Ellis. Clearwater also supports interoperating with various other SIP
+core devices to add more functionality and integrate with an existing
+SIP core.</p>
+<ul class="simple">
+<li><a class="reference external" href="IBCF.md">IBCF function</a></li>
+<li><a class="reference external" href="Application_Server_Guide.md">Application Server</a></li>
+<li><a class="reference external" href="External_HSS_Integration.md">External HSS Integration</a></li>
+<li><a class="reference external" href="CDF_Integration.md">CDF Integration</a></li>
+<li><a class="reference external" href="SIP_Interface_Specifications.md">SIP RFCs supported</a></li>
+</ul>
+</div>
+<div class="section" id="call-features">
+<h2>Call features<a class="headerlink" href="#call-features" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater has a number of call features provided by its <a class="reference external" href="Application_Server_Guide.md#the-built-in-mmtel-application-server">built-in
+TAS</a>,
+including:</p>
+<ul class="simple">
+<li><a class="reference external" href="Clearwater_Call_Barring_Support.md">Call barring</a></li>
+<li><a class="reference external" href="Clearwater_Call_Diversion_Support.md">Call diversion</a></li>
+<li><a class="reference external" href="Clearwater_Privacy_Feature.md">Privacy</a></li>
+</ul>
+<p>Clearwater&#8217;s support for all IR.92 Supplementary Services is discussed
+in <a class="reference external" href="IR.92_Supplementary_Services">this document</a>.</p>
+</div>
+<div class="section" id="scaling-and-redundancy">
+<h2>Scaling and Redundancy<a class="headerlink" href="#scaling-and-redundancy" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater is designed from the ground up to scale horizontally across
+multiple instances to allow it to handle large subscriber counts and to
+support a high level of redundancy.</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.projectclearwater.org/technical/clearwater-performance/">Scaling
+Numbers</a></li>
+<li>The local redundancy story is described in the <a class="reference external" href="Clearwater_Architecture.md">Clearwater
+Architecture</a> page.</li>
+<li><a class="reference external" href="Geographic_redundancy.md">Geographic redundancy</a></li>
+</ul>
+</div>
+<div class="section" id="operational-support">
+<h2>Operational support<a class="headerlink" href="#operational-support" title="Permalink to this headline">¶</a></h2>
+<p>To help you manage your deployment, Clearwater provides:</p>
+<ul class="simple">
+<li><a class="reference external" href="Provisioning_Subscribers.md">Command-line/scriptable provisioning
+tools</a></li>
+<li><a class="reference external" href="Multiple_Network_Support.md">Support for separated management
+networks</a></li>
+<li><a class="reference external" href="Cacti.md">Deployment monitoring</a></li>
+<li><a class="reference external" href="Backups.md">Backup</a></li>
+<li><a class="reference external" href="Troubleshooting_and_Recovery.md">A troubleshooting guide</a> with
+instructions for viewing the database entries on Sprout and
+Homestead/Homer.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Exploring Clearwater</a><ul>
+<li><a class="reference internal" href="#integrating-clearwater-with-existing-services">Integrating Clearwater with existing services</a></li>
+<li><a class="reference internal" href="#call-features">Call features</a></li>
+<li><a class="reference internal" href="#scaling-and-redundancy">Scaling and Redundancy</a></li>
+<li><a class="reference internal" href="#operational-support">Operational support</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Clearwater_Tour.html" title="previous chapter">Clearwater Tour</a></li>
+      <li>Next: <a href="Support.html" title="next chapter">Support</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Exploring_Clearwater.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Exploring_Clearwater.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

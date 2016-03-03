@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>External HSS Integration &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="OpenIMS HSS Integration" href="OpenIMSCore_HSS_Integration.html" />
+    <link rel="prev" title="Configuring an Application Server" href="Configuring_an_Application_Server.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="external-hss-integration">
+<h1>External HSS Integration<a class="headerlink" href="#external-hss-integration" title="Permalink to this headline">¶</a></h1>
+<p>All Clearwater deployments include a
+<a class="reference external" href="https://github.com/Metaswitch/crest">Homestead</a> cluster. Homestead
+presents an HTTP RESTful
+<a class="reference external" href="https://github.com/Metaswitch/homestead/blob/dev/docs/homestead_api.md">interface</a>
+to HSS data. This HSS data can be stored in either</p>
+<ul class="simple">
+<li>a Cassandra database located on the Homestead cluster</li>
+<li>an external HSS, accessible over a standard IMS
+<a class="reference external" href="http://www.3gpp.org/ftp/Specs/html-info/29228.htm">Cx/Diameter</a>
+interface.</li>
+</ul>
+<p>This page describes</p>
+<ul class="simple">
+<li>how it works</li>
+<li>how to enable it</li>
+<li>restrictions.</li>
+</ul>
+<div class="section" id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h2>
+<p>When Clearwater is deployed without an external HSS, all HSS data is
+mastered in Homestead&#8217;s own Cassandra database.</p>
+<p>When Clearwater is deployed with an external HSS, HSS data is queried
+from the external HSS via its Cx/Diameter interface and is then cached
+in the Cassandra database.</p>
+<p>Clearwater uses the following Cx message types.</p>
+<ul class="simple">
+<li>Multimedia-Auth - to retrieve authentication details</li>
+<li>Server-Assignment - to retrieve Initial Filter Criteria documents and
+register for change notifications</li>
+<li>Push-Profile - to be notified of changes to Initial Filter Criteria
+documents</li>
+<li>User-Authorization - to retrieve S-CSCF details on initial
+registrations</li>
+<li>Location-Information - to retrieve S-CSCF details on calls</li>
+<li>Registration-Termination - to be notified of de-registrations</li>
+</ul>
+</div>
+<div class="section" id="how-to-enable-it">
+<h2>How to Enable It<a class="headerlink" href="#how-to-enable-it" title="Permalink to this headline">¶</a></h2>
+<p>This section discusses how to enable support for an external HSS.</p>
+<div class="section" id="before-you-start">
+<h3>Before you start<a class="headerlink" href="#before-you-start" title="Permalink to this headline">¶</a></h3>
+<p>Before enabling support for an external HSS, you must</p>
+<ul class="simple">
+<li><a class="reference external" href="Installation_Instructions.md">install Clearwater</a></li>
+<li>install an external HSS - details for this will vary depending on
+which HSS you choose, but there are instructions for <a class="reference external" href="OpenIMSCore_HSS_Integration.md">OpenIMSCore
+HSS</a>.</li>
+</ul>
+<p>Do not configure any Clearwater subscribers via Ellis!</p>
+<ul class="simple">
+<li>Any subscribers you create before enabling the external HSS will
+override subscribers retrieved from the external HSS, and you will
+not be able to use Ellis to manage them.</li>
+<li>After enabling the external HSS, you will not be able to create
+subscribers through Ellis at all - they must be created through the
+HSS&#8217;s own management interface.</li>
+</ul>
+</div>
+<div class="section" id="enabling-external-hss-support-on-an-existing-deployment">
+<h3>Enabling external HSS support on an existing deployment<a class="headerlink" href="#enabling-external-hss-support-on-an-existing-deployment" title="Permalink to this headline">¶</a></h3>
+<p>To enable external HSS support, you will need to modify the contents of
+<code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> so that the block that reads</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span># HSS configuration
+hss_hostname=0.0.0.0
+hss_port=3868
+</pre></div>
+</div>
+<p>instead reads</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span># HSS configuration
+hss_hostname=&lt;address of your HSS&gt;
+hss_realm=&lt;realm your HSS is located in&gt;
+hss_port=&lt;port of your HSS&#39;s Cx interface&gt;
+</pre></div>
+</div>
+<p>Both hss_hostname and hss_realm are optional. If a realm is
+configured, homestead will try NAPTR/SRV resolution on the realm to find
+and connect to (2 by default) diameter peers in the realm. If a hostname
+is also configured, this will be used in the Destination-Host field on
+the diameter messages, so that the messages will be routed to that host.
+If just a hostname is configured, homestead will just attempt to create
+and maintain a single connection to that host.</p>
+<p><a class="reference external" href="Modifying_Clearwater_settings">This process</a> explains how to modify
+these settings and ensure that all nodes pick up the changes.</p>
+</div>
+<div class="section" id="configuring-your-external-hss">
+<h3>Configuring your external HSS<a class="headerlink" href="#configuring-your-external-hss" title="Permalink to this headline">¶</a></h3>
+<p>Homestead will now query the external HSS for subscriber details when
+they are required by the rest of the Clearwater deployment, such as when
+servicing SIP registrations.</p>
+<p>In order to register and make calls, you need to create subscriber
+records on your external HSS, and the detailed process for this will
+depend on which HSS you have chosen. Generally, however, you will need
+to</p>
+<ol class="arabic simple">
+<li>create a public user identity with the desired SIP URI</li>
+<li>create an associated private user identity with its ID formed by
+removing the <code class="docutils literal"><span class="pre">sip:</span></code> scheme prefix from the public user ID</li>
+<li>configure the public user identity&#8217;s Initial Filter Criteria to
+include an application server named <code class="docutils literal"><span class="pre">sip:mmtel.your.home.domain</span></code>,
+where <code class="docutils literal"><span class="pre">your.home.domain</span></code> is replaced with your home domain - this
+enables MMTEL services for this subscriber.</li>
+</ol>
+</div>
+<div class="section" id="allowing-one-subscriber-to-have-two-private-identities">
+<h3>Allowing one subscriber to have two private identities<a class="headerlink" href="#allowing-one-subscriber-to-have-two-private-identities" title="Permalink to this headline">¶</a></h3>
+<p>If you try to use an <a class="reference external" href="Configuring_the_native_Android_SIP_client.md#instructions-1">Android SIP
+client</a>
+that doesn&#8217;t contain an <strong>Authentication username</strong> field, the client
+will default to a username like <strong>``1234``</strong> (rather than
+<strong>``1234&#64;example.com``</strong> - the IMS standard form). To register a
+subscriber you will have to configure your external HSS so that the
+subscriber you are trying to register has two private identities
+(<strong>``1234``</strong> and <strong>``1234&#64;example.com``</strong>).</p>
+<p>The detailed process for this will depend on which HSS you have chosen.
+Generally, however, you will need to</p>
+<ol class="arabic simple">
+<li>create a subscriber as usual- with public user identity
+&#8220;sip:<em>&lt;username&gt;</em>&#64;<em>&lt;server&gt;</em>&#8220;</li>
+<li>create two new private identities, one having identity
+&#8220;<em>&lt;username&gt;</em>&#8221; and the other with identity
+&#8220;<em>&lt;username&gt;</em>&#64;<em>&lt;server&gt;</em>&#8220;</li>
+<li>associate the public user identity that was created in step 1:
+&#8220;sip:<em>&lt;username&gt;</em>&#64;<em>&lt;server&gt;</em>&#8221; to both of the private identities
+created in step 2.</li>
+</ol>
+<p>This should allow the SIP client to register with that subscriber.</p>
+</div>
+</div>
+<div class="section" id="restrictions">
+<h2>Restrictions<a class="headerlink" href="#restrictions" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Since Homestead uses the Cx/Diameter interface to the HSS, and this
+interface is read-only, the Homestead API is read-only when external
+HSS integration is enabled.</li>
+<li>Since Homestead&#8217;s API is read-only, this means that
+<a class="reference external" href="https://github.com/Metaswitch/ellis">Ellis</a> can&#8217;t be used
+alongside a deployment using an external HSS. Provisioning and
+subscriber management must be performed via the HSS&#8217;s own management
+interface.</li>
+<li>Clearwater currently only supports <a class="reference external" href="http://tools.ietf.org/html/rfc3261#section-22.4">SIP
+digest</a> or
+<a class="reference external" href="http://tools.ietf.org/html/rfc3310">AKA</a> authentication; details
+for other authentication methods are silently ignored from
+Multimedia-Auth responses. Other authentication methods may be added
+in future.</li>
+<li>Homestead currently assumes that private user IDs are formed by
+removing the <code class="docutils literal"><span class="pre">sip:</span></code> prefix from the public user ID. This
+restriction may be relaxed in future.</li>
+<li>While Homestead caches positive results from the external HSS, it
+does not currently cache negative results (e.g. for non-existent
+users). Repeated requests for a non-existent user will increase the
+load on the external HSS. This restriction may be relaxed in future.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">External HSS Integration</a><ul>
+<li><a class="reference internal" href="#how-it-works">How It Works</a></li>
+<li><a class="reference internal" href="#how-to-enable-it">How to Enable It</a><ul>
+<li><a class="reference internal" href="#before-you-start">Before you start</a></li>
+<li><a class="reference internal" href="#enabling-external-hss-support-on-an-existing-deployment">Enabling external HSS support on an existing deployment</a></li>
+<li><a class="reference internal" href="#configuring-your-external-hss">Configuring your external HSS</a></li>
+<li><a class="reference internal" href="#allowing-one-subscriber-to-have-two-private-identities">Allowing one subscriber to have two private identities</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#restrictions">Restrictions</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Configuring_an_Application_Server.html" title="previous chapter">Configuring an Application Server</a></li>
+      <li>Next: <a href="OpenIMSCore_HSS_Integration.html" title="next chapter">OpenIMS HSS Integration</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/External_HSS_Integration.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/External_HSS_Integration.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

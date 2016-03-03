@@ -1,0 +1,588 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Clearwater DNS Usage &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="ENUM Guide" href="ENUM.html" />
+    <link rel="prev" title="Clearwater IP Port Usage" href="Clearwater_IP_Port_Usage.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="clearwater-dns-usage">
+<h1>Clearwater DNS Usage<a class="headerlink" href="#clearwater-dns-usage" title="Permalink to this headline">¶</a></h1>
+<p>DNS is the <a class="reference external" href="http://en.wikipedia.org/wiki/DNS">Domain Name System</a>. It
+maps service names to hostnames and then hostnames to IP addresses.
+Clearwater uses DNS.</p>
+<p>This document describes</p>
+<ul class="simple">
+<li>Clearwater&#8217;s DNS strategy and requirements</li>
+<li>how to configure <a class="reference external" href="http://aws.amazon.com/route53/">AWS Route 53</a>
+and <a class="reference external" href="https://www.isc.org/downloads/bind/">BIND</a> to meet these.</li>
+</ul>
+<p>DNS is also used as part of the
+<a class="reference external" href="http://tools.ietf.org/rfc/rfc6116.txt">ENUM</a> system for mapping
+E.164 numbers to SIP URIs. This isn&#8217;t discussed in this document -
+instead see the separate <a class="reference external" href="ENUM.md">ENUM</a> document.</p>
+<p><em>If you are installing an All-in-One Clearwater node, you do not need
+any DNS records and can ignore the rest of this page.</em></p>
+<div class="section" id="strategy">
+<h2>Strategy<a class="headerlink" href="#strategy" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater makes heavy use of DNS to refer to its nodes. It uses it for</p>
+<ul class="simple">
+<li>identifying individual nodes, e.g. sprout-1.example.com might resolve
+the IP address of the first sprout node</li>
+<li>identifying the nodes within a cluster, e.g. sprout.example.com
+resolves to all the IP addresses in the cluster</li>
+<li>fault-tolerance</li>
+<li>selecting the nearest site in a multi-site deployments, using
+latency-based routing.</li>
+</ul>
+<p>Clearwater also supports using DNS for identifying non-Clearwater nodes.
+In particular, it supports DNS for identifying SIP peers using NAPTR and
+SRV records, as described in <a class="reference external" href="http://tools.ietf.org/rfc/rfc3263.txt">RFC
+3263</a>.</p>
+</div>
+<div class="section" id="resiliency">
+<h2>Resiliency<a class="headerlink" href="#resiliency" title="Permalink to this headline">¶</a></h2>
+<p>By default, Clearwater routes all DNS requests through an instance of
+<a class="reference external" href="http://www.thekelleys.org.uk/dnsmasq">dnsmasq</a> running on localhost.
+This round-robins requests between the servers in /etc/resolv.conf, as
+described in <a class="reference external" href="http://www.thekelleys.org.uk/dnsmasq/docs/FAQ">its
+FAQ</a>:</p>
+<blockquote>
+<div>By default, dnsmasq treats all the nameservers it knows about as
+equal: it picks the one to use using an algorithm designed to avoid
+nameservers which aren&#8217;t responding.</div></blockquote>
+<p>If the <code class="docutils literal"><span class="pre">signaling_dns_server</span></code> option is set in
+<code class="docutils literal"><span class="pre">/etc/clearwater/shared_config</span></code> (which is mandatory when using
+<a class="reference external" href="Multiple_Network_Support.md">traffic separation</a>), Clearwater will
+not use dnsmasq. Instead, resiliency is achieved by being able to
+specify up to three servers in a comma-separated list (e.g.
+<code class="docutils literal"><span class="pre">signaling_dns_server=1.2.3.4,10.0.0.1,192.168.1.1</span></code>), and Clearwater
+will fail over between them as follows:</p>
+<ul class="simple">
+<li>It will always query the first server in the list first</li>
+<li>If this returns SERVFAIL or times out (which happens after a
+randomised 500ms-1000ms period), it will resend the query to the
+second server</li>
+<li>If this returns SERVFAIL or times out, it will resend the query to
+the third server</li>
+<li>If all servers return SERVFAIL or time out, the DNS query will fail</li>
+</ul>
+<p>Clearwater caches DNS responses for several minutes (to reduce the load
+on DNS servers, and the latency introduced by querying them). If a cache
+entry is stale, but the DNS servers return SERVFAIL or time out when
+Clearwater attempts to refresh it, Clearwater will continue to use the
+cached value until the DNS servers become responsive again. This
+minimises the impact of a DNS server failure on calls.</p>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="dns-server">
+<h3>DNS Server<a class="headerlink" href="#dns-server" title="Permalink to this headline">¶</a></h3>
+<p>Clearwater requires the DNS server to support</p>
+<ul class="simple">
+<li><a class="reference external" href="http://tools.ietf.org/rfc/rfc1034.txt">RFC 1034</a> and <a class="reference external" href="http://tools.ietf.org/rfc/rfc1035.txt">RFC
+1035</a> - basic DNS</li>
+<li><a class="reference external" href="http://tools.ietf.org/rfc/rfc2181.txt">RFC 2181</a> - clarifications
+to DNS</li>
+<li><a class="reference external" href="http://tools.ietf.org/rfc/rfc2782.txt">RFC 2782</a> - SRV records</li>
+<li><a class="reference external" href="http://tools.ietf.org/rfc/rfc3596.txt">RFC 3596</a> - AAAA records
+(if IPv6 is required).</li>
+</ul>
+<p>Support for latency-based routing and health-checking are required for
+multi-site deployments.</p>
+<p>Support for <a class="reference external" href="http://tools.ietf.org/rfc/rfc2915.txt">RFC 2915</a> (NAPTR
+records) is also suggested, but not required. NAPTR records specify the
+transport (UDP, TCP, etc.) to use for a particular service - without it,
+UEs will default (probably to UDP).</p>
+<p>AWS Route 53 supports all these features except NAPTR. BIND supports all
+these features except latency-based routing (although there is a
+<a class="reference external" href="http://www.caraytech.com/geodns/">patch</a> for this) and
+health-checking.</p>
+</div>
+<div class="section" id="dns-records">
+<h3>DNS Records<a class="headerlink" href="#dns-records" title="Permalink to this headline">¶</a></h3>
+<p>Clearwater requires the following DNS records to be configured.</p>
+<ul class="simple">
+<li>bono<ul>
+<li><code class="docutils literal"><span class="pre">bono-1.&lt;zone&gt;</span></code>, <code class="docutils literal"><span class="pre">bono-2.&lt;zone&gt;</span></code>... (A and/or AAAA) - per-node
+records for bono</li>
+<li><code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> (A and/or AAAA) - cluster record for bono, resolving to
+all bono nodes - used by UEs that don&#8217;t support RFC 3263
+(NAPTR/SRV)</li>
+<li><code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> (NAPTR, optional) - specifies transport requirements
+for accessing bono - service <code class="docutils literal"><span class="pre">SIP+D2T</span></code> maps to
+<code class="docutils literal"><span class="pre">_sip._tcp.&lt;zone&gt;</span></code> and <code class="docutils literal"><span class="pre">SIP+D2U</span></code> maps to <code class="docutils literal"><span class="pre">_sip._udp.&lt;zone&gt;</span></code></li>
+<li><code class="docutils literal"><span class="pre">_sip._tcp.&lt;zone&gt;</span></code> and <code class="docutils literal"><span class="pre">_sip._udp.&lt;zone&gt;</span></code> (SRV) - cluster SRV
+records for bono, resolving to port 5060 on each of the per-node
+records</li>
+</ul>
+</li>
+<li>sprout<ul>
+<li><code class="docutils literal"><span class="pre">sprout-1.&lt;zone&gt;</span></code>, <code class="docutils literal"><span class="pre">sprout-2.&lt;zone&gt;</span></code>... (A and/or AAAA) -
+per-node records for sprout</li>
+<li><code class="docutils literal"><span class="pre">sprout.&lt;zone&gt;</span></code> (A and/or AAAA) - cluster record for sprout,
+resolving to all sprout nodes - used by P-CSCFs that don&#8217;t support
+RFC 3263 (NAPTR/SRV)</li>
+<li><code class="docutils literal"><span class="pre">sprout.&lt;zone&gt;</span></code> (NAPTR, optional) - specifies transport
+requirements for accessing sprout - service <code class="docutils literal"><span class="pre">SIP+D2T</span></code> maps to
+<code class="docutils literal"><span class="pre">_sip._tcp.sprout.&lt;zone&gt;</span></code></li>
+<li><code class="docutils literal"><span class="pre">_sip._tcp.sprout.&lt;zone&gt;</span></code> (SRV) - cluster SRV record for sprout,
+resolving to port 5054 on each of the per-node records</li>
+<li><code class="docutils literal"><span class="pre">icscf.sprout.&lt;zone&gt;</span></code> (NAPTR, only required if using sprout as
+an I-CSCF) - specifies transport requirements for accessing sprout
+- service <code class="docutils literal"><span class="pre">SIP+D2T</span></code> maps to <code class="docutils literal"><span class="pre">_sip._tcp.icscf.sprout.&lt;zone&gt;</span></code></li>
+<li><code class="docutils literal"><span class="pre">_sip._tcp.icscf.sprout.&lt;zone&gt;</span></code> (SRV, only required if using
+sprout as an I-CSCF) - cluster SRV record for sprout, resolving to
+port 5052 on each of the per-node records</li>
+</ul>
+</li>
+<li>homestead<ul>
+<li><code class="docutils literal"><span class="pre">homestead-1.&lt;zone&gt;</span></code>, <code class="docutils literal"><span class="pre">homestead-2.&lt;zone&gt;</span></code>... (A and/or AAAA)
+- per-node records for homestead</li>
+<li><code class="docutils literal"><span class="pre">hs.&lt;zone&gt;</span></code> (A and/or AAAA) - cluster record for homestead,
+resolving to all homestead nodes</li>
+</ul>
+</li>
+<li>homer<ul>
+<li><code class="docutils literal"><span class="pre">homer-1.&lt;zone&gt;</span></code>, <code class="docutils literal"><span class="pre">homer-2.&lt;zone&gt;</span></code>... (A and/or AAAA) -
+per-node records for homer</li>
+<li><code class="docutils literal"><span class="pre">homer.&lt;zone&gt;</span></code> (A and/or AAAA) - cluster record for homer,
+resolving to all homer nodes</li>
+</ul>
+</li>
+<li>ralf<ul>
+<li><code class="docutils literal"><span class="pre">ralf-1.&lt;zone&gt;</span></code>, <code class="docutils literal"><span class="pre">ralf-2.&lt;zone&gt;</span></code>... (A and/or AAAA) - per-node
+records for ralf</li>
+<li><code class="docutils literal"><span class="pre">ralf.&lt;zone&gt;</span></code> (A and/or AAAA) - cluster record for ralf,
+resolving to all ralf nodes</li>
+</ul>
+</li>
+<li>ellis<ul>
+<li><code class="docutils literal"><span class="pre">ellis-1.&lt;zone&gt;</span></code> (A and/or AAAA) - per-node record for ellis</li>
+<li><code class="docutils literal"><span class="pre">ellis.&lt;zone&gt;</span></code> (A and/or AAAA) - &#8220;cluster&#8221;/access record for
+ellis</li>
+</ul>
+</li>
+<li>standalone application server (e.g. gemini/memento)<ul>
+<li><code class="docutils literal"><span class="pre">&lt;standalone</span> <span class="pre">name&gt;-1.&lt;zone&gt;</span></code> (A and/or AAAA) - per-node record
+for each standalone application server</li>
+<li><code class="docutils literal"><span class="pre">&lt;standalone</span> <span class="pre">name&gt;.&lt;zone&gt;</span></code> (A and/or AAAA) - &#8220;cluster&#8221;/access
+record for the standalone application servers</li>
+</ul>
+</li>
+</ul>
+<p>Of these, the following must be resolvable by UEs - the others need only
+be resolvable within the core of the network. If you have a NAT-ed
+network, the following must resolve to public IP addresses, while the
+others should resolve to private IP addresses.</p>
+<ul class="simple">
+<li>bono<ul>
+<li><code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> (A and/or AAAA)</li>
+<li><code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> (NAPTR, optional)</li>
+<li><code class="docutils literal"><span class="pre">_sip._tcp.&lt;zone&gt;</span></code> and <code class="docutils literal"><span class="pre">_sip._udp.&lt;zone&gt;</span></code> (SRV)</li>
+</ul>
+</li>
+<li>ellis<ul>
+<li><code class="docutils literal"><span class="pre">ellis.&lt;zone&gt;</span></code> (A and/or AAAA)</li>
+</ul>
+</li>
+<li>memento<ul>
+<li><code class="docutils literal"><span class="pre">memento.&lt;zone&gt;</span></code> (A and/or AAAA)</li>
+</ul>
+</li>
+</ul>
+<p>If you are not deploying with some of these components, you do not need
+the DNS records to be configured for them. For example, if you are using
+a different P-CSCF (and so don&#8217;t need bono), you don&#8217;t need the bono DNS
+records. Likewise, if you are deploying with an external HSS (and so
+don&#8217;t need ellis), you don&#8217;t need the ellis DNS records.</p>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>Clearwater can work with any DNS server that meets the <a class="reference external" href="#dns-server">requirements
+above</a>. However, most of our testing has been performed
+with</p>
+<ul class="simple">
+<li><a class="reference external" href="http://aws.amazon.com/route53/">AWS Route 53</a> - see
+<a class="reference external" href="#aws-route-53">configuration instructions</a></li>
+<li><a class="reference external" href="https://www.isc.org/downloads/bind/">BIND</a> - see <a class="reference external" href="#bind">configuration
+instructions</a>.</li>
+</ul>
+<p>The Clearwater nodes also need to know the identity of their DNS server.
+Ideally, this is done via <a class="reference external" href="http://en.wikipedia.org/wiki/DHCP">DHCP</a>
+within your virtualization infrastructure. Alternatively, you can
+<a class="reference external" href="#client-configuration">configure it manually</a>.</p>
+<p>The UEs need to know the identity of the DNS server too. In a testing
+environment, you may be able to use DHCP or manual configuration. In a
+public network, you will need to register the <code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> domain name you
+are using and arranging for an NS record for <code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> to point to your
+DNS server.</p>
+<div class="section" id="aws-route-53">
+<h3>AWS Route 53<a class="headerlink" href="#aws-route-53" title="Permalink to this headline">¶</a></h3>
+<p>Clearwater&#8217;s <a class="reference external" href="Automated_Install.md">automated install</a> automatically
+configures AWS Route 53. There is no need to follow the following
+instructions if you are using the automated install.</p>
+<p>The official <a class="reference external" href="http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html">AWS Route 53
+documentation</a>
+is a good reference, and most of the following steps are links into it.</p>
+<p>To use AWS Route 53 for Clearwater, you need to</p>
+<ul class="simple">
+<li><a class="reference external" href="http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingNewDNS.html">create a
+domain</a></li>
+<li><a class="reference external" href="http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/RRSchanges_console.html">create record
+sets</a>
+for each of the non-geographically-redundant <a class="reference external" href="#dns-records">records Clearwater
+requires</a>.</li>
+</ul>
+<p>For the geographically-redundant records, you need to</p>
+<ul class="simple">
+<li><a class="reference external" href="http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/health-checks-creating-deleting.html">create a
+health-check</a>
+for each of your sites</li>
+<li><a class="reference external" href="http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/HowToLatencyRRS.html">create latency-based-routing
+records</a>
+for each of your sites</li>
+<li>associate each site&#8217;s records with its health-check.</li>
+</ul>
+<p>Note that AWS Route 53 does not support NAPTR records.</p>
+</div>
+<div class="section" id="bind">
+<h3>BIND<a class="headerlink" href="#bind" title="Permalink to this headline">¶</a></h3>
+<p>To use BIND, you need to</p>
+<ul class="simple">
+<li>install it</li>
+<li>create an entry for your &#8220;zone&#8221; (DNS suffix your deployment uses)</li>
+<li>configure the zone with a &#8220;zone file&#8221;</li>
+<li>restart BIND.</li>
+</ul>
+<p>Note that BIND does not support latency-based routing or
+health-checking.</p>
+<div class="section" id="installation">
+<h4>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h4>
+<p>To install BIND on Ubuntu, issue <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">bind9</span></code>.</p>
+</div>
+<div class="section" id="creating-zone-entry">
+<h4>Creating Zone Entry<a class="headerlink" href="#creating-zone-entry" title="Permalink to this headline">¶</a></h4>
+<p>To create an entry for your zone, edit the
+<code class="docutils literal"><span class="pre">/etc/bind/named.conf.local</span></code> file to add a line of the following form,
+replacing <code class="docutils literal"><span class="pre">&lt;zone&gt;</span></code> with your zone name.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>zone &quot;&lt;zone&gt;&quot; IN { type master; file &quot;/etc/bind/db.&lt;zone&gt;&quot;; };
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuring-zone">
+<h4>Configuring Zone<a class="headerlink" href="#configuring-zone" title="Permalink to this headline">¶</a></h4>
+<p>Zones are configured through &#8220;zone files&#8221; (defined in <a class="reference external" href="http://tools.ietf.org/rfc/rfc1034.txt">RFC
+1034</a> and <a class="reference external" href="http://tools.ietf.org/rfc/rfc1035.txt">RFC
+1035</a>).</p>
+<p>If you followed the instructions above, the zone file for your zone is
+at <code class="docutils literal"><span class="pre">/etc/bind/db.&lt;zone&gt;</span></code>.</p>
+<p>For Clearwater, you should be able to adapt the following example zone
+file by correcting the IP addresses and duplicating (or removing)
+entries where you have more (or fewer) than 2 nodes in each tier.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>$TTL 5m ; Default TTL
+
+; SOA, NS and A record for DNS server itself
+@                 3600 IN SOA  ns admin ( 2014010800 ; Serial
+                                          3600       ; Refresh
+                                          3600       ; Retry
+                                          3600       ; Expire
+                                          300 )      ; Minimum TTL
+@                 3600 IN NS   ns
+ns                3600 IN A    1.0.0.1 ; IPv4 address of BIND server
+ns                3600 IN AAAA 1::1    ; IPv6 address of BIND server
+
+; bono
+; ====
+;
+; Per-node records - not required to have both IPv4 and IPv6 records
+bono-1                 IN A     2.0.0.1
+bono-2                 IN A     2.0.0.2
+bono-1                 IN AAAA  2::1
+bono-2                 IN AAAA  2::2
+;
+; Cluster A and AAAA records - UEs that don&#39;t support RFC 3263 will simply
+; resolve the A or AAAA records and pick randomly from this set of addresses.
+@                      IN A     2.0.0.1
+@                      IN A     2.0.0.2
+@                      IN AAAA  2::1
+@                      IN AAAA  2::2
+;
+; NAPTR and SRV records - these indicate a preference for TCP and then resolve
+; to port 5060 on the per-node records defined above.
+@                      IN NAPTR 1 1 &quot;S&quot; &quot;SIP+D2T&quot; &quot;&quot; _sip._tcp
+@                      IN NAPTR 2 1 &quot;S&quot; &quot;SIP+D2U&quot; &quot;&quot; _sip._udp
+_sip._tcp              IN SRV   0 0 5060 bono-1
+_sip._tcp              IN SRV   0 0 5060 bono-2
+_sip._udp              IN SRV   0 0 5060 bono-1
+_sip._udp              IN SRV   0 0 5060 bono-2
+
+; sprout
+; ======
+;
+; Per-node records - not required to have both IPv4 and IPv6 records
+sprout-1               IN A     3.0.0.1
+sprout-2               IN A     3.0.0.2
+sprout-1               IN AAAA  3::1
+sprout-2               IN AAAA  3::2
+;
+; Cluster A and AAAA records - P-CSCFs that don&#39;t support RFC 3263 will simply
+; resolve the A or AAAA records and pick randomly from this set of addresses.
+sprout                 IN A     3.0.0.1
+sprout                 IN A     3.0.0.2
+sprout                 IN AAAA  3::1
+sprout                 IN AAAA  3::2
+;
+; NAPTR and SRV records - these indicate TCP support only and then resolve
+; to port 5054 on the per-node records defined above.
+sprout                 IN NAPTR 1 1 &quot;S&quot; &quot;SIP+D2T&quot; &quot;&quot; _sip._tcp.sprout
+_sip._tcp.sprout       IN SRV   0 0 5054 sprout-1
+_sip._tcp.sprout       IN SRV   0 0 5054 sprout-2
+;
+; Per-node records for I-CSCF (if enabled) - not required to have both
+; IPv4 and IPv6 records
+sprout-3               IN A     3.0.0.3
+sprout-3               IN AAAA  3::3
+;
+; Cluster A and AAAA records - P-CSCFs that don&#39;t support RFC 3263 will simply
+; resolve the A or AAAA records and pick randomly from this set of addresses.
+icscf.sprout           IN A     3.0.0.3
+icscf.sprout           IN AAAA  3::3
+;
+; NAPTR and SRV records for I-CSCF (if enabled) - these indicate TCP
+; support only and then resolve to port 5052 on the per-node records
+; defined above.
+icscf.sprout           IN NAPTR 1 1 &quot;S&quot; &quot;SIP+D2T&quot; &quot;&quot; _sip._tcp.icscf.sprout
+_sip._tcp.icscf.sprout IN SRV   0 0 5052 sprout-3
+
+; homestead
+; =========
+;
+; Per-node records - not required to have both IPv4 and IPv6 records
+homestead-1            IN A     4.0.0.1
+homestead-2            IN A     4.0.0.2
+homestead-1            IN AAAA  4::1
+homestead-2            IN AAAA  4::2
+;
+; Cluster A and AAAA records - sprout picks randomly from these.
+hs                     IN A     4.0.0.1
+hs                     IN A     4.0.0.2
+hs                     IN AAAA  4::1
+hs                     IN AAAA  4::2
+;
+; (No need for NAPTR or SRV records as homestead doesn&#39;t handle SIP traffic.)
+
+; homer
+; =====
+;
+; Per-node records - not required to have both IPv4 and IPv6 records
+homer-1                IN A     5.0.0.1
+homer-2                IN A     5.0.0.2
+homer-1                IN AAAA  5::1
+homer-2                IN AAAA  5::2
+;
+; Cluster A and AAAA records - sprout picks randomly from these.
+homer                  IN A     5.0.0.1
+homer                  IN A     5.0.0.2
+homer                  IN AAAA  5::1
+homer                  IN AAAA  5::2
+;
+; (No need for NAPTR or SRV records as homer doesn&#39;t handle SIP traffic.)
+
+; ralf
+; =====
+;
+; Per-node records - not required to have both IPv4 and IPv6 records
+ralf-1                IN A     6.0.0.1
+ralf-2                IN A     6.0.0.2
+ralf-1                IN AAAA  6::1
+ralf-2                IN AAAA  6::2
+;
+; Cluster A and AAAA records - sprout and bono pick randomly from these.
+ralf                  IN A     6.0.0.1
+ralf                  IN A     6.0.0.2
+ralf                  IN AAAA  6::1
+ralf                  IN AAAA  6::2
+;
+; (No need for NAPTR or SRV records as ralf doesn&#39;t handle SIP traffic.)
+
+; ellis
+; =====
+;
+; ellis is not clustered, so there&#39;s only ever one node.
+;
+; Per-node record - not required to have both IPv4 and IPv6 records
+ellis-1                IN A     7.0.0.1
+ellis-1                IN AAAA  7::1
+;
+; &quot;Cluster&quot;/access A and AAAA record
+ellis                  IN A     7.0.0.1
+ellis                  IN AAAA  7::1
+</pre></div>
+</div>
+</div>
+<div class="section" id="restarting">
+<h4>Restarting<a class="headerlink" href="#restarting" title="Permalink to this headline">¶</a></h4>
+<p>To restart BIND, issue <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">service</span> <span class="pre">bind9</span> <span class="pre">restart</span></code>. Check
+/var/log/syslog for any error messages.</p>
+</div>
+</div>
+<div class="section" id="client-configuration">
+<h3>Client Configuration<a class="headerlink" href="#client-configuration" title="Permalink to this headline">¶</a></h3>
+<p>Clearwater nodes need to know the identity of their DNS server. Ideally,
+this is achieved through DHCP. There are two main situations in which it
+might need to be configured manually.</p>
+<ul class="simple">
+<li>When DNS configuration is not provided via DHCP.</li>
+<li>When incorrect DNS configuration is provided via DHCP.</li>
+</ul>
+<p>Either way, you must</p>
+<ul class="simple">
+<li>create an <code class="docutils literal"><span class="pre">/etc/dnsmasq.resolv.conf</span></code> file containing the desired
+DNS configuration (probably just the single line
+<code class="docutils literal"><span class="pre">nameserver</span> <span class="pre">&lt;IP</span> <span class="pre">address&gt;</span></code>)</li>
+<li>add <code class="docutils literal"><span class="pre">RESOLV_CONF=/etc/dnsmasq.resolv.conf</span></code> to
+<code class="docutils literal"><span class="pre">/etc/default/dnsmasq</span></code></li>
+<li>run <code class="docutils literal"><span class="pre">service</span> <span class="pre">dnsmasq</span> <span class="pre">restart</span></code>.</li>
+</ul>
+<p>(As background,
+<a class="reference external" href="http://www.thekelleys.org.uk/dnsmasq/doc.html">dnsmasq</a> is a DNS
+forwarder that runs on each Clearwater node to act as a cache. Local
+processes look in <code class="docutils literal"><span class="pre">/etc/resolv.conf</span></code> for DNS configuration, and this
+points them to localhost, where dnsmasq runs. In turn, dnsmasq takes its
+configuration from <code class="docutils literal"><span class="pre">/etc/dnsmasq.resolv.conf</span></code>. By default, dnsmasq
+would use <code class="docutils literal"><span class="pre">/var/run/dnsmasq/resolv.conf</span></code>, but this is controlled by
+DHCP.)</p>
+</div>
+<div class="section" id="ipv6-aaaa-dns-lookups">
+<h3>IPv6 AAAA DNS lookups<a class="headerlink" href="#ipv6-aaaa-dns-lookups" title="Permalink to this headline">¶</a></h3>
+<p>Clearwater can be installed on an IPv4-only system, an IPv6-only system,
+or a system with both IPv4 and IPv6 addresses (though the Clearwater
+software does not use both IPv4 and IPv6 at the same time).</p>
+<p>Normally, systems with both IPv4 and IPv6 addresses will prefer IPv6,
+performing AAAA lookups first and only trying an A record lookup if that
+fails. This may cause problems (or be inefficient) if you know that all
+your Clearwater DNS records are A records.</p>
+<p>In this case, you can configure a preference for A lookups by editing
+<code class="docutils literal"><span class="pre">/etc/gai.conf</span></code> and commenting out the line
+<code class="docutils literal"><span class="pre">precedence</span> <span class="pre">::ffff:0:0/96</span> <span class="pre">100</span></code> (as described at
+<a class="reference external" href="http://askubuntu.com/questions/32298/prefer-a-ipv4-dns-lookups-before-aaaaipv6-lookups">http://askubuntu.com/questions/32298/prefer-a-ipv4-dns-lookups-before-aaaaipv6-lookups</a>).</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Clearwater DNS Usage</a><ul>
+<li><a class="reference internal" href="#strategy">Strategy</a></li>
+<li><a class="reference internal" href="#resiliency">Resiliency</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a><ul>
+<li><a class="reference internal" href="#dns-server">DNS Server</a></li>
+<li><a class="reference internal" href="#dns-records">DNS Records</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li><a class="reference internal" href="#aws-route-53">AWS Route 53</a></li>
+<li><a class="reference internal" href="#bind">BIND</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#creating-zone-entry">Creating Zone Entry</a></li>
+<li><a class="reference internal" href="#configuring-zone">Configuring Zone</a></li>
+<li><a class="reference internal" href="#restarting">Restarting</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#client-configuration">Client Configuration</a></li>
+<li><a class="reference internal" href="#ipv6-aaaa-dns-lookups">IPv6 AAAA DNS lookups</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Clearwater_IP_Port_Usage.html" title="previous chapter">Clearwater IP Port Usage</a></li>
+      <li>Next: <a href="ENUM.html" title="next chapter">ENUM Guide</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_DNS_Usage.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_DNS_Usage.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

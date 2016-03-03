@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Clearwater Tour &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Exploring Clearwater" href="Exploring_Clearwater.html" />
+    <link rel="prev" title="Clearwater Architecture" href="Clearwater_Architecture.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="clearwater-tour">
+<h1>Clearwater Tour<a class="headerlink" href="#clearwater-tour" title="Permalink to this headline">¶</a></h1>
+<p>This document is a quick tour of the key features of Clearwater, from a
+subscriber&#8217;s point of view.</p>
+<div class="section" id="self-service-account-and-line-creation">
+<h2>Self-service account and line creation<a class="headerlink" href="#self-service-account-and-line-creation" title="Permalink to this headline">¶</a></h2>
+<p>In a browser, go to the Account Signup tab at
+<code class="docutils literal"><span class="pre">http://ellis.&lt;domain&gt;/signup.html</span></code> and supply details as requested:</p>
+<ul class="simple">
+<li>Use whatever name you like.</li>
+<li>Use a real email address, or the password reset function won&#8217;t work.</li>
+<li>The signup code to enter in the final box should have been given to
+you by the deployment administrator.</li>
+<li>Hit &#8220;Sign up&#8221;.</li>
+</ul>
+<p>You are now shown a new account with a phone number (which may take a
+second or two to show up).</p>
+<ul class="simple">
+<li>The password for each number is only shown once - it is only stored
+encrypted in the system, for security, so cannot be retrieved by the
+system later. It can be reset by the user if they forget it (see
+button towards the right).</li>
+</ul>
+<p>Try adding and deleting extra lines. Lines can have non-routable numbers
+for a purely on-net service, or PSTN numbers. Make sure you end up with
+just a PSTN number assigned to the account.</p>
+<p>Address book: for this system there is a single address book which all
+numbers are by default added to - see the checkbox by the line.</p>
+</div>
+<div class="section" id="connecting-an-x-lite-client">
+<h2>Connecting an X-Lite client<a class="headerlink" href="#connecting-an-x-lite-client" title="Permalink to this headline">¶</a></h2>
+<p>Now register for the new PSTN line on your newly created account with
+your as yet unregistered X-Lite phone.</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.counterpath.com/x-lite-download.html">Download
+X-Lite</a>.</li>
+<li>Install and start X-Lite</li>
+<li>Navigate to Softphone / Account Settings</li>
+<li>Account tab:<ul>
+<li>Account name: Whatever you like.</li>
+<li>User ID: &#8220;SIP Username&#8221; from the line you&#8217;re adding</li>
+<li>Domain: <code class="docutils literal"><span class="pre">&lt;deployment</span> <span class="pre">domain&gt;</span></code>, e.g., <code class="docutils literal"><span class="pre">ngv.example.com</span></code></li>
+<li>Password: &#8220;SIP Password&#8221; from the line you&#8217;re adding</li>
+<li>Display name: Whatever you like, or omit</li>
+<li>Authorization name: <code class="docutils literal"><span class="pre">&lt;SIP</span> <span class="pre">Username&gt;&#64;&lt;domain&gt;</span></code> e.g.
+<code class="docutils literal"><span class="pre">6505550611&#64;ngv.example.com</span></code></li>
+<li>&#8220;Register with domain and receive calls&#8221; should be selected</li>
+<li>Send outbound via: Domain</li>
+</ul>
+</li>
+<li>Topology tab:<ul>
+<li>Select &#8220;Auto-detect firewall traversal method using ICE
+(recommended)&#8221;</li>
+<li>Server address: <code class="docutils literal"><span class="pre">&lt;domain&gt;</span></code></li>
+<li>User name: <code class="docutils literal"><span class="pre">&lt;SIP</span> <span class="pre">Username&gt;&#64;&lt;domain&gt;</span></code></li>
+<li>Password: &#8220;SIP Password&#8221; from the line</li>
+</ul>
+</li>
+<li>Transport tab:<ul>
+<li>Signaling transport: TCP</li>
+</ul>
+</li>
+<li>hit &#8220;OK&#8221;</li>
+<li>phone should register.</li>
+</ul>
+<p>We have now registered for the new line.</p>
+</div>
+<div class="section" id="connecting-an-android-phone">
+<h2>Connecting an Android phone<a class="headerlink" href="#connecting-an-android-phone" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference external" href="Configuring_the_native_Android_SIP_client.md">here</a> for
+instructions.</p>
+</div>
+<div class="section" id="making-calls">
+<h2>Making calls<a class="headerlink" href="#making-calls" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Make a call using your new line to a PSTN number (eg your regular
+mobile phone number). Clearwater performs an ENUM lookup to decide
+how to route the call, and rings the number.</li>
+<li>Make a call using a PSTN number (eg your regular mobile phone) to
+your new line. Use the online global address book in Ellis to find
+the number to call.</li>
+<li>Make a call between X-Lite and the Android client, optionally using
+the address book.</li>
+</ul>
+<p>We&#8217;ve gone from no user account, no line, and no service to a configured
+user and working line in five minutes. All of this works without any
+on-premise equipment, without dedicated servers in a data centre,
+without any admin intervention at all.</p>
+<div class="section" id="supported-dialling-formats">
+<h3>Supported dialling formats<a class="headerlink" href="#supported-dialling-formats" title="Permalink to this headline">¶</a></h3>
+<p>A brief note on supported dialing formats:</p>
+<ul class="simple">
+<li>Dialling between devices on the Clearwater system. It is easiest to
+always dial the ten digit number, even when calling a PSTN number.
+Seven digit dialling is not supported, and dialing 1+10D is not
+supported. In theory dialling +1-10D if the destination is a
+Clearwater PSTN number should work, but some clients (eg. X-Lite)
+silently strip out the + before sending the INVITE, so only do this
+if you are absolutely sure your client supports it.</li>
+<li>Dialling out to the PSTN. You must dial as per the NANP. Calls to US
+numbers can use 10D, 1-10D or +1-10D format as appropriate (the
+latter only if your device supports +), and international calls must
+use the 011 prefix (+ followed by country code does not work). If you
+try to make a call using one of these number formats and it doesn&#8217;t
+connect, then it almost certainly wouldn&#8217;t connect if you were
+dialling the same number via the configured SIP trunk directly.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="webrtc-support">
+<h2>WebRTC support<a class="headerlink" href="#webrtc-support" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference external" href="WebRTC_support_in_Clearwater.md">WebRTC support in Clearwater</a>
+for how to use a browser instead of a SIP phone as a client.</p>
+</div>
+<div class="section" id="volte-call-services">
+<h2>VoLTE call services<a class="headerlink" href="#volte-call-services" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="call-barring">
+<h3>Call barring<a class="headerlink" href="#call-barring" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>From Ellis, press the Configure button on the X-Lite PSTN number,
+this will pop up the services management interface.</li>
+<li>Select the Barring tab and choose the bars you wish to apply to
+incoming/outgoing calls.</li>
+<li>Click OK then attempt to call X-Lite from the PSTN, see that the call
+is rejected without the called party being notified of anything.</li>
+</ul>
+</div>
+<div class="section" id="call-diversion">
+<h3>Call diversion<a class="headerlink" href="#call-diversion" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>From Ellis, press the Configure button on the X-Lite PSTN number,
+this will pop up the services management interface.</li>
+<li>Select the Barring tab and turn off barring.</li>
+<li>Select the Redirect tab, enable call diversion and add a new rule to
+unconditionally divert calls to your Android client if using or your
+chosen call diversion destination if not.</li>
+<li>Click OK then call X-Lite from the PSTN and see that that number is
+not notified but the diverted-to number is, and can accept the call.</li>
+</ul>
+</div>
+<div class="section" id="other-features">
+<h3>Other features<a class="headerlink" href="#other-features" title="Permalink to this headline">¶</a></h3>
+<p>Clearwater also supports privacy, call hold, and call waiting.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Clearwater Tour</a><ul>
+<li><a class="reference internal" href="#self-service-account-and-line-creation">Self-service account and line creation</a></li>
+<li><a class="reference internal" href="#connecting-an-x-lite-client">Connecting an X-Lite client</a></li>
+<li><a class="reference internal" href="#connecting-an-android-phone">Connecting an Android phone</a></li>
+<li><a class="reference internal" href="#making-calls">Making calls</a><ul>
+<li><a class="reference internal" href="#supported-dialling-formats">Supported dialling formats</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#webrtc-support">WebRTC support</a></li>
+<li><a class="reference internal" href="#volte-call-services">VoLTE call services</a><ul>
+<li><a class="reference internal" href="#call-barring">Call barring</a></li>
+<li><a class="reference internal" href="#call-diversion">Call diversion</a></li>
+<li><a class="reference internal" href="#other-features">Other features</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Clearwater_Architecture.html" title="previous chapter">Clearwater Architecture</a></li>
+      <li>Next: <a href="Exploring_Clearwater.html" title="next chapter">Exploring Clearwater</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_Tour.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_Tour.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

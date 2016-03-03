@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Ruby Coding Guidelines &mdash; Project Clearwater 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Clearwater 1.0 documentation" href="index.html" />
+    <link rel="next" title="Debugging Clearwater with GDB and Valgrind" href="Debugging_Bono_Sprout_and_Homestead_with_GDB_and_Valgrind.html" />
+    <link rel="prev" title="C++ Coding Guidelines" href="Clearwater_CPP_Coding_Guidelines.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ruby-coding-guidelines">
+<h1>Ruby Coding Guidelines<a class="headerlink" href="#ruby-coding-guidelines" title="Permalink to this headline">¶</a></h1>
+<p>Strongly based on <a class="reference external" href="https://github.com/chneukirchen/styleguide/">https://github.com/chneukirchen/styleguide/</a> with some
+local changes.</p>
+<div class="section" id="formatting">
+<h2>Formatting:<a class="headerlink" href="#formatting" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Use UTF-8 encoding in your source files.</li>
+<li>Use 2 space indent, no tabs.</li>
+<li>Use Unix-style line endings, including on the last line of the file.</li>
+<li>Use spaces around operators, after commas, colons and semicolons,
+around { and before }.</li>
+<li>No spaces after (, [ and before ], ).</li>
+<li>Prefer postfix modifiers (if, unless, rescue) when possible.</li>
+<li>Indent when as deep as case then indent the contents one step more.</li>
+<li>Use an empty line before the return value of a method (unless it only
+has one line), and an empty line between defs.</li>
+<li>Use Yard and its conventions for API documentation. Don&#8217;t put an
+empty line between the comment block and the definition.</li>
+<li>Use empty lines to break up a long method into logical paragraphs.</li>
+<li>Keep lines shorter than 80 characters.</li>
+<li>Avoid trailing whitespace.</li>
+</ul>
+</div>
+<div class="section" id="syntax">
+<h2>Syntax:<a class="headerlink" href="#syntax" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Use def with parentheses when there are arguments.</li>
+<li>Conversely, avoid parentheses when there are none.</li>
+<li>Never use for, unless you exactly know why. Prefer each or loop.</li>
+<li>Never use then, a newline is sufficient.</li>
+<li>Prefer words to symbols.</li>
+<li>and and or in place of &amp;&amp; and ||</li>
+<li>not in place of !</li>
+<li>Avoid ?:, use if (remember: if returns a value, use it).</li>
+<li>Avoid if not, use unless.</li>
+<li>Suppress superfluous parentheses when calling methods, unless the
+method has side-effects.</li>
+<li>Prefer do...end over {...} for multi-line blocks.</li>
+<li>Prefer {...} over do...end for single-line blocks.</li>
+<li>Avoid chaining function calls over multiple lines (implying, use
+{...} for chained functions.</li>
+<li>Avoid return where not required.</li>
+<li>Avoid line continuation (\) where not required.</li>
+<li>Using the return value of = is okay.</li>
+<li>if v = array.grep(/foo/)</li>
+<li>Use ||= freely for memoization.</li>
+<li>When using regexps, freely use =~, -9, :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>~, <a href="#id3"><span class="problematic" id="id4">`</span></a>&nbsp;and $` when
+needed.</li>
+<li>Prefer symbols (:name) to strings where applicable.</li>
+</ul>
+</div>
+<div class="section" id="naming">
+<h2>Naming:<a class="headerlink" href="#naming" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Use snake_case for methods.</li>
+<li>Use CamelCase for classes and modules. (Keep acronyms like HTTP, RFC
+and XML uppercase.)</li>
+<li>Use SCREAMING_CASE for other constants.</li>
+<li>Use one-letter variables for short block/method parameters, according
+to this scheme:</li>
+<li>a,b,c: any object</li>
+<li>d: directory names</li>
+<li>e: elements of an Enumerable or a rescued Exception</li>
+<li>f: files and file names</li>
+<li>i,j: indexes or integers</li>
+<li>k: the key part of a hash entry</li>
+<li>m: methods</li>
+<li>o: any object</li>
+<li>r: return values of short methods</li>
+<li>s: strings</li>
+<li>v: any value</li>
+<li>v: the value part of a hash entry</li>
+<li>And in general, the first letter of the class name if all objects are
+of that type (e.g. <code class="docutils literal"><span class="pre">nodes.each</span> <span class="pre">{</span> <span class="pre">|n|</span> <span class="pre">n.name</span> <span class="pre">}</span></code>)</li>
+<li>Use _ for unused variables.</li>
+<li>When defining binary operators, name the argument other.</li>
+<li>Use def self.method to define singleton methods.</li>
+</ul>
+</div>
+<div class="section" id="comments">
+<h2>Comments:<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Comments longer than a word are capitalized and use punctuation. Use
+two spaces after periods.</li>
+<li>Avoid superfluous comments. It should be easy to write
+self-documenting code.</li>
+</ul>
+</div>
+<div class="section" id="code-design">
+<h2>Code design<a class="headerlink" href="#code-design" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Avoid needless meta-programming.</li>
+<li>Avoid long methods. Much prefer to go too far the wrong way and have
+multiple one-line methods.</li>
+<li>Avoid long parameter lists, consider using a hash with documented
+defaults instead.</li>
+<li>Prefer functional methods over procedural ones (common methods
+below):</li>
+<li>each - Apply block to each element</li>
+<li>map - Apply block to each element and remember the returned values.</li>
+<li>select - Find all matching elements</li>
+<li>detect - Find first matching element</li>
+<li>inject - Equivalent to foldl from Haskell</li>
+<li>Use the mutating version of functional methods (e.g. map!) where
+applicable, rather than using temporary variables.</li>
+<li>Avoid non-obvious function overloading (e.g. don&#8217;t use [&#8220;0&#8221;] * 8 to
+initialize an array).</li>
+<li>Prefer objects to vanilla arrays/hashes, this allows you to document
+the structure and interface.</li>
+<li>Protect the internal data stores from external access. Write API
+functions explicitly.</li>
+<li>Use attr_accessor to create getters/setters for simple access.</li>
+<li>Prefer to add a to_s function to an object for ease of debugging.</li>
+<li>Internally, use standard libraries where applicable (See the docs for
+the various APIs).:</li>
+<li>Hash, Array and Set</li>
+<li>String</li>
+<li>Fixnum and Integer</li>
+<li>Thread and Mutex</li>
+<li>Fiber</li>
+<li>Complex</li>
+<li>Float</li>
+<li>Dir and File</li>
+<li>Random</li>
+<li>Time</li>
+<li>Prefer string interpolation &#8220;blah#{expr}&#8221; rather than appending to
+strings.</li>
+<li>Prefer using the %w{} family of array generators to typing out arrays
+of strings manually.</li>
+</ul>
+</div>
+<div class="section" id="general">
+<h2>General:<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Write ruby -w safe code.</li>
+<li>Avoid alias, use alias_method if you absolutely must alias something
+(for Monkey Patching).</li>
+<li>Use OptionParser for parsing command line options.</li>
+<li>Target Ruby 2.0 (except where libraries are not compatible, such as
+Chef).</li>
+<li>Do not mutate arguments unless that is the purpose of the method.</li>
+<li>Do not mess around in core classes when writing libraries.</li>
+<li>Do not program defensively.</li>
+<li>Keep the code simple.</li>
+<li>Be consistent.</li>
+<li>Use common sense.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Ruby Coding Guidelines</a><ul>
+<li><a class="reference internal" href="#formatting">Formatting:</a></li>
+<li><a class="reference internal" href="#syntax">Syntax:</a></li>
+<li><a class="reference internal" href="#naming">Naming:</a></li>
+<li><a class="reference internal" href="#comments">Comments:</a></li>
+<li><a class="reference internal" href="#code-design">Code design</a></li>
+<li><a class="reference internal" href="#general">General:</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Clearwater_CPP_Coding_Guidelines.html" title="previous chapter">C++ Coding Guidelines</a></li>
+      <li>Next: <a href="Debugging_Bono_Sprout_and_Homestead_with_GDB_and_Valgrind.html" title="next chapter">Debugging Clearwater with GDB and Valgrind</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Clearwater_Ruby_Coding_Guidelines.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Metaswitch Networks.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/Clearwater_Ruby_Coding_Guidelines.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
